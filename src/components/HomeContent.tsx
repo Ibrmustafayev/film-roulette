@@ -7,10 +7,21 @@ import { MovieCard } from "@/components/MovieCard";
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
 import { Genre } from "@/lib/tmdb";
+import { useEffect, useRef } from "react";
 
 export function HomeContent({ genres }: { genres: Genre[] }) {
-  const { locale } = useStore();
+  const { locale, movie } = useStore();
   const t = getTranslations(locale);
+  const movieRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to movie card when a movie is loaded
+  useEffect(() => {
+    if (movie && movieRef.current) {
+      setTimeout(() => {
+        movieRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+  }, [movie]);
 
   return (
     <div className="flex flex-col min-h-screen relative">
@@ -44,7 +55,9 @@ export function HomeContent({ genres }: { genres: Genre[] }) {
 
         <FilterPanel genres={genres} />
         <RouletteButton />
-        <MovieCard />
+        <div ref={movieRef} className="w-full flex justify-center">
+          <MovieCard />
+        </div>
       </main>
 
       <footer className="py-8 text-center text-sm text-muted-foreground border-t border-border/40 mt-auto">
