@@ -1,6 +1,8 @@
 import { getGenres, Genre } from "@/lib/tmdb";
 import { HomeContent } from "@/components/HomeContent";
 
+export const dynamic = 'force-dynamic';
+
 export default async function Home() {
   let genres: Genre[] = [];
   try {

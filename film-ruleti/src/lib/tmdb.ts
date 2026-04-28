@@ -25,7 +25,7 @@ const fetchFromTMDB = async (endpoint: string, params: Record<string, string | n
 
   const response = await fetch(url.toString(), {
     headers,
-    next: { revalidate: 0 },
+    cache: 'no-store',
   });
 
   if (!response.ok) {
