@@ -1,0 +1,104 @@
+{
+  "site": {
+    "name": "Film Ruleti",
+    "tagline": "Zərləri At, Filmini Tap!",
+    "description": "Filtrlərini seç, zərləri at və bu axşam izləyəcəyin filmi saniyələr içində kəşf et. Qeydiyyat yox, reklam yox — yalnız kino!",
+    "badge": "Minlərlə film arasından təsadüfi kəşf",
+    "footer": "Film Ruleti — TMDB API ilə dəstəklənir. Bu məhsul TMDb tərəfindən təsdiqlənməyib."
+  },
+  "filters": {
+    "title": "Filtrlər",
+    "genre": "Janr",
+    "genreAll": "Bütün Janrlar",
+    "year": "İl Aralığı",
+    "yearFrom": "Dən",
+    "yearTo": "Dək",
+    "yearAny": "Fərq etməz",
+    "language": "Orijinal Dil",
+    "languageAny": "Fərq etməz",
+    "rating": "Min. Reytinq",
+    "ratingAny": "Fərq etməz"
+  },
+  "button": {
+    "roll": "🎲 Zərləri At!",
+    "rolling": "Zərlər Atılır..."
+  },
+  "movie": {
+    "cast": "Aktyor Heyəti",
+    "watchTrailer": "Treylerə Bax",
+    "noOverview": "Bu film üçün hələ xülasə mövcud deyil.",
+    "votes": "səs",
+    "unknown": "Bilinmir",
+    "runtime": "{h}s {m}dq"
+  },
+  "share": {
+    "copyLink": "Linki Kopyala",
+    "copied": "Kopyalandı!",
+    "share": "Paylaş",
+    "download": "Şəkli Yüklə",
+    "ogText": "🎲 Film Ruletində zərləri atdım!\n\n🎬 {title} ({year})\n⭐ TMDB: {rating}/10\n\nSən də sına 👉"
+  },
+  "errors": {
+    "notFound": "Bu filtrlərə uyğun film tapılmadı.",
+    "generic": "Film gətirilərkən xəta baş verdi."
+  },
+  "theme": {
+    "toggle": "Temanı Dəyiş"
+  },
+  "lang": {
+    "label": "Dil"
+  },
+  "rating": {
+    "tmdb": "TMDB",
+    "imdb": "IMDb"
+  },
+  "genres": {
+    "28": "Aksiyon",
+    "12": "Macəra",
+    "16": "Animasiya",
+    "35": "Komediya",
+    "80": "Cinayət",
+    "99": "Sənədli",
+    "18": "Dram",
+    "10751": "Ailə",
+    "14": "Fantastik",
+    "36": "Tarix",
+    "27": "Qorxu",
+    "10402": "Musiqi",
+    "9648": "Sirr",
+    "10749": "Romantik",
+    "878": "Elmi Fantastika",
+    "10770": "TV Filmi",
+    "53": "Triller",
+    "10752": "Müharibə",
+    "37": "Vestern"
+  },
+  "languages": {
+    "": "Fərq etməz",
+    "en": "İngiliscə",
+    "tr": "Türkcə",
+    "fr": "Fransızca",
+    "de": "Almanca",
+    "es": "İspanca",
+    "it": "İtalyanca",
+    "ja": "Yaponca",
+    "ko": "Koreyaca",
+    "hi": "Hindcə",
+    "ru": "Rusca",
+    "pt": "Portuqalca",
+    "zh": "Çincə",
+    "ar": "Ərəbcə",
+    "sv": "İsveçcə",
+    "da": "Danimarka dili",
+    "pl": "Polyakca"
+  },
+  "ratingOptions": {
+    "": "Fərq etməz",
+    "9-10": "⭐ 9+ (Şah əsər)",
+    "8-10": "⭐ 8+ (Əla)",
+    "7-10": "⭐ 7+ (Çox yaxşı)",
+    "6-10": "⭐ 6+ (Yaxşı)",
+    "5-10": "⭐ 5+ (Orta)",
+    "0-5": "⭐ 5-dən aşağı (Riskli)"
+  }
+}

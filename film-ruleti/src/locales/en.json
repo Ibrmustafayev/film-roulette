@@ -1,0 +1,104 @@
+{
+  "site": {
+    "name": "Film Roulette",
+    "tagline": "Roll the Dice, Find Your Movie!",
+    "description": "Set your filters, roll the dice and discover a random movie to watch tonight. No signup, no ads — just cinema!",
+    "badge": "Random discovery among thousands of movies",
+    "footer": "Film Roulette — Powered by TMDB API. This product is not endorsed or certified by TMDb."
+  },
+  "filters": {
+    "title": "Filters",
+    "genre": "Genre",
+    "genreAll": "All Genres",
+    "year": "Year Range",
+    "yearFrom": "From",
+    "yearTo": "To",
+    "yearAny": "Any",
+    "language": "Original Language",
+    "languageAny": "Any",
+    "rating": "Min. Rating",
+    "ratingAny": "Any"
+  },
+  "button": {
+    "roll": "🎲 Roll the Dice!",
+    "rolling": "Rolling..."
+  },
+  "movie": {
+    "cast": "Cast",
+    "watchTrailer": "Watch Trailer",
+    "noOverview": "No overview available for this movie yet.",
+    "votes": "votes",
+    "unknown": "Unknown",
+    "runtime": "{h}h {m}m"
+  },
+  "share": {
+    "copyLink": "Copy Link",
+    "copied": "Copied!",
+    "share": "Share",
+    "download": "Download Image",
+    "ogText": "🎲 I rolled the dice on Film Roulette!\n\n🎬 {title} ({year})\n⭐ TMDB: {rating}/10\n\nTry it yourself 👉"
+  },
+  "errors": {
+    "notFound": "No movie found matching these filters.",
+    "generic": "An error occurred while fetching the movie."
+  },
+  "theme": {
+    "toggle": "Toggle Theme"
+  },
+  "lang": {
+    "label": "Language"
+  },
+  "rating": {
+    "tmdb": "TMDB",
+    "imdb": "IMDb"
+  },
+  "genres": {
+    "28": "Action",
+    "12": "Adventure",
+    "16": "Animation",
+    "35": "Comedy",
+    "80": "Crime",
+    "99": "Documentary",
+    "18": "Drama",
+    "10751": "Family",
+    "14": "Fantasy",
+    "36": "History",
+    "27": "Horror",
+    "10402": "Music",
+    "9648": "Mystery",
+    "10749": "Romance",
+    "878": "Sci-Fi",
+    "10770": "TV Movie",
+    "53": "Thriller",
+    "10752": "War",
+    "37": "Western"
+  },
+  "languages": {
+    "": "Any",
+    "en": "English",
+    "tr": "Turkish",
+    "fr": "French",
+    "de": "German",
+    "es": "Spanish",
+    "it": "Italian",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "hi": "Hindi",
+    "ru": "Russian",
+    "pt": "Portuguese",
+    "zh": "Chinese",
+    "ar": "Arabic",
+    "sv": "Swedish",
+    "da": "Danish",
+    "pl": "Polish"
+  },
+  "ratingOptions": {
+    "": "Any",
+    "9-10": "⭐ 9+ (Masterpiece)",
+    "8-10": "⭐ 8+ (Excellent)",
+    "7-10": "⭐ 7+ (Great)",
+    "6-10": "⭐ 6+ (Good)",
+    "5-10": "⭐ 5+ (Average)",
+    "0-5": "⭐ Below 5 (Risky)"
+  }
+}
