@@ -6,12 +6,17 @@ import { Star, Calendar, Clock, Play, Globe, User, ExternalLink } from "lucide-r
 import { getImageUrl } from "@/lib/tmdb";
 import { ShareButton } from "./ShareButton";
 import { getTranslations } from "@/lib/i18n";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function MovieCard() {
   const { movie, isLoading, locale } = useStore();
   const [showTrailer, setShowTrailer] = useState(false);
   const t = getTranslations(locale);
+
+  // Reset trailer state when a new movie is loaded
+  useEffect(() => {
+    setShowTrailer(false);
+  }, [movie?.id]);
 
   if (isLoading || !movie) return null;
 
