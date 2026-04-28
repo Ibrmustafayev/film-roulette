@@ -74,8 +74,9 @@
     "37": "Vestern"
   },
   "languages": {
-    "": "Fərq etməz",
-    "en": "İngiliscə",
+    "": "Bütün Dillər",
+    "en": "İngilis",
+    "az": "Azərbaycan",
     "tr": "Türkcə",
     "fr": "Fransızca",
     "de": "Almanca",

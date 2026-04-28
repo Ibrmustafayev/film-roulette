@@ -67,7 +67,7 @@ export interface Movie {
 }
 
 export const LANGUAGE_CODES = [
-  '', 'en', 'tr', 'fr', 'de', 'es', 'it', 'ja', 'ko', 'hi',
+  '', 'en', 'az', 'tr', 'fr', 'de', 'es', 'it', 'ja', 'ko', 'hi',
   'ru', 'pt', 'zh', 'ar', 'sv', 'da', 'pl',
 ];
 
