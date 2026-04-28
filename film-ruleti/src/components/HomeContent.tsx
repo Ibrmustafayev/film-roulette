@@ -30,11 +30,11 @@ export function HomeContent({ genres }: { genres: Genre[] }) {
           </div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tight">
             <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/60">
-              {t("site.tagline").split(",")[0]},
+              {t("site.tagline").includes(",") ? t("site.tagline").split(",")[0] + "," : t("site.tagline")}
             </span>
             <br />
             <span className="bg-gradient-to-r from-red-500 to-amber-500 bg-clip-text text-transparent">
-              {t("site.tagline").split(",")[1] || t("site.tagline")}
+              {t("site.tagline").includes(",") ? t("site.tagline").split(",")[1] : ""}
             </span>
           </h1>
           <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl mx-auto">

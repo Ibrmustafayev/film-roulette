@@ -1,8 +1,8 @@
-import { getGenres } from "@/lib/tmdb";
+import { getGenres, Genre } from "@/lib/tmdb";
 import { HomeContent } from "@/components/HomeContent";
 
 export default async function Home() {
-  let genres = [];
+  let genres: Genre[] = [];
   try {
     genres = await getGenres("en-US");
   } catch (error) {
