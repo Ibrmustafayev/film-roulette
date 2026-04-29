@@ -6,13 +6,23 @@ import { Star, Calendar, Clock, Play, Globe, User, ExternalLink } from "lucide-r
 import { getImageUrl } from "@/lib/tmdb";
 import { ShareButton } from "./ShareButton";
 import { getTranslations } from "@/lib/i18n";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function MovieCard() {
   const { movie, isLoading, locale } = useStore();
   const [showTrailer, setShowTrailer] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
   const t = getTranslations(locale);
+  const playerRef = useRef<HTMLDivElement>(null);
+
+  // Scroll to player when trailer or movie starts
+  useEffect(() => {
+    if ((showTrailer || showPlayer) && playerRef.current) {
+      setTimeout(() => {
+        playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+    }
+  }, [showTrailer, showPlayer]);
 
   // Reset states when a new movie is loaded
   useEffect(() => {
@@ -93,6 +103,7 @@ export function MovieCard() {
         <AnimatePresence>
           {(showTrailer || showPlayer) && (
             <motion.div
+              ref={playerRef}
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
