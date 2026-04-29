@@ -182,12 +182,22 @@ export const getRandomMovie = async ({
 // Search movies by title
 export const searchMovies = async (query: string, language = 'en-US') => {
   if (!query) return [];
+  
+  // If running in browser, use our internal proxy API to keep the key safe
+  if (typeof window !== 'undefined') {
+    const res = await fetch(`/api/search?query=${encodeURIComponent(query)}&language=${language}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data.results || []) as Movie[];
+  }
+
+  // If server-side, use direct TMDB fetch
   const data = await fetchFromTMDB('/search/movie', {
     query,
     language,
     include_adult: 'false',
   });
-  return data.results as Movie[];
+  return (data.results || []) as Movie[];
 };
 
 export const getImageUrl = (path: string | null, size: 'w185' | 'w342' | 'w500' | 'w780' | 'original' = 'w500') => {
