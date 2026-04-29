@@ -5,9 +5,9 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY;
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const movieId = params.id;
+  const { id: movieId } = await params;
   const { searchParams } = new URL(request.url);
   const language = searchParams.get('language') || 'en-US';
 
