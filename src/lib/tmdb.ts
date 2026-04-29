@@ -87,11 +87,18 @@ export const getGenres = async (language = 'en-US') => {
 };
 
 // Movie details + cast + trailer + IMDB ID
-export const getMovieDetails = async (movieId: number): Promise<Partial<Movie>> => {
+export const getMovieDetails = async (movieId: number, language = 'en-US'): Promise<Partial<Movie>> => {
+  // If running in browser, use our internal proxy API
+  if (typeof window !== 'undefined') {
+    const res = await fetch(`/api/movies/${movieId}?language=${language}`);
+    if (!res.ok) throw new Error('Failed to fetch movie details');
+    return await res.json();
+  }
+
   const [details, credits, videos] = await Promise.all([
-    fetchFromTMDB(`/movie/${movieId}`, { language: 'en-US' }),
-    fetchFromTMDB(`/movie/${movieId}/credits`, { language: 'en-US' }),
-    fetchFromTMDB(`/movie/${movieId}/videos`, { language: 'en-US' }),
+    fetchFromTMDB(`/movie/${movieId}`, { language }),
+    fetchFromTMDB(`/movie/${movieId}/credits`, { language }),
+    fetchFromTMDB(`/movie/${movieId}/videos`, { language }),
   ]);
 
   const cast = (credits.cast || []).slice(0, 6).map((c: any) => ({
