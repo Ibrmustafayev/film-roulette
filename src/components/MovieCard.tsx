@@ -11,11 +11,13 @@ import { useEffect, useState } from "react";
 export function MovieCard() {
   const { movie, isLoading, locale } = useStore();
   const [showTrailer, setShowTrailer] = useState(false);
+  const [showPlayer, setShowPlayer] = useState(false);
   const t = getTranslations(locale);
 
-  // Reset trailer state when a new movie is loaded
+  // Reset states when a new movie is loaded
   useEffect(() => {
     setShowTrailer(false);
+    setShowPlayer(false);
   }, [movie?.id]);
 
   if (isLoading || !movie) return null;
@@ -37,6 +39,10 @@ export function MovieCard() {
     ? `https://www.imdb.com/title/${movie.imdb_id}/`
     : null;
 
+  const playUrl = movie.imdb_id
+    ? `https://www.playimdb.com/title/${movie.imdb_id}/`
+    : null;
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -52,20 +58,40 @@ export function MovieCard() {
           <div className="relative w-full h-48 md:h-64 rounded-t-2xl overflow-hidden">
             <img src={backdropUrl} alt="" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
-            {movie.trailer_key && (
-              <button
-                onClick={() => setShowTrailer(!showTrailer)}
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-red-600/90 hover:bg-red-600 text-white rounded-full w-16 h-16 flex items-center justify-center shadow-2xl transition-transform hover:scale-110"
-              >
-                <Play className="w-7 h-7 ml-1 fill-current" />
-              </button>
-            )}
+            
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-4">
+              {movie.trailer_key && (
+                <button
+                  onClick={() => {
+                    setShowTrailer(!showTrailer);
+                    setShowPlayer(false);
+                  }}
+                  className="bg-red-600/90 hover:bg-red-600 text-white rounded-full w-14 h-14 md:w-16 md:h-16 flex items-center justify-center shadow-2xl transition-transform hover:scale-110"
+                  title={t("movie.watchTrailer")}
+                >
+                  <Play className="w-6 h-6 md:w-7 md:h-7 ml-1 fill-current" />
+                </button>
+              )}
+              
+              {playUrl && (
+                <button
+                  onClick={() => {
+                    setShowPlayer(!showPlayer);
+                    setShowTrailer(false);
+                  }}
+                  className="bg-amber-500/90 hover:bg-amber-500 text-white rounded-full w-14 h-14 md:w-16 md:h-16 flex items-center justify-center shadow-2xl transition-transform hover:scale-110"
+                  title={t("movie.watchMovie")}
+                >
+                  <ExternalLink className="w-6 h-6 md:w-7 md:h-7" />
+                </button>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Trailer */}
+        {/* Trailer/Player Section */}
         <AnimatePresence>
-          {showTrailer && movie.trailer_key && (
+          {(showTrailer || showPlayer) && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -73,13 +99,23 @@ export function MovieCard() {
               className="overflow-hidden bg-black"
             >
               <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-                <iframe
-                  src={`https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1`}
-                  title="Trailer"
-                  allow="autoplay; encrypted-media"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full"
-                />
+                {showTrailer ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1`}
+                    title="Trailer"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full"
+                  />
+                ) : (
+                  <iframe
+                    src={playUrl!}
+                    title="Movie Player"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full"
+                  />
+                )}
               </div>
             </motion.div>
           )}
@@ -220,9 +256,24 @@ export function MovieCard() {
 
             {/* Actions */}
             <div className="mt-6 flex flex-col gap-3">
+              {playUrl && (
+                <button
+                  onClick={() => {
+                    setShowPlayer(!showPlayer);
+                    setShowTrailer(false);
+                  }}
+                  className="flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-xl transition-colors font-bold text-sm shadow-lg shadow-amber-900/20"
+                >
+                  <Play className="w-4 h-4 fill-current" />
+                  {t("movie.watchMovie")}
+                </button>
+              )}
               {movie.trailer_key && !backdropUrl && (
                 <button
-                  onClick={() => setShowTrailer(!showTrailer)}
+                  onClick={() => {
+                    setShowTrailer(!showTrailer);
+                    setShowPlayer(false);
+                  }}
                   className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl transition-colors font-medium text-sm"
                 >
                   <Play className="w-4 h-4 fill-current" />

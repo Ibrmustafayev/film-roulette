@@ -26,6 +26,7 @@
   "movie": {
     "cast": "Cast",
     "watchTrailer": "Watch Trailer",
+    "watchMovie": "Watch Movie",
     "noOverview": "No overview available for this movie yet.",
     "votes": "votes",
     "unknown": "Unknown",

@@ -26,6 +26,7 @@
   "movie": {
     "cast": "Aktyor Heyəti",
     "watchTrailer": "Treylerə Bax",
+    "watchMovie": "Filmi İzlə",
     "noOverview": "Bu film üçün hələ xülasə mövcud deyil.",
     "votes": "səs",
     "unknown": "Bilinmir",
