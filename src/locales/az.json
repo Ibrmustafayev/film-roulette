@@ -102,5 +102,10 @@
     "6-10": "⭐ 6+ (Yaxşı)",
     "5-10": "⭐ 5+ (Orta)",
     "0-5": "⭐ 5-dən aşağı (Riskli)"
+  },
+  "search": {
+    "placeholder": "Film axtar...",
+    "noResults": "Film tapılmadı.",
+    "searching": "Axtarılır..."
   }
 }

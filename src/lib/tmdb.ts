@@ -179,6 +179,17 @@ export const getRandomMovie = async ({
   };
 };
 
+// Search movies by title
+export const searchMovies = async (query: string, language = 'en-US') => {
+  if (!query) return [];
+  const data = await fetchFromTMDB('/search/movie', {
+    query,
+    language,
+    include_adult: 'false',
+  });
+  return data.results as Movie[];
+};
+
 export const getImageUrl = (path: string | null, size: 'w185' | 'w342' | 'w500' | 'w780' | 'original' = 'w500') => {
   if (!path) return null;
   return `https://image.tmdb.org/t/p/${size}${path}`;

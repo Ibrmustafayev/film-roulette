@@ -102,5 +102,10 @@
     "6-10": "⭐ 6+ (Good)",
     "5-10": "⭐ 5+ (Average)",
     "0-5": "⭐ Below 5 (Risky)"
+  },
+  "search": {
+    "placeholder": "Search for a movie...",
+    "noResults": "No movies found.",
+    "searching": "Searching..."
   }
 }
