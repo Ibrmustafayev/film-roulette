@@ -113,6 +113,7 @@ export function MovieCard() {
                     title="Movie Player"
                     allow="autoplay; encrypted-media"
                     allowFullScreen
+                    sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts"
                     className="absolute inset-0 w-full h-full"
                   />
                 )}
