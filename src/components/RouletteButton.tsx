@@ -17,6 +17,7 @@ export function RouletteButton() {
     isLoading,
     setIsLoading,
     locale,
+    addToHistory,
   } = useStore();
   const [error, setError] = useState("");
   const t = getTranslations(locale);
@@ -44,8 +45,9 @@ export function RouletteButton() {
 
       const data = await res.json();
       setMovie(data);
-    } catch (err: any) {
-      setError(err.message || t("errors.generic"));
+      addToHistory(data);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
       setIsLoading(false);
     }

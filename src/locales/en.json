@@ -30,7 +30,9 @@
     "noOverview": "No overview available for this movie yet.",
     "votes": "votes",
     "unknown": "Unknown",
-    "runtime": "{h}h {m}m"
+    "runtime": "{h}h {m}m",
+    "changeSource": "Change Server",
+    "server": "Server"
   },
   "share": {
     "copyLink": "Copy Link",
@@ -41,7 +43,9 @@
   },
   "errors": {
     "notFound": "No movie found matching these filters.",
-    "generic": "An error occurred while fetching the movie."
+    "generic": "An error occurred while fetching the movie.",
+    "noSource": "No active source found for this movie.",
+    "checking": "Checking available servers..."
   },
   "theme": {
     "toggle": "Toggle Theme"
@@ -52,6 +56,25 @@
   "rating": {
     "tmdb": "TMDB",
     "imdb": "IMDb"
+  },
+  "menu": {
+    "open": "Menu",
+    "close": "Close Menu",
+    "random": "Random Film",
+    "history": "History",
+    "favourites": "Favourites"
+  },
+  "history": {
+    "title": "History",
+    "subtitle": "Your last 30 random discoveries",
+    "empty": "No history yet. Roll the dice to discover movies!"
+  },
+  "favourites": {
+    "title": "Favourites",
+    "subtitle": "Movies you've saved",
+    "empty": "No favourites yet. Add movies by clicking the heart icon!",
+    "add": "Add to Favourites",
+    "remove": "Remove from Favourites"
   },
   "genres": {
     "28": "Action",

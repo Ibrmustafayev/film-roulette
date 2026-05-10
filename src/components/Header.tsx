@@ -1,15 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Dice5 } from "lucide-react";
+import { Dice5, Menu } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
 import { useStore } from "@/store/useStore";
 import { getTranslations, LOCALE_LABELS, Locale } from "@/lib/i18n";
-
 import { SearchBar } from "./SearchBar";
 
 export function Header() {
-  const { locale, setLocale } = useStore();
+  const { locale, setLocale, setMenuOpen } = useStore();
   const t = getTranslations(locale);
 
   return (
@@ -42,6 +41,15 @@ export function Header() {
           </select>
 
           <ThemeToggle />
+
+          {/* Menu Button */}
+          <button
+            onClick={() => setMenuOpen(true)}
+            className="p-2 hover:bg-muted rounded-xl transition-colors border border-border/50"
+            aria-label={t("menu.open")}
+          >
+            <Menu className="w-5 h-5" />
+          </button>
         </div>
       </div>
     </header>

@@ -1,33 +1,55 @@
 "use client";
 
+import Image from "next/image";
 import { useStore } from "@/store/useStore";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Calendar, Clock, Play, Globe, User, ExternalLink } from "lucide-react";
+import { Star, Calendar, Clock, Play, Globe, User, ExternalLink, Heart, Loader2, AlertCircle } from "lucide-react";
 import { getImageUrl } from "@/lib/tmdb";
 import { ShareButton } from "./ShareButton";
 import { getTranslations } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
 
+const SOURCES = [
+  { name: "Server 1", url: (imdbId: string, tmdbId: number) => `https://www.playimdb.com/title/${imdbId}/` },
+  { name: "Server 2", url: (imdbId: string, tmdbId: number) => `https://vidsrc.to/embed/movie/${tmdbId}` },
+  { name: "Server 3", url: (imdbId: string, tmdbId: number) => `https://vidsrc.me/embed/movie?imdb=${imdbId}` },
+  { name: "Server 4", url: (imdbId: string, tmdbId: number) => `https://embed.su/embed/movie/${tmdbId}` },
+];
+
 export function MovieCard() {
-  const { movie, isLoading, locale } = useStore();
+  const { movie, isLoading, locale, toggleFavourite, isFavourite } = useStore();
   const [showTrailer, setShowTrailer] = useState(false);
   const [showPlayer, setShowPlayer] = useState(false);
+  const [selectedSource, setSelectedSource] = useState(0);
+  const [isChecking, setIsChecking] = useState(false);
+  const [sourceError, setSourceError] = useState(false);
+  const [favAnim, setFavAnim] = useState(false);
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
 
+  const isFav = movie ? isFavourite(movie.id) : false;
+
   // Scroll to player when trailer or movie starts
   useEffect(() => {
-    if ((showTrailer || showPlayer) && playerRef.current) {
+    if ((showTrailer || showPlayer || isChecking || sourceError) && playerRef.current) {
       setTimeout(() => {
         playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     }
-  }, [showTrailer, showPlayer]);
+  }, [showTrailer, showPlayer, isChecking, sourceError]);
 
   // Reset states when a new movie is loaded
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowTrailer(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowPlayer(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSelectedSource(0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setIsChecking(false);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSourceError(false);
   }, [movie?.id]);
 
   if (isLoading || !movie) return null;
@@ -49,13 +71,57 @@ export function MovieCard() {
     ? `https://www.imdb.com/title/${movie.imdb_id}/`
     : null;
 
-  const playUrl = movie.imdb_id
-    ? `https://www.playimdb.com/title/${movie.imdb_id}/`
+  const currentPlayUrl = movie.imdb_id
+    ? SOURCES[selectedSource].url(movie.imdb_id, movie.id)
     : null;
+
+  const handleToggleFavourite = () => {
+    toggleFavourite(movie);
+    setFavAnim(true);
+    setTimeout(() => setFavAnim(false), 600);
+  };
+
+  const handleWatchMovie = async () => {
+    if (showPlayer) {
+      setShowPlayer(false);
+      return;
+    }
+    
+    setShowTrailer(false);
+    setSourceError(false);
+    
+    if (!movie.imdb_id) {
+      setSourceError(true);
+      return;
+    }
+
+    setIsChecking(true);
+
+    for (let i = 0; i < SOURCES.length; i++) {
+      const url = SOURCES[i].url(movie.imdb_id, movie.id);
+      try {
+        const res = await fetch(`/api/check-source?url=${encodeURIComponent(url)}`);
+        const data = await res.json();
+        if (data.ok) {
+          setSelectedSource(i);
+          setShowPlayer(true);
+          setIsChecking(false);
+          return;
+        }
+      } catch (err) {
+        console.error("Source check failed:", err);
+      }
+    }
+
+    setIsChecking(false);
+    setSourceError(true);
+  };
 
   return (
     <AnimatePresence mode="wait">
+      <label className="hidden">Movie</label>
       <motion.div
+        aria-label="Movie Card"
         key={movie.id}
         initial={{ opacity: 0, y: 60, scale: 0.92 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -63,88 +129,17 @@ export function MovieCard() {
         transition={{ type: "spring", stiffness: 180, damping: 22 }}
         className="w-full max-w-4xl mx-auto mt-12"
       >
-        {/* Backdrop */}
-        {backdropUrl && (
-          <div className="relative w-full h-48 md:h-64 rounded-t-2xl overflow-hidden">
-            <img src={backdropUrl} alt="" className="w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
-            
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex gap-4">
-              {movie.trailer_key && (
-                <button
-                  onClick={() => {
-                    setShowTrailer(!showTrailer);
-                    setShowPlayer(false);
-                  }}
-                  className="bg-red-600/90 hover:bg-red-600 text-white rounded-full w-14 h-14 md:w-16 md:h-16 flex items-center justify-center shadow-2xl transition-transform hover:scale-110"
-                  title={t("movie.watchTrailer")}
-                >
-                  <Play className="w-6 h-6 md:w-7 md:h-7 ml-1 fill-current" />
-                </button>
-              )}
-              
-              {playUrl && (
-                <button
-                  onClick={() => {
-                    setShowPlayer(!showPlayer);
-                    setShowTrailer(false);
-                  }}
-                  className="bg-amber-500/90 hover:bg-amber-500 text-white rounded-full w-14 h-14 md:w-16 md:h-16 flex items-center justify-center shadow-2xl transition-transform hover:scale-110"
-                  title={t("movie.watchMovie")}
-                >
-                  <ExternalLink className="w-6 h-6 md:w-7 md:h-7" />
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Trailer/Player Section */}
-        <AnimatePresence>
-          {(showTrailer || showPlayer) && (
-            <motion.div
-              ref={playerRef}
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: "auto", opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              className="overflow-hidden bg-black"
-            >
-              <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-                {showTrailer ? (
-                  <iframe
-                    src={`https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1`}
-                    title="Trailer"
-                    allow="autoplay; encrypted-media"
-                    allowFullScreen
-                    className="absolute inset-0 w-full h-full"
-                  />
-                ) : (
-                  <iframe
-                    src={playUrl!}
-                    title="Movie Player"
-                    allow="autoplay; encrypted-media"
-                    allowFullScreen
-                    sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts"
-                    className="absolute inset-0 w-full h-full"
-                  />
-                )}
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* Card */}
-        <div
-          className={`bg-card text-card-foreground ${
-            backdropUrl ? "rounded-b-2xl" : "rounded-2xl"
-          } shadow-xl border border-border overflow-hidden flex flex-col md:flex-row`}
-        >
-          {posterUrl && (
-            <div className="w-full md:w-72 shrink-0 relative">
-              <img
-                src={posterUrl}
+        <div className="bg-card text-card-foreground rounded-2xl shadow-xl border border-border overflow-hidden flex flex-col md:flex-row">
+          {movie.poster_path && (
+            <div className="w-full md:w-72 shrink-0 relative min-h-[420px] bg-muted">
+              <Image
+                src={getImageUrl(movie.poster_path, "w500")!}
                 alt={movie.title}
-                className="w-full h-full object-cover md:min-h-[420px]"
+                fill
+                priority
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 288px"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden" />
             </div>
@@ -152,12 +147,30 @@ export function MovieCard() {
 
           <div className="p-6 md:p-8 flex flex-col justify-between flex-1 min-w-0">
             <div>
-              {/* Title + Rating */}
+              {/* Title + Rating + Favourite */}
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="text-2xl md:text-3xl font-bold leading-tight truncate">
-                    {movie.title}
-                  </h2>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-2xl md:text-3xl font-bold leading-tight truncate">
+                      {movie.title}
+                    </h2>
+                    {/* Favourite Button */}
+                    <motion.button
+                      onClick={handleToggleFavourite}
+                      animate={favAnim ? { scale: [1, 1.3, 1] } : {}}
+                      transition={{ duration: 0.4 }}
+                      className={`shrink-0 p-2 rounded-full transition-all ${
+                        isFav
+                          ? "bg-red-500/15 text-red-500 hover:bg-red-500/25"
+                          : "bg-muted text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
+                      }`}
+                      title={isFav ? t("favourites.remove") : t("favourites.add")}
+                    >
+                      <Heart
+                        className={`w-5 h-5 transition-all ${isFav ? "fill-current" : ""}`}
+                      />
+                    </motion.button>
+                  </div>
                   {movie.original_title !== movie.title && (
                     <p className="text-sm text-muted-foreground mt-1 truncate">
                       {movie.original_title}
@@ -242,9 +255,11 @@ export function MovieCard() {
                       <div key={actor.id} className="flex flex-col items-center shrink-0 w-16">
                         <div className="w-12 h-12 rounded-full overflow-hidden bg-muted border-2 border-border">
                           {actor.profile_path ? (
-                            <img
+                            <Image
                               src={getImageUrl(actor.profile_path, "w185")!}
                               alt={actor.name}
+                              width={48}
+                              height={48}
                               className="w-full h-full object-cover"
                             />
                           ) : (
@@ -268,34 +283,89 @@ export function MovieCard() {
 
             {/* Actions */}
             <div className="mt-6 flex flex-col gap-3">
-              {playUrl && (
-                <button
-                  onClick={() => {
-                    setShowPlayer(!showPlayer);
-                    setShowTrailer(false);
-                  }}
-                  className="flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 text-white px-4 py-3 rounded-xl transition-colors font-bold text-sm shadow-lg shadow-amber-900/20"
-                >
-                  <Play className="w-4 h-4 fill-current" />
-                  {t("movie.watchMovie")}
-                </button>
-              )}
-              {movie.trailer_key && !backdropUrl && (
-                <button
-                  onClick={() => {
-                    setShowTrailer(!showTrailer);
-                    setShowPlayer(false);
-                  }}
-                  className="flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl transition-colors font-medium text-sm"
-                >
-                  <Play className="w-4 h-4 fill-current" />
-                  {t("movie.watchTrailer")}
-                </button>
-              )}
+              <div className="flex gap-3">
+                {movie.imdb_id && (
+                  <button
+                    onClick={handleWatchMovie}
+                    disabled={isChecking}
+                    className="flex-1 flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white px-4 py-3 rounded-xl transition-colors font-bold text-sm shadow-lg shadow-amber-900/20"
+                  >
+                    {isChecking ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Play className="w-4 h-4 fill-current" />
+                    )}
+                    {t("movie.watchMovie")}
+                  </button>
+                )}
+                {movie.trailer_key && (
+                  <button
+                    onClick={() => {
+                      setShowTrailer(!showTrailer);
+                      setShowPlayer(false);
+                      setSourceError(false);
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl transition-colors font-bold text-sm shadow-lg shadow-red-900/20"
+                  >
+                    <Play className="w-4 h-4 fill-current" />
+                    {t("movie.watchTrailer")}
+                  </button>
+                )}
+              </div>
               <ShareButton movie={movie} />
             </div>
           </div>
         </div>
+
+        {/* Trailer/Player Section - NOW BELOW THE CARD */}
+        <AnimatePresence>
+          {(showTrailer || showPlayer || isChecking || sourceError) && (
+            <motion.div
+              ref={playerRef}
+              initial={{ height: 0, opacity: 0, marginTop: 0 }}
+              animate={{ height: "auto", opacity: 1, marginTop: 24 }}
+              exit={{ height: 0, opacity: 0, marginTop: 0 }}
+              className="overflow-hidden bg-black rounded-2xl shadow-2xl border border-border"
+            >
+              <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+                {isChecking ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-card">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <p className="text-sm font-medium animate-pulse">{t("errors.checking")}</p>
+                  </div>
+                ) : sourceError ? (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-card p-6 text-center">
+                    <AlertCircle className="w-10 h-10 text-red-500" />
+                    <p className="text-lg font-bold text-red-500">{t("errors.noSource")}</p>
+                    <button 
+                      onClick={() => setSourceError(false)}
+                      className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4"
+                    >
+                      {t("menu.close")}
+                    </button>
+                  </div>
+                ) : showTrailer ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1`}
+                    title="Trailer"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full"
+                  />
+                ) : showPlayer ? (
+                  <iframe
+                    src={currentPlayUrl!}
+                    title="Movie Player"
+                    allow="autoplay; encrypted-media"
+                    allowFullScreen
+                    sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts"
+                    className="absolute inset-0 w-full h-full"
+                  />
+                ) : null}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
     </AnimatePresence>
   );

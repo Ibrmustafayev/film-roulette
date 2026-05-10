@@ -101,7 +101,7 @@ export const getMovieDetails = async (movieId: number, language = 'en-US'): Prom
     fetchFromTMDB(`/movie/${movieId}/videos`, { language }),
   ]);
 
-  const cast = (credits.cast || []).slice(0, 6).map((c: any) => ({
+  const cast = (credits.cast || []).slice(0, 6).map((c: { id: number; name: string; character: string; profile_path: string | null }) => ({
     id: c.id,
     name: c.name,
     character: c.character,
@@ -109,7 +109,7 @@ export const getMovieDetails = async (movieId: number, language = 'en-US'): Prom
   }));
 
   const trailer = (videos.results || []).find(
-    (v: any) => v.type === 'Trailer' && v.site === 'YouTube'
+    (v: { type: string; site: string; key: string }) => v.type === 'Trailer' && v.site === 'YouTube'
   );
 
   return {

@@ -30,7 +30,9 @@
     "noOverview": "Bu film üçün hələ xülasə mövcud deyil.",
     "votes": "səs",
     "unknown": "Bilinmir",
-    "runtime": "{h}s {m}dq"
+    "runtime": "{h}s {m}dq",
+    "changeSource": "Serveri Dəyiş",
+    "server": "Server"
   },
   "share": {
     "copyLink": "Linki Kopyala",
@@ -41,7 +43,9 @@
   },
   "errors": {
     "notFound": "Bu filtrlərə uyğun film tapılmadı.",
-    "generic": "Film gətirilərkən xəta baş verdi."
+    "generic": "Film gətirilərkən xəta baş verdi.",
+    "noSource": "Bu film üçün aktiv mənbə tapılmadı.",
+    "checking": "Mövcud serverlər yoxlanılır..."
   },
   "theme": {
     "toggle": "Temanı Dəyiş"
@@ -52,6 +56,25 @@
   "rating": {
     "tmdb": "TMDB",
     "imdb": "IMDb"
+  },
+  "menu": {
+    "open": "Menyu",
+    "close": "Menyunu Bağla",
+    "random": "Təsadüfi Film",
+    "history": "Tarixçə",
+    "favourites": "Sevimlilər"
+  },
+  "history": {
+    "title": "Tarixçə",
+    "subtitle": "Son 30 təsadüfi kəşfiniz",
+    "empty": "Hələ tarixçə yoxdur. Film kəşf etmək üçün zərləri at!"
+  },
+  "favourites": {
+    "title": "Sevimlilər",
+    "subtitle": "Saxladığınız filmlər",
+    "empty": "Hələ sevimli yoxdur. Ürək ikonuna klikləyərək film əlavə edin!",
+    "add": "Sevimlilərə əlavə et",
+    "remove": "Sevimlilərdən çıxar"
   },
   "genres": {
     "28": "Aksiyon",

@@ -20,13 +20,13 @@ export function getTranslations(locale: Locale) {
 
   function t(key: string, vars?: Record<string, string | number>): string {
     const keys = key.split(".");
-    let value: any = dict; // Nested object access still requires some flexibility
+    let value: unknown = dict; // Nested object access still requires some flexibility
     for (const k of keys) {
-      value = (value as Record<string, any>)?.[k];
+      value = (value as Record<string, unknown>)?.[k];
       if (value === undefined) {
         // Fallback to English
-        let fb: any = translations[DEFAULT_LOCALE];
-        for (const fk of keys) fb = (fb as Record<string, any>)?.[fk];
+        let fb: unknown = translations[DEFAULT_LOCALE];
+        for (const fk of keys) fb = (fb as Record<string, unknown>)?.[fk];
         value = fb ?? key;
         break;
       }

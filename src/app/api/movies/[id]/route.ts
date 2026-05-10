@@ -30,7 +30,7 @@ export async function GET(
     const creditsData = await creditsRes.json();
     const videosData = await videosRes.json();
 
-    const cast = (creditsData.cast || []).slice(0, 6).map((c: any) => ({
+    const cast = (creditsData.cast || []).slice(0, 6).map((c: { id: number; name: string; character: string; profile_path: string | null }) => ({
       id: c.id,
       name: c.name,
       character: c.character,
@@ -38,7 +38,7 @@ export async function GET(
     }));
 
     const trailer = (videosData.results || []).find(
-      (v: any) => v.type === 'Trailer' && v.site === 'YouTube'
+      (v: { type: string; site: string; key: string }) => v.type === 'Trailer' && v.site === 'YouTube'
     );
 
     return NextResponse.json({

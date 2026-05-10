@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import { Search as SearchIcon, X, Loader2 } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
@@ -12,7 +13,7 @@ export function SearchBar() {
   const [results, setResults] = useState<Movie[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { locale, setMovie, setIsLoading } = useStore();
+  const { locale, setMovie, setIsLoading, setActiveView, setMenuOpen } = useStore();
   const t = getTranslations(locale);
   const searchRef = useRef<HTMLDivElement>(null);
 
@@ -55,6 +56,8 @@ export function SearchBar() {
     setResults([]);
     setIsOpen(false);
     setIsLoading(true);
+    setActiveView("random");
+    setMenuOpen(false);
     try {
       const details = await getMovieDetails(movie.id);
       setMovie({ ...movie, ...details });
@@ -111,12 +114,14 @@ export function SearchBar() {
                     onClick={() => handleSelect(movie)}
                     className="w-full flex gap-3 p-2 hover:bg-muted rounded-xl transition-colors text-left group"
                   >
-                    <div className="w-12 h-16 shrink-0 rounded-lg overflow-hidden bg-muted border border-border">
+                    <div className="w-12 h-16 shrink-0 rounded-lg overflow-hidden bg-muted border border-border relative">
                       {movie.poster_path ? (
-                        <img
+                        <Image
                           src={getImageUrl(movie.poster_path, "w185")!}
                           alt={movie.title}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="48px"
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
