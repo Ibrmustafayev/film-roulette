@@ -31,6 +31,7 @@ interface AppState {
   // Player state (for resume)
   showPlayer: boolean;
   showTrailer: boolean;
+  watchProgress: Record<number, number>; // Movie ID -> Time in seconds
 
   // Actions
   setGenre: (g: string) => void;
@@ -48,6 +49,7 @@ interface AppState {
   isFavourite: (movieId: number) => boolean;
   setShowPlayer: (s: boolean) => void;
   setShowTrailer: (s: boolean) => void;
+  setWatchProgress: (movieId: number, time: number) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -67,6 +69,7 @@ export const useStore = create<AppState>()(
       favourites: [],
       showPlayer: false,
       showTrailer: false,
+      watchProgress: {},
 
       setGenre: (genre) => set({ genre }),
       setYearFrom: (yearFrom) => set({ yearFrom }),
@@ -85,6 +88,10 @@ export const useStore = create<AppState>()(
       setMenuOpen: (isMenuOpen) => set({ isMenuOpen }),
       setShowPlayer: (showPlayer) => set({ showPlayer, showTrailer: false }),
       setShowTrailer: (showTrailer) => set({ showTrailer, showPlayer: false }),
+      setWatchProgress: (movieId, time) => 
+        set((state) => ({
+          watchProgress: { ...state.watchProgress, [movieId]: time }
+        })),
 
       addToHistory: (movie) =>
         set((state) => {
@@ -105,11 +112,12 @@ export const useStore = create<AppState>()(
       isFavourite: (movieId) => get().favourites.some((m) => m.id === movieId),
     }),
     {
-      name: "film-roulette-prefs",
+      name: "film-roulette-v2",
       partialize: (state) => ({
         locale: state.locale,
         history: state.history,
         favourites: state.favourites,
+        watchProgress: state.watchProgress,
       }),
     }
   )

@@ -17,11 +17,16 @@ const SOURCES = [
 ];
 
 export function MovieCard() {
-  const { movie, isLoading, locale, toggleFavourite, isFavourite, showPlayer, setShowPlayer, showTrailer, setShowTrailer } = useStore();
+  const { 
+    movie, isLoading, locale, toggleFavourite, isFavourite, 
+    showPlayer, setShowPlayer, showTrailer, setShowTrailer,
+    watchProgress, setWatchProgress
+  } = useStore();
   const [selectedSource, setSelectedSource] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
   const [sourceError, setSourceError] = useState(false);
   const [favAnim, setFavAnim] = useState(false);
+  const [lastTime, setLastTime] = useState<number | null>(null);
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
 
@@ -36,12 +41,50 @@ export function MovieCard() {
     }
   }, [showTrailer, showPlayer, isChecking, sourceError]);
 
-  // Reset sources and errors when a new movie is loaded (player states are now handled by store)
+  // Reset sources and errors when a new movie is loaded
   useEffect(() => {
     setSelectedSource(0);
     setIsChecking(false);
     setSourceError(false);
-  }, [movie?.id]);
+    setLastTime(movie ? watchProgress[movie.id] || null : null);
+  }, [movie?.id, watchProgress]);
+
+  // Listen for progress from player (vidsrc support)
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Security: we should ideally check event.origin, but these embeds use various subdomains
+      try {
+        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        
+        // vidsrc specific progress event
+        if (data.type === 'MEDIA_DATA' && data.progress && movie) {
+          const currentTime = Math.floor(data.progress.time);
+          if (currentTime > 0) {
+            setWatchProgress(movie.id, currentTime);
+          }
+        }
+      } catch (e) {
+        // Not JSON or irrelevant message
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [movie, setWatchProgress]);
+
+  // Attempt to seek when iframe loads
+  const handleIframeLoad = (e: React.SyntheticEvent<HTMLIFrameElement>) => {
+    if (movie && watchProgress[movie.id]) {
+      const time = watchProgress[movie.id];
+      const iframe = e.currentTarget;
+      // Many embed providers listen for this to seek
+      setTimeout(() => {
+        iframe.contentWindow?.postMessage({ type: 'seek', time: time }, '*');
+        iframe.contentWindow?.postMessage({ command: 'seek', time: time }, '*');
+        iframe.contentWindow?.postMessage(JSON.stringify({ type: 'seek', time: time }), '*');
+      }, 2000); // Give it time to initialize
+    }
+  };
 
   if (isLoading || !movie) return null;
 
@@ -345,6 +388,7 @@ export function MovieCard() {
                   <iframe
                     src={currentPlayUrl!}
                     title="Movie Player"
+                    onLoad={handleIframeLoad}
                     allow="autoplay; encrypted-media"
                     allowFullScreen
                     sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts"
@@ -352,6 +396,14 @@ export function MovieCard() {
                   />
                 ) : null}
               </div>
+              {lastTime && lastTime > 10 && (
+                <div className="px-4 py-2 bg-muted/30 border-t border-border flex items-center justify-between text-[10px]">
+                  <span className="text-muted-foreground">
+                    Last watched at: {Math.floor(lastTime / 60)}:{(lastTime % 60).toString().padStart(2, '0')}
+                  </span>
+                  <span className="text-primary/70 animate-pulse font-medium">Resuming...</span>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
