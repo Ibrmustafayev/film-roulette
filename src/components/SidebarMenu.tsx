@@ -87,15 +87,6 @@ export function SidebarMenu() {
                       />
                     </div>
                     <span className="flex-1">{t(`menu.${key}`)}</span>
-                    {counts[key] > 0 && (
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${
-                        isActive 
-                          ? "bg-primary/20 text-primary" 
-                          : "bg-muted text-muted-foreground"
-                      }`}>
-                        {counts[key]}
-                      </span>
-                    )}
                   </button>
                 );
               })}
