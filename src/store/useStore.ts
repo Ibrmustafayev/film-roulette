@@ -110,7 +110,6 @@ export const useStore = create<AppState>()(
         locale: state.locale,
         history: state.history,
         favourites: state.favourites,
-        movie: state.movie,
       }),
     }
   )
