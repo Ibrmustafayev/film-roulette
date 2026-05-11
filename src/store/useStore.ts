@@ -28,6 +28,10 @@ interface AppState {
   history: Movie[];
   favourites: Movie[];
 
+  // Player state (for resume)
+  showPlayer: boolean;
+  showTrailer: boolean;
+
   // Actions
   setGenre: (g: string) => void;
   setYearFrom: (y: string) => void;
@@ -42,6 +46,8 @@ interface AppState {
   addToHistory: (movie: Movie) => void;
   toggleFavourite: (movie: Movie) => void;
   isFavourite: (movieId: number) => boolean;
+  setShowPlayer: (s: boolean) => void;
+  setShowTrailer: (s: boolean) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -59,6 +65,8 @@ export const useStore = create<AppState>()(
       isMenuOpen: false,
       history: [],
       favourites: [],
+      showPlayer: false,
+      showTrailer: false,
 
       setGenre: (genre) => set({ genre }),
       setYearFrom: (yearFrom) => set({ yearFrom }),
@@ -66,7 +74,7 @@ export const useStore = create<AppState>()(
       setOriginalLanguage: (originalLanguage) => set({ originalLanguage }),
       setImdbRange: (imdbRange) => set({ imdbRange }),
       setMovie: (movie) => {
-        set({ movie });
+        set({ movie, showPlayer: false, showTrailer: false });
         if (movie) {
           get().addToHistory(movie);
         }
@@ -75,6 +83,8 @@ export const useStore = create<AppState>()(
       setLocale: (locale) => set({ locale }),
       setActiveView: (activeView) => set({ activeView, isMenuOpen: false }),
       setMenuOpen: (isMenuOpen) => set({ isMenuOpen }),
+      setShowPlayer: (showPlayer) => set({ showPlayer, showTrailer: false }),
+      setShowTrailer: (showTrailer) => set({ showTrailer, showPlayer: false }),
 
       addToHistory: (movie) =>
         set((state) => {
@@ -100,6 +110,9 @@ export const useStore = create<AppState>()(
         locale: state.locale,
         history: state.history,
         favourites: state.favourites,
+        movie: state.movie,
+        showPlayer: state.showPlayer,
+        showTrailer: state.showTrailer,
       }),
     }
   )

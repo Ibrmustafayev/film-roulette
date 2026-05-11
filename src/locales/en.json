@@ -58,6 +58,7 @@
     "imdb": "IMDb"
   },
   "menu": {
+    "title": "MENU",
     "open": "Menu",
     "close": "Close Menu",
     "random": "Random Film",

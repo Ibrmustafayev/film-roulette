@@ -45,10 +45,13 @@ export function Header() {
           {/* Menu Button */}
           <button
             onClick={() => setMenuOpen(true)}
-            className="p-2 hover:bg-muted rounded-xl transition-colors border border-border/50"
+            className="flex items-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all border border-primary/20 shadow-sm shadow-primary/5 group"
             aria-label={t("menu.open")}
           >
-            <Menu className="w-5 h-5" />
+            <span className="text-xs font-bold tracking-wider uppercase hidden sm:inline-block">
+              {t("menu.title") || "MENU"}
+            </span>
+            <Menu className="w-5 h-5 group-hover:scale-110 transition-transform" />
           </button>
         </div>
       </div>

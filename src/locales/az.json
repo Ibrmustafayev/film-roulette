@@ -58,6 +58,7 @@
     "imdb": "IMDb"
   },
   "menu": {
+    "title": "MENYU",
     "open": "Menyu",
     "close": "Menyunu Bağla",
     "random": "Təsadüfi Film",

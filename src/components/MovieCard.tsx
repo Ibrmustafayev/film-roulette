@@ -17,9 +17,7 @@ const SOURCES = [
 ];
 
 export function MovieCard() {
-  const { movie, isLoading, locale, toggleFavourite, isFavourite } = useStore();
-  const [showTrailer, setShowTrailer] = useState(false);
-  const [showPlayer, setShowPlayer] = useState(false);
+  const { movie, isLoading, locale, toggleFavourite, isFavourite, showPlayer, setShowPlayer, showTrailer, setShowTrailer } = useStore();
   const [selectedSource, setSelectedSource] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
   const [sourceError, setSourceError] = useState(false);
@@ -38,17 +36,10 @@ export function MovieCard() {
     }
   }, [showTrailer, showPlayer, isChecking, sourceError]);
 
-  // Reset states when a new movie is loaded
+  // Reset sources and errors when a new movie is loaded (player states are now handled by store)
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setShowTrailer(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setShowPlayer(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedSource(0);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsChecking(false);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSourceError(false);
   }, [movie?.id]);
 
@@ -302,8 +293,6 @@ export function MovieCard() {
                   <button
                     onClick={() => {
                       setShowTrailer(!showTrailer);
-                      setShowPlayer(false);
-                      setSourceError(false);
                     }}
                     className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl transition-colors font-bold text-sm shadow-lg shadow-red-900/20"
                   >
