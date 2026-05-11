@@ -111,8 +111,6 @@ export const useStore = create<AppState>()(
         history: state.history,
         favourites: state.favourites,
         movie: state.movie,
-        showPlayer: state.showPlayer,
-        showTrailer: state.showTrailer,
       }),
     }
   )
