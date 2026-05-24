@@ -7,6 +7,8 @@ import { MovieCard } from "@/components/MovieCard";
 import { SidebarMenu } from "@/components/SidebarMenu";
 import { HistoryView } from "@/components/HistoryView";
 import { FavouritesView } from "@/components/FavouritesView";
+import { MobileAppView } from "@/components/MobileAppView";
+import { HelpView } from "@/components/HelpView";
 
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
@@ -71,6 +73,8 @@ export function HomeContent({ genres }: { genres: Genre[] }) {
 
         {activeView === "history" && <HistoryView />}
         {activeView === "favourites" && <FavouritesView />}
+        {activeView === "mobileapp" && <MobileAppView />}
+        {activeView === "help" && <HelpView />}
       </main>
 
       <footer className="py-8 text-center text-sm text-muted-foreground border-t border-border/40 mt-auto">

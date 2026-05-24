@@ -2,13 +2,15 @@
 
 import { useStore } from "@/store/useStore";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Dice5, Clock, Heart } from "lucide-react";
+import { X, Dice5, Clock, Heart, Smartphone, HelpCircle } from "lucide-react";
 import { getTranslations } from "@/lib/i18n";
 
 const menuItems = [
   { key: "random" as const, icon: Dice5 },
   { key: "history" as const, icon: Clock },
   { key: "favourites" as const, icon: Heart },
+  { key: "mobileapp" as const, icon: Smartphone },
+  { key: "help" as const, icon: HelpCircle },
 ] as const;
 
 export function SidebarMenu() {

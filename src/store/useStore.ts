@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 import { Movie } from "@/lib/tmdb";
 import { Locale, DEFAULT_LOCALE } from "@/lib/i18n";
 
-type ActiveView = "random" | "history" | "favourites";
+type ActiveView = "random" | "history" | "favourites" | "mobileapp" | "help";
 
 const MAX_HISTORY = 30;
 
