@@ -10,10 +10,10 @@ import { getTranslations } from "@/lib/i18n";
 import { useEffect, useRef, useState } from "react";
 
 const SOURCES = [
-  { name: "Server 1", url: (imdbId: string, tmdbId: number) => `https://www.playimdb.com/title/${imdbId}/` },
-  { name: "Server 2", url: (imdbId: string, tmdbId: number) => `https://vidsrc.to/embed/movie/${tmdbId}` },
-  { name: "Server 3", url: (imdbId: string, tmdbId: number) => `https://vidsrc.me/embed/movie?imdb=${imdbId}` },
-  { name: "Server 4", url: (imdbId: string, tmdbId: number) => `https://embed.su/embed/movie/${tmdbId}` },
+  { name: "Server 1", url: (_imdbId: string, tmdbId: number) => `https://vidlink.pro/movie/${tmdbId}?primaryColor=d97706&secondaryColor=b45309&icons=vid` },
+  { name: "Server 2", url: (_imdbId: string, tmdbId: number) => `https://vidsrc.su/embed/movie/${tmdbId}` },
+  { name: "Server 3", url: (_imdbId: string, tmdbId: number) => `https://www.2embed.cc/embed/${tmdbId}` },
+  { name: "Server 4", url: (imdbId: string, _tmdbId: number) => `https://multiembed.mov/?video_id=${imdbId}&tmdb=1` },
 ];
 
 export function MovieCard() {
@@ -25,10 +25,13 @@ export function MovieCard() {
   const [selectedSource, setSelectedSource] = useState(0);
   const [isChecking, setIsChecking] = useState(false);
   const [sourceError, setSourceError] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(false);
+  const [iframeSlow, setIframeSlow] = useState(false);
   const [favAnim, setFavAnim] = useState(false);
   const [lastTime, setLastTime] = useState<number | null>(null);
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
+  const iframeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isFav = movie ? isFavourite(movie.id) : false;
 
@@ -46,8 +49,24 @@ export function MovieCard() {
     setSelectedSource(0);
     setIsChecking(false);
     setSourceError(false);
+    setIframeLoading(false);
+    setIframeSlow(false);
     setLastTime(movie ? watchProgress[movie.id] || null : null);
   }, [movie?.id, watchProgress]);
+
+  // When source changes, reset slow-load warning
+  useEffect(() => {
+    if (iframeTimeoutRef.current) clearTimeout(iframeTimeoutRef.current);
+    setIframeSlow(false);
+    if (showPlayer) {
+      setIframeLoading(true);
+      // Show "try next server" hint after 10 seconds of loading
+      iframeTimeoutRef.current = setTimeout(() => setIframeSlow(true), 10000);
+    }
+    return () => {
+      if (iframeTimeoutRef.current) clearTimeout(iframeTimeoutRef.current);
+    };
+  }, [selectedSource, showPlayer]);
 
   // Listen for progress from player (vidsrc support)
   useEffect(() => {
@@ -72,18 +91,27 @@ export function MovieCard() {
     return () => window.removeEventListener('message', handleMessage);
   }, [movie, setWatchProgress]);
 
-  // Attempt to seek when iframe loads
   const handleIframeLoad = (e: React.SyntheticEvent<HTMLIFrameElement>) => {
+    // Clear the slow-load timeout — it loaded
+    if (iframeTimeoutRef.current) clearTimeout(iframeTimeoutRef.current);
+    setIframeLoading(false);
+    setIframeSlow(false);
+
     if (movie && watchProgress[movie.id]) {
       const time = watchProgress[movie.id];
       const iframe = e.currentTarget;
-      // Many embed providers listen for this to seek
       setTimeout(() => {
         iframe.contentWindow?.postMessage({ type: 'seek', time: time }, '*');
         iframe.contentWindow?.postMessage({ command: 'seek', time: time }, '*');
         iframe.contentWindow?.postMessage(JSON.stringify({ type: 'seek', time: time }), '*');
-      }, 2000); // Give it time to initialize
+      }, 2000);
     }
+  };
+
+  const handleTryNextSource = () => {
+    const next = (selectedSource + 1) % SOURCES.length;
+    setSelectedSource(next);
+    setIframeSlow(false);
   };
 
   if (isLoading || !movie) return null;
@@ -115,7 +143,7 @@ export function MovieCard() {
     setTimeout(() => setFavAnim(false), 600);
   };
 
-  const handleWatchMovie = async () => {
+  const handleWatchMovie = () => {
     if (showPlayer) {
       setShowPlayer(false);
       return;
@@ -129,26 +157,7 @@ export function MovieCard() {
       return;
     }
 
-    setIsChecking(true);
-
-    for (let i = 0; i < SOURCES.length; i++) {
-      const url = SOURCES[i].url(movie.imdb_id, movie.id);
-      try {
-        const res = await fetch(`/api/check-source?url=${encodeURIComponent(url)}`);
-        const data = await res.json();
-        if (data.ok) {
-          setSelectedSource(i);
-          setShowPlayer(true);
-          setIsChecking(false);
-          return;
-        }
-      } catch (err) {
-        console.error("Source check failed:", err);
-      }
-    }
-
-    setIsChecking(false);
-    setSourceError(true);
+    setShowPlayer(true);
   };
 
   return (
@@ -385,19 +394,77 @@ export function MovieCard() {
                     className="absolute inset-0 w-full h-full"
                   />
                 ) : showPlayer ? (
-                  <iframe
-                    src={currentPlayUrl!}
-                    title="Movie Player"
-                    onLoad={handleIframeLoad}
-                    allow="autoplay; encrypted-media"
-                    allowFullScreen
-                    sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts"
-                    className="absolute inset-0 w-full h-full"
-                  />
+                  <>
+                    <iframe
+                      key={`${movie.id}-${selectedSource}`}
+                      src={currentPlayUrl!}
+                      title="Movie Player"
+                      onLoad={handleIframeLoad}
+                      allow="autoplay; encrypted-media; fullscreen"
+                      allowFullScreen
+                      sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-popups"
+                      className="absolute inset-0 w-full h-full"
+                    />
+                    {/* Initial loading overlay — disappears once iframe fires onLoad */}
+                    {iframeLoading && !iframeSlow && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 backdrop-blur-sm pointer-events-none">
+                        <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+                        <p className="text-xs text-white/60 font-medium">Loading {SOURCES[selectedSource].name}...</p>
+                      </div>
+                    )}
+                    {/* Slow-load overlay: shown after 10s without a load event */}
+                    {iframeSlow && (
+                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 bg-black/80 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-3 shadow-xl">
+                        <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+                        <p className="text-xs text-white/80 whitespace-nowrap">This server seems slow.</p>
+                        <button
+                          onClick={handleTryNextSource}
+                          className="text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors whitespace-nowrap underline underline-offset-2"
+                        >
+                          Try Next Server →
+                        </button>
+                      </div>
+                    )}
+                  </>
                 ) : null}
               </div>
+              {showPlayer && (
+                <div className="px-5 py-4 bg-muted/20 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
+                      <Globe className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">
+                        {t("movie.changeSource")}
+                      </p>
+                      <p className="text-xs text-muted-foreground/80 mt-0.5">
+                        {selectedSource === 0 ? "Server 1 (Default)" : `Server ${selectedSource + 1}`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                    {SOURCES.map((src, index) => {
+                      const isActive = selectedSource === index;
+                      return (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedSource(index)}
+                          className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
+                            isActive
+                              ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-[1.02]"
+                              : "bg-muted/40 hover:bg-muted/65 text-muted-foreground hover:text-foreground border-border/40"
+                          }`}
+                        >
+                          {src.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               {lastTime && lastTime > 10 && (
-                <div className="px-4 py-2 bg-muted/30 border-t border-border flex items-center justify-between text-[10px]">
+                <div className="px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between text-[11px]">
                   <span className="text-muted-foreground">
                     Last watched at: {Math.floor(lastTime / 60)}:{(lastTime % 60).toString().padStart(2, '0')}
                   </span>
