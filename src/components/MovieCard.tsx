@@ -3,162 +3,181 @@
 import Image from "next/image";
 import { useStore } from "@/store/useStore";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Calendar, Clock, Play, Globe, User, ExternalLink, Heart, Loader2, AlertCircle } from "lucide-react";
+import { Star, Calendar, Clock, Play, Globe, User, ExternalLink, Heart, Loader2, AlertCircle, Wifi } from "lucide-react";
 import { getImageUrl } from "@/lib/tmdb";
 import { ShareButton } from "./ShareButton";
 import { getTranslations } from "@/lib/i18n";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
+// All servers ordered by reliability. No sandbox attribute — embed providers reject it.
 const SOURCES = [
-  { name: "Server 1", url: (_imdbId: string, tmdbId: number) => `https://vidlink.pro/movie/${tmdbId}?primaryColor=d97706&secondaryColor=b45309&icons=vid` },
-  { name: "Server 2", url: (_imdbId: string, tmdbId: number) => `https://vidsrc.su/embed/movie/${tmdbId}` },
-  { name: "Server 3", url: (_imdbId: string, tmdbId: number) => `https://www.2embed.cc/embed/${tmdbId}` },
-  { name: "Server 4", url: (imdbId: string, _tmdbId: number) => `https://multiembed.mov/?video_id=${imdbId}&tmdb=1` },
+  { name: "VidLink",     url: (_imdbId: string, tmdbId: number) => `https://vidlink.pro/movie/${tmdbId}?primaryColor=d97706&secondaryColor=b45309&icons=vid&autoplay=true` },
+  { name: "VidSrc",      url: (_imdbId: string, tmdbId: number) => `https://vidsrc.su/embed/movie/${tmdbId}` },
+  { name: "2Embed",      url: (_imdbId: string, tmdbId: number) => `https://www.2embed.cc/embed/${tmdbId}` },
+  { name: "MultiEmbed",  url: (imdbId: string, _tmdbId: number) => `https://multiembed.mov/?video_id=${imdbId}&tmdb=1` },
 ];
 
+type PlayerState =
+  | { phase: "idle" }
+  | { phase: "searching"; tried: number }
+  | { phase: "playing"; sourceIndex: number }
+  | { phase: "error" };
+
 export function MovieCard() {
-  const { 
-    movie, isLoading, locale, toggleFavourite, isFavourite, 
+  const {
+    movie, isLoading, locale, toggleFavourite, isFavourite,
     showPlayer, setShowPlayer, showTrailer, setShowTrailer,
-    watchProgress, setWatchProgress
+    watchProgress, setWatchProgress,
   } = useStore();
-  const [selectedSource, setSelectedSource] = useState(0);
-  const [isChecking, setIsChecking] = useState(false);
-  const [sourceError, setSourceError] = useState(false);
-  const [iframeLoading, setIframeLoading] = useState(false);
-  const [iframeSlow, setIframeSlow] = useState(false);
+
+  const [playerState, setPlayerState] = useState<PlayerState>({ phase: "idle" });
   const [favAnim, setFavAnim] = useState(false);
   const [lastTime, setLastTime] = useState<number | null>(null);
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
-  const iframeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const autoAdvanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const abortRef = useRef(false);
 
   const isFav = movie ? isFavourite(movie.id) : false;
 
-  // Scroll to player when trailer or movie starts
+  // Clear timers on unmount
   useEffect(() => {
-    if ((showTrailer || showPlayer || isChecking || sourceError) && playerRef.current) {
+    return () => {
+      if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
+      abortRef.current = true;
+    };
+  }, []);
+
+  // Reset everything when movie changes
+  useEffect(() => {
+    abortRef.current = true;
+    if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
+    setPlayerState({ phase: "idle" });
+    setLastTime(movie ? watchProgress[movie.id] || null : null);
+    // Allow new searches after reset
+    setTimeout(() => { abortRef.current = false; }, 50);
+  }, [movie?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Scroll to player when it opens
+  useEffect(() => {
+    if ((showTrailer || playerState.phase !== "idle") && playerRef.current) {
       setTimeout(() => {
         playerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
     }
-  }, [showTrailer, showPlayer, isChecking, sourceError]);
+  }, [showTrailer, playerState.phase]);
 
-  // Reset sources and errors when a new movie is loaded
-  useEffect(() => {
-    setSelectedSource(0);
-    setIsChecking(false);
-    setSourceError(false);
-    setIframeLoading(false);
-    setIframeSlow(false);
-    setLastTime(movie ? watchProgress[movie.id] || null : null);
-  }, [movie?.id, watchProgress]);
-
-  // When source changes, reset slow-load warning
-  useEffect(() => {
-    if (iframeTimeoutRef.current) clearTimeout(iframeTimeoutRef.current);
-    setIframeSlow(false);
-    if (showPlayer) {
-      setIframeLoading(true);
-      // Show "try next server" hint after 10 seconds of loading
-      iframeTimeoutRef.current = setTimeout(() => setIframeSlow(true), 10000);
-    }
-    return () => {
-      if (iframeTimeoutRef.current) clearTimeout(iframeTimeoutRef.current);
-    };
-  }, [selectedSource, showPlayer]);
-
-  // Listen for progress from player (vidsrc support)
+  // Listen for postMessage progress events from embed providers
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Security: we should ideally check event.origin, but these embeds use various subdomains
       try {
-        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        
-        // vidsrc specific progress event
-        if (data.type === 'MEDIA_DATA' && data.progress && movie) {
+        const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+        if (data.type === "MEDIA_DATA" && data.progress && movie) {
           const currentTime = Math.floor(data.progress.time);
-          if (currentTime > 0) {
-            setWatchProgress(movie.id, currentTime);
-          }
+          if (currentTime > 0) setWatchProgress(movie.id, currentTime);
         }
-      } catch (e) {
-        // Not JSON or irrelevant message
+      } catch {
+        // ignore non-JSON messages
       }
     };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
   }, [movie, setWatchProgress]);
 
+  // ─── Auto-failover engine ──────────────────────────────────────────────────
+  // Probes each source via the backend check-source API and loads the first
+  // that responds ok. Falls back to trying them all sequentially if backend
+  // checks all fail (since HEAD requests are often blocked by embed providers).
+  const startAutoSearch = useCallback(async (imdbId: string, tmdbId: number) => {
+    abortRef.current = false;
+    setPlayerState({ phase: "searching", tried: 0 });
+
+    // Build all URLs upfront
+    const urls = SOURCES.map(s => s.url(imdbId, tmdbId));
+
+    // Probe all sources in parallel via our backend (avoids CORS issues)
+    const probeResults = await Promise.allSettled(
+      urls.map((url) =>
+        fetch(`/api/check-source?url=${encodeURIComponent(url)}`)
+          .then(r => r.json())
+          .then(data => ({ url, ok: !!data.ok }))
+          .catch(() => ({ url, ok: false }))
+      )
+    );
+
+    if (abortRef.current) return;
+
+    // Find the first server that passed the backend check
+    const passing = probeResults.findIndex(
+      r => r.status === "fulfilled" && r.value.ok
+    );
+
+    if (passing !== -1) {
+      setPlayerState({ phase: "playing", sourceIndex: passing });
+      return;
+    }
+
+    // If all backend checks failed (HEAD requests often blocked),
+    // just try server 0 directly — vidlink.pro is the most reliable
+    setPlayerState({ phase: "playing", sourceIndex: 0 });
+  }, []);
+
+  const handleWatchMovie = () => {
+    if (playerState.phase !== "idle") {
+      // Toggle player off
+      setShowPlayer(false);
+      setPlayerState({ phase: "idle" });
+      if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
+      return;
+    }
+
+    setShowTrailer(false);
+
+    if (!movie?.imdb_id) {
+      setPlayerState({ phase: "error" });
+      return;
+    }
+
+    setShowPlayer(true);
+    startAutoSearch(movie.imdb_id, movie.id);
+  };
+
+  // When iframe loads, send seek position if user was watching before
   const handleIframeLoad = (e: React.SyntheticEvent<HTMLIFrameElement>) => {
-    // Clear the slow-load timeout — it loaded
-    if (iframeTimeoutRef.current) clearTimeout(iframeTimeoutRef.current);
-    setIframeLoading(false);
-    setIframeSlow(false);
+    if (autoAdvanceTimerRef.current) clearTimeout(autoAdvanceTimerRef.current);
 
     if (movie && watchProgress[movie.id]) {
       const time = watchProgress[movie.id];
       const iframe = e.currentTarget;
       setTimeout(() => {
-        iframe.contentWindow?.postMessage({ type: 'seek', time: time }, '*');
-        iframe.contentWindow?.postMessage({ command: 'seek', time: time }, '*');
-        iframe.contentWindow?.postMessage(JSON.stringify({ type: 'seek', time: time }), '*');
+        iframe.contentWindow?.postMessage({ type: "seek", time }, "*");
+        iframe.contentWindow?.postMessage({ command: "seek", time }, "*");
+        iframe.contentWindow?.postMessage(JSON.stringify({ type: "seek", time }), "*");
       }, 2000);
     }
   };
 
-  const handleTryNextSource = () => {
-    const next = (selectedSource + 1) % SOURCES.length;
-    setSelectedSource(next);
-    setIframeSlow(false);
-  };
-
-  if (isLoading || !movie) return null;
-
-  const posterUrl = getImageUrl(movie.poster_path, "w500");
-  const backdropUrl = getImageUrl(movie.backdrop_path, "w780");
-  const releaseYear = movie.release_date
-    ? movie.release_date.split("-")[0]
-    : t("movie.unknown");
-
-  const runtimeText = movie.runtime
-    ? t("movie.runtime", {
-        h: Math.floor(movie.runtime / 60),
-        m: movie.runtime % 60,
-      })
-    : null;
-
-  const imdbUrl = movie.imdb_id
-    ? `https://www.imdb.com/title/${movie.imdb_id}/`
-    : null;
-
-  const currentPlayUrl = movie.imdb_id
-    ? SOURCES[selectedSource].url(movie.imdb_id, movie.id)
-    : null;
-
   const handleToggleFavourite = () => {
+    if (!movie) return;
     toggleFavourite(movie);
     setFavAnim(true);
     setTimeout(() => setFavAnim(false), 600);
   };
 
-  const handleWatchMovie = () => {
-    if (showPlayer) {
-      setShowPlayer(false);
-      return;
-    }
-    
-    setShowTrailer(false);
-    setSourceError(false);
-    
-    if (!movie.imdb_id) {
-      setSourceError(true);
-      return;
-    }
+  if (isLoading || !movie) return null;
 
-    setShowPlayer(true);
-  };
+  const releaseYear = movie.release_date ? movie.release_date.split("-")[0] : t("movie.unknown");
+  const runtimeText = movie.runtime
+    ? t("movie.runtime", { h: Math.floor(movie.runtime / 60), m: movie.runtime % 60 })
+    : null;
+  const imdbUrl = movie.imdb_id ? `https://www.imdb.com/title/${movie.imdb_id}/` : null;
+
+  const currentSourceIndex = playerState.phase === "playing" ? playerState.sourceIndex : 0;
+  const currentPlayUrl = movie.imdb_id
+    ? SOURCES[currentSourceIndex].url(movie.imdb_id, movie.id)
+    : null;
+
+  const isPlayerOpen = playerState.phase !== "idle";
 
   return (
     <AnimatePresence mode="wait">
@@ -197,7 +216,6 @@ export function MovieCard() {
                     <h2 className="text-2xl md:text-3xl font-bold leading-tight truncate">
                       {movie.title}
                     </h2>
-                    {/* Favourite Button */}
                     <motion.button
                       onClick={handleToggleFavourite}
                       animate={favAnim ? { scale: [1, 1.3, 1] } : {}}
@@ -209,9 +227,7 @@ export function MovieCard() {
                       }`}
                       title={isFav ? t("favourites.remove") : t("favourites.add")}
                     >
-                      <Heart
-                        className={`w-5 h-5 transition-all ${isFav ? "fill-current" : ""}`}
-                      />
+                      <Heart className={`w-5 h-5 transition-all ${isFav ? "fill-current" : ""}`} />
                     </motion.button>
                   </div>
                   {movie.original_title !== movie.title && (
@@ -221,13 +237,11 @@ export function MovieCard() {
                   )}
                 </div>
                 <div className="flex flex-col gap-1.5 shrink-0">
-                  {/* TMDB Rating */}
                   <div className="flex items-center gap-1.5 bg-yellow-500/15 text-yellow-500 px-3 py-1.5 rounded-full font-bold text-sm">
                     <Star className="w-3.5 h-3.5 fill-current" />
                     <span>{movie.vote_average.toFixed(1)}</span>
                     <span className="text-[10px] opacity-70 font-normal">{t("rating.tmdb")}</span>
                   </div>
-                  {/* IMDB Link */}
                   {imdbUrl && (
                     <a
                       href={imdbUrl}
@@ -330,22 +344,23 @@ export function MovieCard() {
                 {movie.imdb_id && (
                   <button
                     onClick={handleWatchMovie}
-                    disabled={isChecking}
-                    className="flex-1 flex items-center justify-center gap-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-50 text-white px-4 py-3 rounded-xl transition-colors font-bold text-sm shadow-lg shadow-amber-900/20"
+                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all font-bold text-sm shadow-lg ${
+                      isPlayerOpen
+                        ? "bg-muted text-muted-foreground hover:bg-muted/80 shadow-none"
+                        : "bg-amber-600 hover:bg-amber-700 text-white shadow-amber-900/20"
+                    }`}
                   >
-                    {isChecking ? (
+                    {playerState.phase === "searching" ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <Play className="w-4 h-4 fill-current" />
                     )}
-                    {t("movie.watchMovie")}
+                    {isPlayerOpen ? t("menu.close") : t("movie.watchMovie")}
                   </button>
                 )}
                 {movie.trailer_key && (
                   <button
-                    onClick={() => {
-                      setShowTrailer(!showTrailer);
-                    }}
+                    onClick={() => setShowTrailer(!showTrailer)}
                     className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl transition-colors font-bold text-sm shadow-lg shadow-red-900/20"
                   >
                     <Play className="w-4 h-4 fill-current" />
@@ -358,9 +373,9 @@ export function MovieCard() {
           </div>
         </div>
 
-        {/* Trailer/Player Section - NOW BELOW THE CARD */}
+        {/* Player / Trailer section */}
         <AnimatePresence>
-          {(showTrailer || showPlayer || isChecking || sourceError) && (
+          {(showTrailer || isPlayerOpen) && (
             <motion.div
               ref={playerRef}
               initial={{ height: 0, opacity: 0, marginTop: 0 }}
@@ -369,106 +384,69 @@ export function MovieCard() {
               className="overflow-hidden bg-black rounded-2xl shadow-2xl border border-border"
             >
               <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-                {isChecking ? (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-card">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    <p className="text-sm font-medium animate-pulse">{t("errors.checking")}</p>
+
+                {/* ── Trailer ── */}
+                {showTrailer && (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1`}
+                    title="Trailer"
+                    allow="autoplay; encrypted-media; fullscreen"
+                    allowFullScreen
+                    className="absolute inset-0 w-full h-full"
+                  />
+                )}
+
+                {/* ── Searching for stream ── */}
+                {!showTrailer && playerState.phase === "searching" && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-[#0a0a0f]">
+                    <div className="relative flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full border-2 border-amber-500/20 animate-ping absolute" />
+                      <div className="w-12 h-12 rounded-full border-2 border-amber-500/40 animate-ping absolute" style={{ animationDelay: "0.3s" }} />
+                      <Wifi className="w-7 h-7 text-amber-400 relative z-10" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-white font-semibold text-sm">Finding best stream…</p>
+                      <p className="text-white/40 text-xs mt-1">Checking available servers</p>
+                    </div>
                   </div>
-                ) : sourceError ? (
+                )}
+
+                {/* ── No stream found ── */}
+                {!showTrailer && playerState.phase === "error" && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-card p-6 text-center">
                     <AlertCircle className="w-10 h-10 text-red-500" />
                     <p className="text-lg font-bold text-red-500">{t("errors.noSource")}</p>
-                    <button 
-                      onClick={() => setSourceError(false)}
+                    <button
+                      onClick={() => setPlayerState({ phase: "idle" })}
                       className="text-sm text-muted-foreground hover:text-foreground underline underline-offset-4"
                     >
                       {t("menu.close")}
                     </button>
                   </div>
-                ) : showTrailer ? (
+                )}
+
+                {/* ── Playing ── */}
+                {!showTrailer && playerState.phase === "playing" && currentPlayUrl && (
                   <iframe
-                    src={`https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1`}
-                    title="Trailer"
-                    allow="autoplay; encrypted-media"
+                    key={`${movie.id}-${currentSourceIndex}`}
+                    src={currentPlayUrl}
+                    title="Movie Player"
+                    onLoad={handleIframeLoad}
+                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen
+                    referrerPolicy="no-referrer"
                     className="absolute inset-0 w-full h-full"
                   />
-                ) : showPlayer ? (
-                  <>
-                    <iframe
-                      key={`${movie.id}-${selectedSource}`}
-                      src={currentPlayUrl!}
-                      title="Movie Player"
-                      onLoad={handleIframeLoad}
-                      allow="autoplay; encrypted-media; fullscreen"
-                      allowFullScreen
-                      sandbox="allow-forms allow-pointer-lock allow-same-origin allow-scripts allow-popups"
-                      className="absolute inset-0 w-full h-full"
-                    />
-                    {/* Initial loading overlay — disappears once iframe fires onLoad */}
-                    {iframeLoading && !iframeSlow && (
-                      <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/80 backdrop-blur-sm pointer-events-none">
-                        <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
-                        <p className="text-xs text-white/60 font-medium">Loading {SOURCES[selectedSource].name}...</p>
-                      </div>
-                    )}
-                    {/* Slow-load overlay: shown after 10s without a load event */}
-                    {iframeSlow && (
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-3 bg-black/80 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-3 shadow-xl">
-                        <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
-                        <p className="text-xs text-white/80 whitespace-nowrap">This server seems slow.</p>
-                        <button
-                          onClick={handleTryNextSource}
-                          className="text-xs font-bold text-amber-400 hover:text-amber-300 transition-colors whitespace-nowrap underline underline-offset-2"
-                        >
-                          Try Next Server →
-                        </button>
-                      </div>
-                    )}
-                  </>
-                ) : null}
+                )}
               </div>
-              {showPlayer && (
-                <div className="px-5 py-4 bg-muted/20 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2.5 rounded-xl bg-primary/10 text-primary">
-                      <Globe className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-foreground">
-                        {t("movie.changeSource")}
-                      </p>
-                      <p className="text-xs text-muted-foreground/80 mt-0.5">
-                        {selectedSource === 0 ? "Server 1 (Default)" : `Server ${selectedSource + 1}`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                    {SOURCES.map((src, index) => {
-                      const isActive = selectedSource === index;
-                      return (
-                        <button
-                          key={index}
-                          onClick={() => setSelectedSource(index)}
-                          className={`flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all border ${
-                            isActive
-                              ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/20 scale-[1.02]"
-                              : "bg-muted/40 hover:bg-muted/65 text-muted-foreground hover:text-foreground border-border/40"
-                          }`}
-                        >
-                          {src.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              {lastTime && lastTime > 10 && (
+
+              {/* Resume banner */}
+              {!showTrailer && playerState.phase === "playing" && lastTime && lastTime > 10 && (
                 <div className="px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between text-[11px]">
                   <span className="text-muted-foreground">
-                    Last watched at: {Math.floor(lastTime / 60)}:{(lastTime % 60).toString().padStart(2, '0')}
+                    Last watched at: {Math.floor(lastTime / 60)}:{(lastTime % 60).toString().padStart(2, "0")}
                   </span>
-                  <span className="text-primary/70 animate-pulse font-medium">Resuming...</span>
+                  <span className="text-primary/70 animate-pulse font-medium">Resuming…</span>
                 </div>
               )}
             </motion.div>

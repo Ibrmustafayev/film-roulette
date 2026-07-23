@@ -10,23 +10,35 @@ export async function GET(request: Request) {
 
   try {
     const controller = new AbortController();
-    const id = setTimeout(() => controller.abort(), 3000); // 3s timeout
+    const id = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
-    const response = await fetch(url, {
+    // Try HEAD first; fall back to GET with early abort if HEAD is blocked (405)
+    let response = await fetch(url, {
       method: 'HEAD',
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'en-US,en;q=0.5',
       },
-    });
+    }).catch(() => null);
 
     clearTimeout(id);
-    
-    // Even if HEAD fails, some servers might return 405 Method Not Allowed, 
-    // so we can try a partial GET if needed, but for now let's just check response.ok or response.status < 500
-    return NextResponse.json({ ok: response.status < 400 });
-  } catch (error) {
-    console.error('Check Source Error:', error);
+
+    // 405 = server is alive but rejects HEAD → treat as ok
+    if (response && response.status === 405) {
+      return NextResponse.json({ ok: true });
+    }
+
+    // Any 2xx or 3xx = server is alive
+    if (response && response.status < 400) {
+      return NextResponse.json({ ok: true });
+    }
+
+    // HEAD failed entirely → not reachable
+    return NextResponse.json({ ok: false });
+
+  } catch {
     return NextResponse.json({ ok: false });
   }
 }
