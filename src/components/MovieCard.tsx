@@ -15,32 +15,32 @@ import { useCallback, useEffect, useRef, useState } from "react";
 // Modern working embed providers
 const SOURCES = [
   {
-    name: "Server 1 (VidLink - High Speed)",
+    name: "Server 1 (VidLink)",
     url: (_: string, tmdbId: number) =>
       `https://vidlink.pro/movie/${tmdbId}?primaryColor=d97706&secondaryColor=b45309&icons=vid&autoplay=true`,
   },
   {
-    name: "Server 2 (VidSrc - Primary)",
+    name: "Server 2 (VidSrc)",
     url: (_: string, tmdbId: number) =>
       `https://vidsrc.su/embed/movie/${tmdbId}`,
   },
   {
-    name: "Server 3 (2Embed - Backup)",
+    name: "Server 3 (2Embed)",
     url: (_: string, tmdbId: number) =>
       `https://www.2embed.cc/embed/${tmdbId}`,
   },
   {
-    name: "Server 4 (AutoEmbed - Fast)",
+    name: "Server 4 (AutoEmbed)",
     url: (_: string, tmdbId: number) =>
       `https://player.autoembed.cc/embed/movie/${tmdbId}`,
   },
   {
-    name: "Server 5 (MultiEmbed - Universal)",
+    name: "Server 5 (MultiEmbed)",
     url: (imdbId: string, _: number) =>
       `https://multiembed.mov/?video_id=${imdbId}&tmdb=1`,
   },
   {
-    name: "Server 6 (EmbedSu - Alternative)",
+    name: "Server 6 (EmbedSu)",
     url: (_: string, tmdbId: number) =>
       `https://embed.su/embed/movie/${tmdbId}`,
   },
@@ -433,10 +433,14 @@ export function MovieCard() {
                       </div>
                       <div className="text-center space-y-1">
                         <p className="text-white font-semibold text-sm">
-                          Avtomatik server tapılır...
+                          {t("movie.autoSearching")}
                         </p>
                         <p className="text-white/40 text-xs">
-                          {SOURCES[phase.sourceIndex].name} test edilir ({phase.sourceIndex + 1}/{SOURCES.length})
+                          {t("movie.testingServer", {
+                            server: SOURCES[phase.sourceIndex].name,
+                            current: phase.sourceIndex + 1,
+                            total: SOURCES.length,
+                          })}
                         </p>
                         <div className="flex justify-center gap-1.5 mt-3">
                           {SOURCES.map((_, i) => (
@@ -463,7 +467,7 @@ export function MovieCard() {
                     <div>
                       <p className="text-lg font-bold text-red-500">{t("errors.noSource")}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        Bütün {SOURCES.length} server yoxlanıldı. Bu film üçün video tapılmadı.
+                        {t("movie.allServersChecked", { total: SOURCES.length })}
                       </p>
                     </div>
                     <button
@@ -474,7 +478,7 @@ export function MovieCard() {
                       className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600/15 text-amber-500 hover:bg-amber-600/25 text-sm font-semibold transition-colors"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
-                      Yenidən cəhd et
+                      {t("movie.retry")}
                     </button>
                   </div>
                 )}
@@ -498,13 +502,13 @@ export function MovieCard() {
                 <div className="px-5 py-3 bg-muted/20 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center gap-2">
                     <Server className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Aktiv Server: <strong className="text-foreground">{SOURCES[phase.sourceIndex].name}</strong></span>
+                    <span>{t("movie.activeServer")} <strong className="text-foreground">{SOURCES[phase.sourceIndex].name}</strong></span>
                   </div>
                   <button
                     onClick={handleNextServerManual}
                     className="flex items-center gap-1 text-amber-500 hover:text-amber-400 font-medium transition-colors"
                   >
-                    <span>Növbəti serverə keç</span>
+                    <span>{t("movie.nextServer")}</span>
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -513,9 +517,11 @@ export function MovieCard() {
               {!showTrailer && phase.tag === "playing" && lastTime && lastTime > 10 && (
                 <div className="px-5 py-2.5 bg-muted/30 border-t border-border flex items-center justify-between text-[11px]">
                   <span className="text-muted-foreground">
-                    Son izlənilən vaxt: {Math.floor(lastTime / 60)}:{(lastTime % 60).toString().padStart(2, "0")}
+                    {t("movie.lastWatched", {
+                      time: `${Math.floor(lastTime / 60)}:${(lastTime % 60).toString().padStart(2, "0")}`
+                    })}
                   </span>
-                  <span className="text-primary/70 animate-pulse font-medium">Davam etdirilir…</span>
+                  <span className="text-primary/70 animate-pulse font-medium">{t("movie.resuming")}</span>
                 </div>
               )}
             </motion.div>

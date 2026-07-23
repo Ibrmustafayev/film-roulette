@@ -32,7 +32,15 @@
     "unknown": "Неизвестно",
     "runtime": "{h}ч {m}м",
     "changeSource": "Сменить сервер",
-    "server": "Сервер"
+    "server": "Сервер",
+    "autoSearching": "Автоматический поиск лучшего сервера...",
+    "testingServer": "Тестируем {server} ({current}/{total})",
+    "allServersChecked": "Проверены все {total} серверов. Видео для этого фильма не найдено.",
+    "retry": "Попробовать снова",
+    "activeServer": "Активный сервер:",
+    "nextServer": "Переключить на следующий сервер",
+    "lastWatched": "Последний просмотр: {time}",
+    "resuming": "Возобновление..."
   },
   "share": {
     "copyLink": "Копировать ссылку",

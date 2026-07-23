@@ -32,7 +32,15 @@
     "unknown": "Bilinmir",
     "runtime": "{h}s {m}dq",
     "changeSource": "Serveri Dəyiş",
-    "server": "Server"
+    "server": "Server",
+    "autoSearching": "Avtomatik server tapılır...",
+    "testingServer": "{server} test edilir ({current}/{total})",
+    "allServersChecked": "Bütün {total} server yoxlanıldı. Bu film üçün video tapılmadı.",
+    "retry": "Yenidən cəhd et",
+    "activeServer": "Aktiv Server:",
+    "nextServer": "Növbəti serverə keç",
+    "lastWatched": "Son izlənilən vaxt: {time}",
+    "resuming": "Davam etdirilir…"
   },
   "share": {
     "copyLink": "Linki Kopyala",

@@ -32,7 +32,15 @@
     "unknown": "Unknown",
     "runtime": "{h}h {m}m",
     "changeSource": "Change Server",
-    "server": "Server"
+    "server": "Server",
+    "autoSearching": "Finding best server automatically...",
+    "testingServer": "Testing {server} ({current}/{total})",
+    "allServersChecked": "Checked all {total} servers. No stream found for this movie.",
+    "retry": "Try Again",
+    "activeServer": "Active Server:",
+    "nextServer": "Switch to next server",
+    "lastWatched": "Last watched at: {time}",
+    "resuming": "Resuming..."
   },
   "share": {
     "copyLink": "Copy Link",
