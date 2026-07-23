@@ -5,66 +5,53 @@ import { useStore } from "@/store/useStore";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Star, Calendar, Clock, Play, Globe, User,
-  ExternalLink, Heart, Loader2, AlertCircle, RefreshCw,
+  ExternalLink, Heart, Loader2, AlertCircle, RefreshCw, ChevronRight, Server
 } from "lucide-react";
 import { getImageUrl } from "@/lib/tmdb";
 import { ShareButton } from "./ShareButton";
 import { getTranslations } from "@/lib/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-// ─── Sources ──────────────────────────────────────────────────────────────────
-// 7 diverse providers — different backends mean different movie coverage.
-// Order: most reliable / cleanest first.
-// NO sandbox attribute is used on the iframe (providers reject it and refuse to play).
+// Modern working embed providers
 const SOURCES = [
   {
-    name: "VidLink",
+    name: "Server 1 (VidLink - High Speed)",
     url: (_: string, tmdbId: number) =>
       `https://vidlink.pro/movie/${tmdbId}?primaryColor=d97706&secondaryColor=b45309&icons=vid&autoplay=true`,
   },
   {
-    name: "VidSrc",
+    name: "Server 2 (VidSrc - Primary)",
     url: (_: string, tmdbId: number) =>
       `https://vidsrc.su/embed/movie/${tmdbId}`,
   },
   {
-    name: "VidSrc.in",
-    url: (imdbId: string, _: number) =>
-      `https://vidsrc.in/embed/movie/${imdbId}`,
-  },
-  {
-    name: "2Embed",
+    name: "Server 3 (2Embed - Backup)",
     url: (_: string, tmdbId: number) =>
       `https://www.2embed.cc/embed/${tmdbId}`,
   },
   {
-    name: "AutoEmbed",
+    name: "Server 4 (AutoEmbed - Fast)",
     url: (_: string, tmdbId: number) =>
       `https://player.autoembed.cc/embed/movie/${tmdbId}`,
   },
   {
-    name: "MultiEmbed",
+    name: "Server 5 (MultiEmbed - Universal)",
     url: (imdbId: string, _: number) =>
       `https://multiembed.mov/?video_id=${imdbId}&tmdb=1`,
   },
   {
-    name: "EmbedSu",
+    name: "Server 6 (EmbedSu - Alternative)",
     url: (_: string, tmdbId: number) =>
       `https://embed.su/embed/movie/${tmdbId}`,
   },
 ];
 
-// Seconds to wait per source before declaring it failed and trying the next.
-const SOURCE_TIMEOUT_MS = 8000;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 type PlayerPhase =
   | { tag: "idle" }
-  | { tag: "probing"; sourceIndex: number }  // trying current source
-  | { tag: "playing"; sourceIndex: number }  // source confirmed, showing iframe
-  | { tag: "error" };                         // all sources exhausted
+  | { tag: "probing"; sourceIndex: number }
+  | { tag: "playing"; sourceIndex: number }
+  | { tag: "error" };
 
-// ─── Component ────────────────────────────────────────────────────────────────
 export function MovieCard() {
   const {
     movie, isLoading, locale,
@@ -81,13 +68,9 @@ export function MovieCard() {
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
 
-  // Refs that persist across re-renders without causing them
   const probeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const abortRef = useRef(false);          // set to true to stop the probe chain
-  const imdbIdRef = useRef("");
-  const tmdbIdRef = useRef(0);
+  const abortRef = useRef(false);
 
-  // ── Cleanup ──
   const clearProbeTimer = useCallback(() => {
     if (probeTimerRef.current) {
       clearTimeout(probeTimerRef.current);
@@ -102,15 +85,12 @@ export function MovieCard() {
     setShowPlayer(false);
   }, [clearProbeTimer, setShowPlayer]);
 
-  // ── Reset on new movie ──
   useEffect(() => {
     stopPlayer();
     setLastTime(movie ? watchProgress[movie.id] || null : null);
-    // Allow new probe after tick
     setTimeout(() => { abortRef.current = false; }, 0);
   }, [movie?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Scroll to player ──
   useEffect(() => {
     if ((showTrailer || phase.tag !== "idle") && playerRef.current) {
       setTimeout(() => {
@@ -119,14 +99,13 @@ export function MovieCard() {
     }
   }, [showTrailer, phase.tag]);
 
-  // ── Progress tracking (vidsrc postMessage API) ──
   useEffect(() => {
     const handleMsg = (e: MessageEvent) => {
       try {
         const d = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
         if (d?.type === "MEDIA_DATA" && d?.progress && movie) {
-          const t = Math.floor(d.progress.time);
-          if (t > 0) setWatchProgress(movie.id, t);
+          const time = Math.floor(d.progress.time);
+          if (time > 0) setWatchProgress(movie.id, time);
         }
       } catch { /* ignore */ }
     };
@@ -134,25 +113,16 @@ export function MovieCard() {
     return () => window.removeEventListener("message", handleMsg);
   }, [movie, setWatchProgress]);
 
-  // ── Popup ad blocker ──
-  // When the iframe triggers a popup (window loses focus), immediately refocus.
-  // This neutralises popup/tab-hijack ads without needing the sandbox attribute.
+  // Anti-ad-popup helper
   useEffect(() => {
-    if (phase.tag !== "playing") return;
+    if (phase.tag !== "playing" && phase.tag !== "probing") return;
     const refocus = () => {
-      // Small delay so the popup can open, then we steal focus back
-      setTimeout(() => window.focus(), 50);
+      setTimeout(() => window.focus(), 100);
     };
     window.addEventListener("blur", refocus);
     return () => window.removeEventListener("blur", refocus);
   }, [phase.tag]);
 
-  // ─── Sequential auto-failover engine ────────────────────────────────────────
-  // Each source gets SOURCE_TIMEOUT_MS to fire its iframe's onLoad event.
-  // If it doesn't, we automatically advance to the next source.
-  // The iframe's onLoad is our "success" signal — the player HTML has loaded.
-  // (We can't detect JS errors cross-origin, but if HTML loads ≥ 3s after mount
-  //  it's almost certainly a real player, not an instant error page redirect.)
   const trySource = useCallback((index: number) => {
     if (abortRef.current) return;
     if (index >= SOURCES.length) {
@@ -163,10 +133,10 @@ export function MovieCard() {
     setPhase({ tag: "probing", sourceIndex: index });
     clearProbeTimer();
 
-    // Auto-advance after timeout — this source is too slow or broken
+    // Give each server 5 seconds to load html or auto-switch
     probeTimerRef.current = setTimeout(() => {
       if (!abortRef.current) trySource(index + 1);
-    }, SOURCE_TIMEOUT_MS);
+    }, 5500);
   }, [clearProbeTimer]);
 
   const handleWatchMovie = () => {
@@ -180,26 +150,20 @@ export function MovieCard() {
     }
 
     abortRef.current = false;
-    imdbIdRef.current = movie.imdb_id;
-    tmdbIdRef.current = movie.id;
-
     setShowTrailer(false);
     setShowPlayer(true);
     trySource(0);
   };
 
-  // Called when the iframe fires its onLoad event
   const handleIframeLoad = useCallback((
     e: React.SyntheticEvent<HTMLIFrameElement>,
     sourceIndex: number,
   ) => {
-    // If we're probing this source and it loaded → promote to "playing"
     clearProbeTimer();
     if (!abortRef.current) {
       setPhase({ tag: "playing", sourceIndex });
     }
 
-    // Send seek position if user was watching before
     if (movie && watchProgress[movie.id]) {
       const time = watchProgress[movie.id];
       const iframe = e.currentTarget;
@@ -211,6 +175,13 @@ export function MovieCard() {
     }
   }, [clearProbeTimer, movie, watchProgress]);
 
+  const handleNextServerManual = () => {
+    if (phase.tag === "playing" || phase.tag === "probing") {
+      const nextIdx = (phase.sourceIndex + 1) % SOURCES.length;
+      trySource(nextIdx);
+    }
+  };
+
   const handleToggleFavourite = () => {
     if (!movie) return;
     toggleFavourite(movie);
@@ -218,7 +189,6 @@ export function MovieCard() {
     setTimeout(() => setFavAnim(false), 600);
   };
 
-  // ─── Render ────────────────────────────────────────────────────────────────
   if (isLoading || !movie) return null;
 
   const releaseYear = movie.release_date?.split("-")[0] ?? t("movie.unknown");
@@ -248,7 +218,7 @@ export function MovieCard() {
         transition={{ type: "spring", stiffness: 180, damping: 22 }}
         className="w-full max-w-4xl mx-auto mt-12"
       >
-        {/* ── Card ── */}
+        {/* Card */}
         <div className="bg-card text-card-foreground rounded-2xl shadow-xl border border-border overflow-hidden flex flex-col md:flex-row">
           {movie.poster_path && (
             <div className="w-full md:w-72 shrink-0 relative min-h-[420px] bg-muted">
@@ -265,7 +235,6 @@ export function MovieCard() {
 
           <div className="p-6 md:p-8 flex flex-col justify-between flex-1 min-w-0">
             <div>
-              {/* Title + favourite + rating */}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
@@ -312,7 +281,6 @@ export function MovieCard() {
                 </div>
               </div>
 
-              {/* Meta row */}
               <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Calendar className="w-3.5 h-3.5" />{releaseYear}
@@ -335,7 +303,6 @@ export function MovieCard() {
                 )}
               </div>
 
-              {/* Genres */}
               {movie.genres && movie.genres.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-4">
                   {movie.genres.map((g) => (
@@ -349,12 +316,10 @@ export function MovieCard() {
                 </div>
               )}
 
-              {/* Overview */}
               <p className="mt-4 text-muted-foreground leading-relaxed text-sm line-clamp-4">
                 {movie.overview || t("movie.noOverview")}
               </p>
 
-              {/* Cast */}
               {movie.cast && movie.cast.length > 0 && (
                 <div className="mt-5">
                   <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -391,7 +356,6 @@ export function MovieCard() {
               )}
             </div>
 
-            {/* Action buttons */}
             <div className="mt-6 flex flex-col gap-3">
               <div className="flex gap-3">
                 {movie.imdb_id && (
@@ -426,7 +390,7 @@ export function MovieCard() {
           </div>
         </div>
 
-        {/* ── Player / Trailer section ── */}
+        {/* Player Section */}
         <AnimatePresence>
           {(showTrailer || isPlayerOpen) && (
             <motion.div
@@ -438,7 +402,6 @@ export function MovieCard() {
             >
               <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
 
-                {/* Trailer */}
                 {showTrailer && (
                   <iframe
                     src={`https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1`}
@@ -449,10 +412,8 @@ export function MovieCard() {
                   />
                 )}
 
-                {/* Probing: searching animation */}
                 {!showTrailer && phase.tag === "probing" && (
                   <>
-                    {/* Hidden iframe that actually probes — when it loads, we promote to "playing" */}
                     <iframe
                       key={`probe-${movie.id}-${phase.sourceIndex}`}
                       src={currentPlayUrl!}
@@ -464,7 +425,6 @@ export function MovieCard() {
                       className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
                       aria-hidden
                     />
-                    {/* Searching UI on top */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-[#08080f]">
                       <div className="relative flex items-center justify-center w-20 h-20">
                         <div className="absolute inset-0 rounded-full border-2 border-amber-500/20 animate-ping" />
@@ -473,12 +433,11 @@ export function MovieCard() {
                       </div>
                       <div className="text-center space-y-1">
                         <p className="text-white font-semibold text-sm">
-                          Trying {SOURCES[phase.sourceIndex].name}…
+                          Avtomatik server tapılır...
                         </p>
-                        <p className="text-white/30 text-xs">
-                          Source {phase.sourceIndex + 1} of {SOURCES.length}
+                        <p className="text-white/40 text-xs">
+                          {SOURCES[phase.sourceIndex].name} test edilir ({phase.sourceIndex + 1}/{SOURCES.length})
                         </p>
-                        {/* Progress dots */}
                         <div className="flex justify-center gap-1.5 mt-3">
                           {SOURCES.map((_, i) => (
                             <div
@@ -498,14 +457,13 @@ export function MovieCard() {
                   </>
                 )}
 
-                {/* Error: all sources exhausted */}
                 {!showTrailer && phase.tag === "error" && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-card p-6 text-center">
                     <AlertCircle className="w-10 h-10 text-red-500" />
                     <div>
                       <p className="text-lg font-bold text-red-500">{t("errors.noSource")}</p>
                       <p className="text-xs text-muted-foreground mt-1">
-                        All {SOURCES.length} servers checked — no stream found for this title.
+                        Bütün {SOURCES.length} server yoxlanıldı. Bu film üçün video tapılmadı.
                       </p>
                     </div>
                     <button
@@ -516,12 +474,11 @@ export function MovieCard() {
                       className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600/15 text-amber-500 hover:bg-amber-600/25 text-sm font-semibold transition-colors"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
-                      Retry
+                      Yenidən cəhd et
                     </button>
                   </div>
                 )}
 
-                {/* Playing: show the iframe */}
                 {!showTrailer && phase.tag === "playing" && currentPlayUrl && (
                   <iframe
                     key={`play-${movie.id}-${phase.sourceIndex}`}
@@ -536,13 +493,29 @@ export function MovieCard() {
                 )}
               </div>
 
-              {/* Resume banner */}
+              {/* Sub-bar for quiet status & optional manual next server fallback */}
+              {!showTrailer && phase.tag === "playing" && (
+                <div className="px-5 py-3 bg-muted/20 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Server className="w-3.5 h-3.5 text-amber-500" />
+                    <span>Aktiv Server: <strong className="text-foreground">{SOURCES[phase.sourceIndex].name}</strong></span>
+                  </div>
+                  <button
+                    onClick={handleNextServerManual}
+                    className="flex items-center gap-1 text-amber-500 hover:text-amber-400 font-medium transition-colors"
+                  >
+                    <span>Növbəti serverə keç</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
               {!showTrailer && phase.tag === "playing" && lastTime && lastTime > 10 && (
-                <div className="px-5 py-3 bg-muted/30 border-t border-border flex items-center justify-between text-[11px]">
+                <div className="px-5 py-2.5 bg-muted/30 border-t border-border flex items-center justify-between text-[11px]">
                   <span className="text-muted-foreground">
-                    Last watched at: {Math.floor(lastTime / 60)}:{(lastTime % 60).toString().padStart(2, "0")}
+                    Son izlənilən vaxt: {Math.floor(lastTime / 60)}:{(lastTime % 60).toString().padStart(2, "0")}
                   </span>
-                  <span className="text-primary/70 animate-pulse font-medium">Resuming…</span>
+                  <span className="text-primary/70 animate-pulse font-medium">Davam etdirilir…</span>
                 </div>
               )}
             </motion.div>
