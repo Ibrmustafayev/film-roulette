@@ -3,11 +3,21 @@ import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
+/* The OG card follows the same world as the app: ink ground, the film's own
+   artwork as the only colour, left-aligned composition, hard corners, one live
+   accent, and the aperture mark. See DESIGN.md. */
+const INK_0 = "#0B0E11";
+const INK_4 = "#2A323C";
+const INK_6 = "#5C6977";
+const INK_8 = "#B9C4CE";
+const INK_9 = "#EDF1F5";
+const LIVE = "#00E054";
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const title = searchParams.get("title") || "Film Ruleti";
+    const title = searchParams.get("title") || "Film Roulette";
     const poster = searchParams.get("poster");
     const rating = searchParams.get("rating") || "";
     const year = searchParams.get("year") || "";
@@ -20,269 +30,202 @@ export async function GET(request: NextRequest) {
             height: "100%",
             width: "100%",
             display: "flex",
-            flexDirection: "column",
             position: "relative",
-            backgroundColor: "#020617",
+            backgroundColor: INK_0,
             fontFamily: "sans-serif",
             overflow: "hidden",
           }}
         >
-          {/* Background Poster (Dramatic Blur) */}
+          {/* The film supplies the colour; the shell stays neutral. */}
           {poster && (
             <img
               src={`https://image.tmdb.org/t/p/w1280${poster}`}
-              alt="Background"
+              alt=""
               style={{
                 position: "absolute",
                 inset: 0,
                 width: "100%",
                 height: "100%",
                 objectFit: "cover",
-                opacity: 0.3,
-                filter: "blur(40px) brightness(0.6) saturate(1.4)",
+                opacity: 0.28,
+                filter: "blur(28px)",
               }}
             />
           )}
-
-          {/* Vignette & Gradient Overlay */}
           <div
             style={{
               position: "absolute",
               inset: 0,
-              background:
-                "radial-gradient(circle at center, transparent 0%, rgba(2,6,23,0.8) 100%), linear-gradient(to bottom, rgba(2,6,23,0.4), #020617)",
+              background: `linear-gradient(90deg, ${INK_0} 30%, rgba(11,14,17,0.55) 100%)`,
+              display: "flex",
             }}
           />
 
-          {/* Grid pattern for high-tech feel */}
-          <div 
-            style={{
-              position: "absolute",
-              inset: 0,
-              backgroundImage: "radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px)",
-              backgroundSize: "40px 40px",
-              opacity: 0.5,
-            }}
-          />
-
-          {/* Main Content */}
+          {/* Content: poster left, detail right — the stage arrangement */}
           <div
             style={{
               position: "relative",
               display: "flex",
               width: "100%",
               height: "100%",
-              padding: "60px",
+              padding: 64,
+              gap: 56,
               alignItems: "center",
-              gap: "60px",
             }}
           >
-            {/* Movie Poster with Sophisticated Frame */}
-            {poster ? (
-              <div
+            {poster && (
+              <img
+                src={`https://image.tmdb.org/t/p/w500${poster}`}
+                alt=""
+                width={320}
+                height={480}
                 style={{
-                  display: "flex",
-                  position: "relative",
-                  padding: "4px",
-                  background: "linear-gradient(135deg, rgba(255,255,255,0.2), transparent, rgba(255,255,255,0.1))",
-                  borderRadius: "24px",
-                  boxShadow: "0 40px 80px -20px rgba(0,0,0,0.8)",
+                  width: 320,
+                  height: 480,
+                  objectFit: "cover",
+                  borderRadius: 2,
+                  boxShadow: "0 6px 18px rgba(0,0,0,0.55)",
                 }}
-              >
-                <img
-                  src={`https://image.tmdb.org/t/p/w500${poster}`}
-                  alt="Poster"
-                  style={{
-                    width: "320px",
-                    height: "480px",
-                    objectFit: "cover",
-                    borderRadius: "20px",
-                  }}
-                />
-              </div>
-            ) : (
-              <div
-                style={{
-                  width: "320px",
-                  height: "480px",
-                  backgroundColor: "rgba(255,255,255,0.05)",
-                  borderRadius: "24px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "120px",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
-              >
-                🎬
-              </div>
+              />
             )}
 
-            {/* Movie Info Section */}
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
                 flex: 1,
-                minWidth: 0,
+                height: 480,
+                justifyContent: "space-between",
               }}
             >
-              {/* Header Branding */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "12px",
-                  marginBottom: "24px",
-                }}
-              >
-                <div style={{ fontSize: "24px" }}>🎲</div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                {/* Mark + wordmark */}
+                <div
+                  style={{ display: "flex", alignItems: "center", gap: 12 }}
+                >
+                  <svg width="30" height="30" viewBox="0 0 32 32">
+                    <mask id="og-pips">
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        fill="#fff"
+                        d="M16 1 28.99 8.5 28.99 23.5 16 31 3.01 23.5 3.01 8.5Z M16 9 22.06 12.5 22.06 19.5 16 23 9.94 19.5 9.94 12.5Z"
+                      />
+                      <circle cx="16" cy="5.6" r="1.9" fill="#000" />
+                      <circle cx="25.2" cy="21.4" r="1.9" fill="#000" />
+                      <circle cx="6.8" cy="21.4" r="1.9" fill="#000" />
+                    </mask>
+                    <rect width="32" height="32" fill={LIVE} mask="url(#og-pips)" />
+                  </svg>
+                  <div
+                    style={{
+                      display: "flex",
+                      fontSize: 17,
+                      letterSpacing: 3,
+                      textTransform: "uppercase",
+                      color: INK_9,
+                      fontWeight: 600,
+                    }}
+                  >
+                    Film / Roulette
+                  </div>
+                </div>
+
                 <div
                   style={{
-                    fontSize: "22px",
-                    fontWeight: 800,
-                    letterSpacing: "4px",
-                    textTransform: "uppercase",
-                    background: "linear-gradient(to right, #ef4444, #f87171)",
-                    backgroundClip: "text",
-                    WebkitBackgroundClip: "text",
-                    color: "transparent",
-                  }}
-                >
-                  Film Roulette
-                </div>
-              </div>
-
-              {/* Title with Custom Typography */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  marginBottom: "32px",
-                }}
-              >
-                <h1
-                  style={{
-                    color: "#ffffff",
-                    fontSize: title.length > 20 ? "64px" : "80px",
-                    fontWeight: 900,
-                    margin: 0,
-                    lineHeight: 1.05,
-                    letterSpacing: "-2px",
+                    display: "flex",
+                    marginTop: 40,
+                    fontSize: title.length > 30 ? 60 : 76,
+                    lineHeight: 1.02,
+                    letterSpacing: -2,
+                    color: INK_9,
+                    fontWeight: 700,
                   }}
                 >
                   {title}
-                </h1>
-                {year && (
-                  <div
-                    style={{
-                      fontSize: "32px",
-                      color: "rgba(255,255,255,0.5)",
-                      fontWeight: 600,
-                      marginTop: "12px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "16px",
-                    }}
-                  >
-                    <span>{year}</span>
-                    <div style={{ width: "4px", height: "4px", borderRadius: "50%", backgroundColor: "rgba(255,255,255,0.3)" }} />
-                    <span style={{ fontSize: "24px", fontWeight: 700, color: "#fcd34d" }}>MOVIE PASS</span>
+                </div>
+
+                {genres && (
+                  <div style={{ display: "flex", gap: 8, marginTop: 28 }}>
+                    {genres
+                      .split(",")
+                      .slice(0, 4)
+                      .map((g) => (
+                        <div
+                          key={g}
+                          style={{
+                            display: "flex",
+                            border: `1px solid ${INK_4}`,
+                            color: INK_6,
+                            fontSize: 15,
+                            letterSpacing: 1.4,
+                            textTransform: "uppercase",
+                            padding: "5px 9px",
+                          }}
+                        >
+                          {g.trim()}
+                        </div>
+                      ))}
                   </div>
                 )}
               </div>
 
-              {/* Details Card (Glassmorphism) */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  padding: "32px",
-                  backgroundColor: "rgba(255,255,255,0.03)",
-                  borderRadius: "24px",
-                  border: "1px solid rgba(255,255,255,0.1)",
-                  backdropFilter: "blur(12px)",
-                  gap: "24px",
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "32px" }}>
-                  {rating && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                      <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "14px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Rating</span>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ color: "#fcd34d", fontSize: "36px", fontWeight: 800 }}>{rating}</span>
-                        <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "20px", fontWeight: 600, marginTop: "8px" }}>/ 10</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {genres && (
-                    <div style={{ display: "flex", flexDirection: "column", gap: "4px", flex: 1 }}>
-                      <span style={{ color: "rgba(255,255,255,0.4)", fontSize: "14px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>Genre</span>
-                      <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", marginTop: "4px" }}>
-                        {genres.split(", ").slice(0, 3).map((g, i) => (
-                          <span
-                            key={i}
-                            style={{
-                              backgroundColor: "rgba(255,255,255,0.08)",
-                              color: "#ffffff",
-                              padding: "6px 14px",
-                              borderRadius: "10px",
-                              fontSize: "16px",
-                              fontWeight: 600,
-                              border: "1px solid rgba(255,255,255,0.1)",
-                            }}
-                          >
-                            {g}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* URL/Branding Footer */}
-              <div
-                style={{
-                  marginTop: "auto",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  paddingTop: "40px",
-                  borderTop: "1px solid rgba(255,255,255,0.05)",
-                }}
-              >
-                <div style={{ display: "flex", flexDirection: "column" }}>
-                  <span style={{ color: "rgba(255,255,255,0.3)", fontSize: "12px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px" }}>Available at</span>
-                  <span style={{ color: "#ffffff", fontSize: "18px", fontWeight: 600, opacity: 0.8 }}>filmroulette.vercel.app</span>
-                </div>
-                <div 
-                  style={{ 
-                    padding: "10px 20px", 
-                    borderRadius: "12px", 
-                    backgroundColor: "rgba(239,68,68,0.1)", 
-                    color: "#f87171",
-                    fontSize: "14px",
-                    fontWeight: 700,
-                    letterSpacing: "1px"
+              {/* Readout strip, closed by a directional rule */}
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <div
+                  style={{
+                    display: "flex",
+                    height: 1,
+                    background: `linear-gradient(90deg, ${INK_6}, ${INK_4} 40%, transparent)`,
+                    marginBottom: 20,
                   }}
+                />
+                <div
+                  style={{ display: "flex", alignItems: "baseline", gap: 36 }}
                 >
-                  #CinematicDiscovery
+                  {rating && (
+                    <div
+                      style={{ display: "flex", alignItems: "baseline", gap: 10 }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          fontSize: 44,
+                          color: LIVE,
+                          fontWeight: 600,
+                        }}
+                      >
+                        {rating}
+                      </div>
+                      <div
+                        style={{
+                          display: "flex",
+                          fontSize: 15,
+                          letterSpacing: 2,
+                          textTransform: "uppercase",
+                          color: INK_6,
+                        }}
+                      >
+                        TMDB
+                      </div>
+                    </div>
+                  )}
+                  {year && (
+                    <div
+                      style={{ display: "flex", fontSize: 26, color: INK_8 }}
+                    >
+                      {year}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </div>
       ),
-      {
-        width: 1200,
-        height: 630,
-      }
+      { width: 1200, height: 630 }
     );
-  } catch (e: unknown) {
-    return new Response(`Failed to generate image`, {
-      status: 500,
-    });
+  } catch {
+    return new Response("Failed to generate image", { status: 500 });
   }
 }

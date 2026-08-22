@@ -56,47 +56,47 @@ export function HelpView() {
             className="space-y-10 animate-in fade-in duration-300"
           >
             <div>
-              <h3 className="text-h3 font-semibold text-heading">
+              <h3 className="text-h3 font-semibold text-ink-9">
                 {t("help.gettingStartedTitle")}
               </h3>
-              <p className="text-base md:text-lg text-meta/90 mt-4 leading-relaxed">
+              <p className="text-base md:text-lg text-ink-6/90 mt-4 leading-relaxed">
                 {t("help.gettingStartedDesc")}
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
-              <div className="p-8 rounded-panel bg-surface/40 border border-surface-alt/60 hover:bg-surface/60 hover:border-green/20 transition-all hover:shadow-lg hover:shadow-primary/5 space-y-5 duration-300">
-                <div className="w-14 h-14 rounded-[8px] bg-green-surface/10 flex items-center justify-center text-green font-serif text-h4 font-semibold">
+              <div className="p-8  bg-ink-2/40 border border-ink-4/60 hover:bg-ink-2/60 hover:border-live-border/20 transition-all hover:shadow-lg hover:shadow-primary/5 space-y-5 duration-300">
+                <div className="w-14 h-14  bg-live/10 flex items-center justify-center text-live font-prose text-h4 font-semibold">
                   1
                 </div>
-                <h4 className="text-h5 font-semibold text-heading">
+                <h4 className="text-h4 font-semibold text-ink-9">
                   {t("help.gs1Title")}
                 </h4>
-                <p className="text-base text-meta/90 leading-relaxed">
+                <p className="text-base text-ink-6/90 leading-relaxed">
                   {t("help.gs1Desc")}
                 </p>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/40 border border-surface-alt/60 hover:bg-surface/60 hover:border-green/20 transition-all hover:shadow-lg hover:shadow-primary/5 space-y-5 duration-300">
-                <div className="w-14 h-14 rounded-[8px] bg-green-surface/10 flex items-center justify-center text-green font-serif text-h4 font-semibold">
+              <div className="p-8  bg-ink-2/40 border border-ink-4/60 hover:bg-ink-2/60 hover:border-live-border/20 transition-all hover:shadow-lg hover:shadow-primary/5 space-y-5 duration-300">
+                <div className="w-14 h-14  bg-live/10 flex items-center justify-center text-live font-prose text-h4 font-semibold">
                   2
                 </div>
-                <h4 className="text-h5 font-semibold text-heading">
+                <h4 className="text-h4 font-semibold text-ink-9">
                   {t("help.gs2Title")}
                 </h4>
-                <p className="text-base text-meta/90 leading-relaxed">
+                <p className="text-base text-ink-6/90 leading-relaxed">
                   {t("help.gs2Desc")}
                 </p>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/40 border border-surface-alt/60 hover:bg-surface/60 hover:border-green/20 transition-all hover:shadow-lg hover:shadow-primary/5 space-y-5 duration-300">
-                <div className="w-14 h-14 rounded-[8px] bg-green-surface/10 flex items-center justify-center text-green font-serif text-h4 font-semibold">
+              <div className="p-8  bg-ink-2/40 border border-ink-4/60 hover:bg-ink-2/60 hover:border-live-border/20 transition-all hover:shadow-lg hover:shadow-primary/5 space-y-5 duration-300">
+                <div className="w-14 h-14  bg-live/10 flex items-center justify-center text-live font-prose text-h4 font-semibold">
                   3
                 </div>
-                <h4 className="text-h5 font-semibold text-heading">
+                <h4 className="text-h4 font-semibold text-ink-9">
                   {t("help.gs3Title")}
                 </h4>
-                <p className="text-base text-meta/90 leading-relaxed">
+                <p className="text-base text-ink-6/90 leading-relaxed">
                   {t("help.gs3Desc")}
                 </p>
               </div>
@@ -114,48 +114,48 @@ export function HelpView() {
             className="space-y-10 animate-in fade-in duration-300"
           >
             <div>
-              <h3 className="text-h3 font-semibold text-heading">
+              <h3 className="text-h3 font-semibold text-ink-9">
                 {t("help.featuresTitle")}
               </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
-                <h4 className="text-h5 font-semibold text-green flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-surface" />
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+                <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
+                  <span className="w-2.5 h-2.5 rounded-full bg-live" />
                   {t("help.feat1Title")}
                 </h4>
-                <p className="text-base text-meta/90 leading-relaxed pl-5.5">
+                <p className="text-base text-ink-6/90 leading-relaxed pl-5.5">
                   {t("help.feat1Desc")}
                 </p>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
-                <h4 className="text-h5 font-semibold text-green flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-surface" />
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+                <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
+                  <span className="w-2.5 h-2.5 rounded-full bg-live" />
                   {t("help.feat2Title")}
                 </h4>
-                <p className="text-base text-meta/90 leading-relaxed pl-5.5">
+                <p className="text-base text-ink-6/90 leading-relaxed pl-5.5">
                   {t("help.feat2Desc")}
                 </p>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
-                <h4 className="text-h5 font-semibold text-green flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-surface" />
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+                <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
+                  <span className="w-2.5 h-2.5 rounded-full bg-live" />
                   {t("help.feat3Title")}
                 </h4>
-                <p className="text-base text-meta/90 leading-relaxed pl-5.5">
+                <p className="text-base text-ink-6/90 leading-relaxed pl-5.5">
                   {t("help.feat3Desc")}
                 </p>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
-                <h4 className="text-h5 font-semibold text-green flex items-center gap-3">
-                  <span className="w-2.5 h-2.5 rounded-full bg-green-surface" />
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+                <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
+                  <span className="w-2.5 h-2.5 rounded-full bg-live" />
                   {t("help.feat4Title")}
                 </h4>
-                <p className="text-base text-meta/90 leading-relaxed pl-5.5">
+                <p className="text-base text-ink-6/90 leading-relaxed pl-5.5">
                   {t("help.feat4Desc")}
                 </p>
               </div>
@@ -173,48 +173,48 @@ export function HelpView() {
             className="space-y-10 animate-in fade-in duration-300"
           >
             <div>
-              <h3 className="text-h3 font-semibold text-heading">
+              <h3 className="text-h3 font-semibold text-ink-9">
                 {t("help.filtersTitle")}
               </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
-                <h4 className="text-h5 font-semibold text-green flex items-center gap-3">
-                  <Sliders className="w-6 h-6 text-green" />
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+                <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
+                  <Sliders className="w-6 h-6 text-live" />
                   {t("help.filt1Title")}
                 </h4>
-                <p className="text-base text-meta/90 leading-relaxed pl-9">
+                <p className="text-base text-ink-6/90 leading-relaxed pl-9">
                   {t("help.filt1Desc")}
                 </p>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
-                <h4 className="text-h5 font-semibold text-green flex items-center gap-3">
-                  <Sliders className="w-6 h-6 text-green" />
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+                <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
+                  <Sliders className="w-6 h-6 text-live" />
                   {t("help.filt2Title")}
                 </h4>
-                <p className="text-base text-meta/90 leading-relaxed pl-9">
+                <p className="text-base text-ink-6/90 leading-relaxed pl-9">
                   {t("help.filt2Desc")}
                 </p>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
-                <h4 className="text-h5 font-semibold text-green flex items-center gap-3">
-                  <Sliders className="w-6 h-6 text-green" />
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+                <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
+                  <Sliders className="w-6 h-6 text-live" />
                   {t("help.filt3Title")}
                 </h4>
-                <p className="text-base text-meta/90 leading-relaxed pl-9">
+                <p className="text-base text-ink-6/90 leading-relaxed pl-9">
                   {t("help.filt3Desc")}
                 </p>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
-                <h4 className="text-h5 font-semibold text-green flex items-center gap-3">
-                  <Sliders className="w-6 h-6 text-green" />
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+                <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
+                  <Sliders className="w-6 h-6 text-live" />
                   {t("help.filt4Title")}
                 </h4>
-                <p className="text-base text-meta/90 leading-relaxed pl-9">
+                <p className="text-base text-ink-6/90 leading-relaxed pl-9">
                   {t("help.filt4Desc")}
                 </p>
               </div>
@@ -232,43 +232,43 @@ export function HelpView() {
             className="space-y-10 animate-in fade-in duration-300"
           >
             <div>
-              <h3 className="text-h3 font-semibold text-heading">
+              <h3 className="text-h3 font-semibold text-ink-9">
                 {t("help.playerTitle")}
               </h3>
             </div>
 
             <div className="space-y-8">
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
-                <div className="p-4 rounded-[8px] bg-green-surface/10 text-green h-fit shrink-0">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+                <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <Film className="w-7 h-7" />
                 </div>
                 <div>
-                  <h4 className="text-h5 font-semibold text-heading">{t("help.pl1Title")}</h4>
-                  <p className="text-base text-meta mt-3 leading-relaxed">
+                  <h4 className="text-h4 font-semibold text-ink-9">{t("help.pl1Title")}</h4>
+                  <p className="text-base text-ink-6 mt-3 leading-relaxed">
                     {t("help.pl1Desc")}
                   </p>
                 </div>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
-                <div className="p-4 rounded-[8px] bg-green-surface/10 text-green h-fit shrink-0">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+                <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <Film className="w-7 h-7" />
                 </div>
                 <div>
-                  <h4 className="text-h5 font-semibold text-heading">{t("help.pl2Title")}</h4>
-                  <p className="text-base text-meta mt-3 leading-relaxed">
+                  <h4 className="text-h4 font-semibold text-ink-9">{t("help.pl2Title")}</h4>
+                  <p className="text-base text-ink-6 mt-3 leading-relaxed">
                     {t("help.pl2Desc")}
                   </p>
                 </div>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
-                <div className="p-4 rounded-[8px] bg-green-surface/10 text-green h-fit shrink-0">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+                <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <Film className="w-7 h-7" />
                 </div>
                 <div>
-                  <h4 className="text-h5 font-semibold text-heading">{t("help.pl3Title")}</h4>
-                  <p className="text-base text-meta mt-3 leading-relaxed">
+                  <h4 className="text-h4 font-semibold text-ink-9">{t("help.pl3Title")}</h4>
+                  <p className="text-base text-ink-6 mt-3 leading-relaxed">
                     {t("help.pl3Desc")}
                   </p>
                 </div>
@@ -287,43 +287,43 @@ export function HelpView() {
             className="space-y-10 animate-in fade-in duration-300"
           >
             <div>
-              <h3 className="text-h3 font-semibold text-heading">
+              <h3 className="text-h3 font-semibold text-ink-9">
                 {t("help.accountTitle")}
               </h3>
             </div>
 
             <div className="space-y-8">
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
-                <div className="p-4 rounded-[8px] bg-green-surface/10 text-green h-fit shrink-0">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+                <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <ShieldAlert className="w-7 h-7" />
                 </div>
                 <div>
-                  <h4 className="text-h5 font-semibold text-heading">{t("help.acc1Title")}</h4>
-                  <p className="text-base text-meta mt-3 leading-relaxed">
+                  <h4 className="text-h4 font-semibold text-ink-9">{t("help.acc1Title")}</h4>
+                  <p className="text-base text-ink-6 mt-3 leading-relaxed">
                     {t("help.acc1Desc")}
                   </p>
                 </div>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
-                <div className="p-4 rounded-[8px] bg-green-surface/10 text-green h-fit shrink-0">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+                <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <ShieldAlert className="w-7 h-7" />
                 </div>
                 <div>
-                  <h4 className="text-h5 font-semibold text-heading">{t("help.acc2Title")}</h4>
-                  <p className="text-base text-meta mt-3 leading-relaxed">
+                  <h4 className="text-h4 font-semibold text-ink-9">{t("help.acc2Title")}</h4>
+                  <p className="text-base text-ink-6 mt-3 leading-relaxed">
                     {t("help.acc2Desc")}
                   </p>
                 </div>
               </div>
 
-              <div className="p-8 rounded-panel bg-surface/30 border border-surface-alt/50 hover:bg-surface/45 hover:border-green/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
-                <div className="p-4 rounded-[8px] bg-green-surface/10 text-green h-fit shrink-0">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+                <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <ShieldAlert className="w-7 h-7" />
                 </div>
                 <div>
-                  <h4 className="text-h5 font-semibold text-heading">{t("help.acc3Title")}</h4>
-                  <p className="text-base text-meta mt-3 leading-relaxed">
+                  <h4 className="text-h4 font-semibold text-ink-9">{t("help.acc3Title")}</h4>
+                  <p className="text-base text-ink-6 mt-3 leading-relaxed">
                     {t("help.acc3Desc")}
                   </p>
                 </div>
@@ -350,7 +350,7 @@ export function HelpView() {
             className="space-y-10 animate-in fade-in duration-300"
           >
             <div>
-              <h3 className="text-h3 font-semibold text-heading">
+              <h3 className="text-h3 font-semibold text-ink-9">
                 {t("help.faqTitle")}
               </h3>
             </div>
@@ -361,16 +361,16 @@ export function HelpView() {
                 return (
                   <div
                     key={index}
-                    className="rounded-panel border border-surface-alt/60 bg-surface/30 overflow-hidden hover:border-green/20 transition-colors shadow-sm"
+                    className="border border-ink-4/60 bg-ink-2/30 overflow-hidden hover:border-live-border/20 transition-colors shadow-sm"
                   >
                     <button
                       onClick={() => setExpandedFaq(isExpanded ? null : index)}
-                      className="w-full flex items-center justify-between p-6 md:p-7 font-semibold text-base md:text-lg text-left text-heading hover:text-green transition-colors gap-4"
+                      className="w-full flex items-center justify-between p-6 md:p-7 font-semibold text-base md:text-lg text-left text-ink-9 hover:text-live transition-colors gap-4"
                     >
                       <span>{faq.q}</span>
                       <ChevronDown
-                        className={`w-6 h-6 shrink-0 text-meta transition-transform duration-300 ${
-                          isExpanded ? "rotate-180 text-green" : ""
+                        className={`w-6 h-6 shrink-0 text-ink-6 transition-transform duration-300 ${
+                          isExpanded ? "rotate-180 text-live" : ""
                         }`}
                       />
                     </button>
@@ -383,7 +383,7 @@ export function HelpView() {
                           transition={{ duration: 0.25, ease: "easeInOut" }}
                           className="overflow-hidden"
                         >
-                          <div className="p-7 pt-2 text-base text-meta/95 leading-relaxed border-t border-surface-alt/10 mt-1">
+                          <div className="p-7 pt-2 text-base text-ink-6/95 leading-relaxed border-t border-ink-4/10 mt-1">
                             {faq.a}
                           </div>
                         </motion.div>
@@ -402,17 +402,17 @@ export function HelpView() {
   };
 
   return (
-    <div className="mx-auto w-full max-w-[960px] space-y-10 px-6 pt-10">
+    <div className="stage-pad space-y-10 pt-10 sm:pt-16">
       <header>
         <h2 className="label-rule">{t("help.title")}</h2>
-        <p className="max-w-[62ch] font-serif text-body-lg leading-[1.6] text-meta">
+        <p className="max-w-[62ch] font-prose text-body-lg leading-[1.6] text-ink-6">
           {t("help.subtitle")}
         </p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-start pt-6">
         {/* Left Sub-Navigation Sidebar */}
-        <div className="md:col-span-4 space-y-3.5 bg-surface border border-surface-alt/60 p-6 rounded-panel sticky top-24 shadow-sm">
+        <div className="md:col-span-4 space-y-3.5 bg-ink-2 border border-ink-4/60 p-6  sticky top-24 shadow-sm">
           {CATEGORIES.map(({ id, icon: Icon }) => {
             const isActive = activeCategory === id;
             return (
@@ -422,20 +422,20 @@ export function HelpView() {
                   setActiveCategory(id);
                   setExpandedFaq(null);
                 }}
-                className={`w-full flex items-center gap-4 px-6 py-4 rounded-[8px] transition-all text-left group relative ${
+                className={`w-full flex items-center gap-4 px-6 py-4  transition-all text-left group relative ${
                   isActive
-                    ? "text-green font-semibold bg-green-surface/10 shadow-sm"
-                    : "hover:bg-surface text-heading/80 hover:text-heading"
+                    ? "text-live font-semibold bg-live/10 shadow-sm"
+                    : "hover:bg-ink-2 text-ink-9/80 hover:text-ink-9"
                 }`}
               >
                 <div
-                  className={`p-3 rounded-[4px] transition-colors ${
+                  className={`p-3 rounded-control transition-colors ${
                     isActive
-                      ? "bg-green-surface/15"
-                      : "bg-surface group-hover:bg-panel/40"
+                      ? "bg-live/15"
+                      : "bg-ink-2 group-hover:bg-ink-3/40"
                   }`}
                 >
-                  <Icon className={`w-5.5 h-5.5 ${isActive ? "text-green" : ""}`} />
+                  <Icon className={`w-5.5 h-5.5 ${isActive ? "text-live" : ""}`} />
                 </div>
                 <span className="text-body font-medium">{t(`help.${id}`)}</span>
 
@@ -453,7 +453,7 @@ export function HelpView() {
         </div>
 
         {/* Right Content Pane */}
-        <div className="md:col-span-8 bg-surface border border-surface-alt/60 p-8 md:p-12 rounded-panel min-h-[500px] shadow-sm flex flex-col justify-between">
+        <div className="md:col-span-8 bg-ink-2 border border-ink-4/60 p-8 md:p-12  min-h-[500px] shadow-sm flex flex-col justify-between">
           <div className="flex-1">
             <AnimatePresence mode="wait">
               {renderCategoryContent()}

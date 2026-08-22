@@ -4,6 +4,7 @@ import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
 import { Movie } from "@/lib/tmdb";
 import { PosterTile, PosterWall, EmptyState } from "./PosterTile";
+import { StageHeading } from "./StageHeading";
 
 export function HistoryView() {
   const { history, locale, setMovie, setActiveView } = useStore();
@@ -15,21 +16,12 @@ export function HistoryView() {
   };
 
   return (
-    <section
-      aria-label={t("history.title")}
-      className="mx-auto w-full max-w-[960px] px-6 pt-10"
-    >
-      <h2 className="label-rule">
-        {t("history.title")}
-        {history.length > 0 && (
-          <span className="font-serif text-body-sm tracking-normal" data-numeric>
-            {history.length}
-          </span>
-        )}
-      </h2>
-      <p className="mb-6 font-serif text-body text-meta">
-        {t("history.subtitle")}
-      </p>
+    <section aria-label={t("history.title")} className="stage-pad pt-10 sm:pt-16">
+      <StageHeading
+        title={t("history.title")}
+        subtitle={t("history.subtitle")}
+        count={history.length}
+      />
 
       {history.length === 0 ? (
         <EmptyState message={t("history.empty")} />

@@ -2,10 +2,10 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Star, X } from "lucide-react";
+import { X } from "lucide-react";
 import { getImageUrl, Movie } from "@/lib/tmdb";
 
-const EASE = [0.19, 1, 0.22, 1] as const;
+const EASE = [0.2, 0.8, 0.2, 1] as const;
 
 export function PosterTile({
   movie,
@@ -29,7 +29,7 @@ export function PosterTile({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0 }}
       // Stagger caps out so a long wall does not crawl in.
-      transition={{ delay: Math.min(index, 12) * 0.025, duration: 0.333, ease: EASE }}
+      transition={{ delay: Math.min(index, 10) * 0.02, duration: 0.24, ease: EASE }}
       className="group relative"
     >
       <button
@@ -44,10 +44,10 @@ export function PosterTile({
             alt=""
             fill
             className="object-cover"
-            sizes="(max-width: 640px) 33vw, 125px"
+            sizes="(max-width: 640px) 33vw, 150px"
           />
         ) : (
-          <span className="flex h-full w-full items-center justify-center p-2 text-center text-tiny text-meta">
+          <span className="flex h-full w-full items-center justify-center p-2 text-center text-label uppercase tracking-[0.12em] text-ink-6">
             {movie.title}
           </span>
         )}
@@ -59,37 +59,29 @@ export function PosterTile({
           onClick={() => onRemove(movie)}
           title={removeLabel}
           aria-label={`${removeLabel}: ${movie.title}`}
-          className="absolute right-1 top-1 rounded-full bg-bg/80 p-1 text-meta opacity-0 transition-[opacity,color] duration-150 hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
+          className="absolute right-1 top-1 bg-ink-0/85 p-1 text-ink-7 opacity-0 transition-[opacity,color] duration-[120ms] hover:text-alert focus-visible:opacity-100 group-hover:opacity-100"
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-3 w-3" />
         </button>
       )}
 
-      <div className="mt-1.5 space-y-0.5">
-        <p className="truncate text-body-sm font-medium text-ink-high">
-          {movie.title}
-        </p>
-        <p className="flex items-center gap-2 text-tiny text-meta">
-          <span className="font-serif" data-numeric>
-            {year}
+      <p className="mt-2 truncate text-small text-ink-8">{movie.title}</p>
+      <p className="flex items-center gap-2 text-label text-ink-6">
+        <span data-num>{year}</span>
+        {typeof movie.vote_average === "number" && movie.vote_average > 0 && (
+          <span data-num className="text-live">
+            {movie.vote_average.toFixed(1)}
           </span>
-          {typeof movie.vote_average === "number" && movie.vote_average > 0 && (
-            <span className="inline-flex items-center gap-0.5">
-              <Star className="h-2.5 w-2.5 fill-green-hover text-green-hover" />
-              <span className="font-serif" data-numeric>
-                {movie.vote_average.toFixed(1)}
-              </span>
-            </span>
-          )}
-        </p>
-      </div>
+        )}
+      </p>
     </motion.li>
   );
 }
 
+/** Fixed-width tracks, tight gutter — a wall, not a card grid. */
 export function PosterWall({ children }: { children: React.ReactNode }) {
   return (
-    <ul className="grid grid-cols-[repeat(auto-fill,minmax(100px,1fr))] gap-x-[10px] gap-y-5 sm:grid-cols-[repeat(auto-fill,minmax(125px,1fr))]">
+    <ul className="grid grid-cols-[repeat(auto-fill,minmax(104px,1fr))] gap-x-3 gap-y-6 sm:grid-cols-[repeat(auto-fill,minmax(132px,1fr))]">
       {children}
     </ul>
   );
@@ -97,8 +89,8 @@ export function PosterWall({ children }: { children: React.ReactNode }) {
 
 export function EmptyState({ message }: { message: string }) {
   return (
-    <div className="border border-dashed border-surface-alt px-6 py-16 text-center">
-      <p className="font-serif text-body-lg text-meta">{message}</p>
-    </div>
+    <p className="max-w-[46ch] font-prose text-h4 leading-[1.5] text-ink-6">
+      {message}
+    </p>
   );
 }

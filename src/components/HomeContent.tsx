@@ -3,12 +3,11 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { Menu } from "lucide-react";
 
-import { Header as TopBar } from "@/components/Header";
-import { FilterPanel } from "@/components/FilterPanel";
-import { RouletteButton } from "@/components/RouletteButton";
+import { Rail } from "@/components/Rail";
+import { Mark, Logo } from "@/components/Mark";
 import { MovieCard } from "@/components/MovieCard";
-import { SidebarMenu } from "@/components/SidebarMenu";
 import { HistoryView } from "@/components/HistoryView";
 import { FavouritesView } from "@/components/FavouritesView";
 import { MobileAppView } from "@/components/MobileAppView";
@@ -18,17 +17,17 @@ import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
 import { getImageUrl, Genre } from "@/lib/tmdb";
 
-const EASE = [0.19, 1, 0.22, 1] as const;
+const EASE = [0.2, 0.8, 0.2, 1] as const;
 
 export function HomeContent({ genres }: { genres: Genre[] }) {
-  const { locale, movie, isLoading, activeView } = useStore();
+  const { locale, movie, isLoading, activeView, setMenuOpen } = useStore();
   const t = getTranslations(locale);
-  const resultRef = useRef<HTMLDivElement>(null);
+  const stageRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (movie && resultRef.current && activeView === "random") {
+    if (movie && stageRef.current && activeView === "random") {
       const timer = setTimeout(() => {
-        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+        stageRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 120);
       return () => clearTimeout(timer);
     }
@@ -38,66 +37,64 @@ export function HomeContent({ genres }: { genres: Genre[] }) {
   const showBackdrop = activeView === "random" && !!backdrop;
 
   return (
-    <div className="relative flex min-h-screen flex-col">
-      {/* The film supplies the only colour on the page. */}
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-[420px] overflow-hidden sm:h-[560px]"
-        aria-hidden="true"
-      >
-        <AnimatePresence mode="wait">
-          {showBackdrop && (
-            <motion.div
-              key={movie!.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.5, ease: EASE }}
-              className="absolute inset-0"
-            >
-              <Image
-                src={backdrop!}
-                alt=""
-                fill
-                priority
-                className="object-cover object-top"
-                sizes="100vw"
-              />
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <div className="absolute inset-x-0 top-0 h-[72px] bg-gradient-to-b from-bg/90 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-bg via-bg/85 to-transparent" />
-      </div>
+    <div className="flex min-h-screen flex-col bg-ink-1 xl:pl-(--rail-width)">
+      <Rail genres={genres} />
 
-      <TopBar />
-      <SidebarMenu />
+      {/* Compact bar below xl only — the rail carries navigation above it. */}
+      <div className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-ink-4 bg-ink-1/95 px-4 backdrop-blur-sm xl:hidden">
+        <button
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-label={t("menu.open")}
+          className="ctl ctl-ghost h-8 w-8 px-0"
+        >
+          <Menu className="h-4 w-4" />
+        </button>
+        <Logo markSize={18} />
+      </div>
 
       <main className="relative flex-1">
         {activeView === "random" && (
           <>
-            <section className="mx-auto w-full max-w-[960px] px-6 pb-8 pt-10 sm:pt-16">
-              <h1 className="max-w-[18ch] text-h2 font-semibold leading-[1.125] text-heading sm:text-h1">
-                {t("site.tagline")}
-              </h1>
-              <p className="mt-3 max-w-[62ch] font-serif text-body-lg leading-[1.6] text-ink-high">
-                {t("site.description")}
-              </p>
+            {/* Stage backdrop: the film supplies the only colour on the page. */}
+            <div
+              className="pointer-events-none absolute inset-x-0 top-0 h-[380px] overflow-hidden sm:h-[520px]"
+              aria-hidden="true"
+            >
+              <AnimatePresence mode="wait">
+                {showBackdrop && (
+                  <motion.div
+                    key={movie!.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 0.55 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.42, ease: EASE }}
+                    className="absolute inset-0"
+                  >
+                    <Image
+                      src={backdrop!}
+                      alt=""
+                      fill
+                      priority
+                      className="object-cover object-top"
+                      sizes="100vw"
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <div className="absolute inset-0 bg-gradient-to-r from-ink-1 via-ink-1/60 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-ink-1 to-transparent" />
+            </div>
 
-              <div className="mt-8 rounded-panel border border-surface-alt bg-surface/60 p-4 backdrop-blur-sm sm:p-5">
-                <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-                  <div className="min-w-0 flex-1">
-                    <FilterPanel genres={genres} />
-                  </div>
-                  <div className="shrink-0 lg:pb-0">
-                    <RouletteButton />
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <div ref={resultRef} className="scroll-mt-[72px]">
-              {isLoading && <ResultSkeleton />}
-              {!isLoading && !movie && <FirstRun label={t("site.badge")} />}
+            <div ref={stageRef} className="relative scroll-mt-14">
+              {isLoading && <StageSkeleton />}
+              {!isLoading && !movie && (
+                <Idle
+                  headline={t("site.tagline")}
+                  body={t("site.description")}
+                  note={t("site.badge")}
+                />
+              )}
               <MovieCard />
             </div>
           </>
@@ -109,60 +106,75 @@ export function HomeContent({ genres }: { genres: Genre[] }) {
         {activeView === "help" && <HelpView />}
       </main>
 
-      <footer className="mt-16 border-t border-surface-alt py-6">
-        <p className="mx-auto max-w-[960px] px-6 text-tiny text-meta">
-          {t("site.footer")}
-        </p>
+      <footer className="mt-24 border-t border-ink-4">
+        <div className="stage-pad py-6">
+          <p className="text-label uppercase tracking-[0.12em] text-ink-7">
+            {t("site.footer")}
+          </p>
+        </div>
       </footer>
     </div>
   );
 }
 
-/* Holds the result's shape while it loads, so the page does not jump. */
-function ResultSkeleton() {
+/**
+ * Before the first roll. Not a card and not an apology for empty space — the
+ * proposition set at display size, so the stage reads as waiting, not blank.
+ */
+function Idle({
+  headline,
+  body,
+  note,
+}: {
+  headline: string;
+  body: string;
+  note: string;
+}) {
   return (
-    <div className="mx-auto w-full max-w-[960px] px-6 pb-12" aria-hidden="true">
-      <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
-        <div className="poster w-[180px] shrink-0 sm:w-[230px]">
-          <span className="skeleton" />
+    <div className="stage-pad pt-16 sm:pt-24">
+      <div className="grid gap-x-10 gap-y-8 sm:grid-cols-12">
+        <div className="sm:col-span-11 lg:col-span-9">
+          <h1 className="max-w-[15ch] text-title leading-[1.1] tracking-[-0.02em] text-ink-9 lg:text-display lg:leading-[1.02] lg:tracking-[-0.03em]">
+            {headline}
+          </h1>
+          <p className="mt-6 max-w-[58ch] font-prose text-[1.0625rem] leading-[1.65] text-ink-7">
+            {body}
+          </p>
         </div>
-        <div className="flex-1 space-y-3 pt-2">
-          <Bar className="h-7 w-2/3" />
-          <Bar className="h-4 w-1/3" />
-          <Bar className="mt-6 h-3 w-full" />
-          <Bar className="h-3 w-full" />
-          <Bar className="h-3 w-4/5" />
-        </div>
+      </div>
+
+      <div className="stage-rule mt-12" />
+
+      <div className="mt-5 flex items-center gap-4">
+        <Mark size={28} className="shrink-0 text-ink-5" />
+        <p className="text-label uppercase tracking-[0.12em] text-ink-6">
+          {note}
+        </p>
       </div>
     </div>
   );
 }
 
-/* Before the first roll the page would otherwise be a filter bar over nothing.
-   Three blank frames stand in for the result, so the shape is legible first. */
-function FirstRun({ label }: { label: string }) {
+/** Holds the result's shape while it loads so the stage does not jump. */
+function StageSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-[960px] px-6 pb-12">
-      <div className="flex items-center gap-4 border border-dashed border-surface-alt p-6 sm:gap-6 sm:p-8">
-        <div className="flex shrink-0 gap-2" aria-hidden="true">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-9 rounded-[2px] bg-poster-inset sm:w-12"
-              style={{ aspectRatio: "2 / 3", opacity: 1 - i * 0.28 }}
-            />
-          ))}
+    <div className="stage-pad pt-10 sm:pt-16" aria-hidden="true">
+      <div className="grid gap-8 sm:grid-cols-12">
+        <div className="sm:col-span-4 lg:col-span-3">
+          <div className="poster">
+            <span className="skeleton-cell absolute inset-0" />
+          </div>
         </div>
-        <p className="font-serif text-body-lg leading-[1.6] text-meta">{label}</p>
+        <div className="space-y-4 sm:col-span-8 lg:col-span-9">
+          <div className="skeleton-cell h-11 w-3/5" />
+          <div className="skeleton-cell h-4 w-1/4" />
+          <div className="mt-8 space-y-2">
+            <div className="skeleton-cell h-3 w-full" />
+            <div className="skeleton-cell h-3 w-full" />
+            <div className="skeleton-cell h-3 w-4/5" />
+          </div>
+        </div>
       </div>
     </div>
-  );
-}
-
-function Bar({ className }: { className: string }) {
-  return (
-    <div
-      className={`animate-skeleton rounded-[2px] bg-poster-inset ${className}`}
-    />
   );
 }

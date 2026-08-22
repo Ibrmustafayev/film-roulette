@@ -1,81 +1,89 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Film Roulette — cinema-dark design system.
-   Token values are measured, not invented; see DESIGN.md for the record.
-   Dark only: the use scene is a dark room, and no light theme was ever measured.
+   Film Roulette — "projection booth"
+   A dense instrument rail against a wide, quiet stage. See DESIGN.md.
+   Radius, density and elevation vary by role on purpose; nothing is uniform.
 --------------------------------------------------------------------------- */
 
 @theme {
-  /* Surfaces */
-  --color-bg: #14181c;
-  --color-surface: #283038;
-  --color-surface-alt: #2c3440;
-  --color-panel: #445566;
-  --color-panel-high: #334455;
-  --color-poster-bg: #12161a;
-  --color-poster-inset: #21282f;
-  --color-separator: #445566;
-  --color-rating-track: #3c454f;
+  /* --- Neutral ramp (cool cast, ten steps) --- */
+  --color-ink-0: #0b0e11;
+  --color-ink-1: #101418;
+  --color-ink-2: #161b21;
+  --color-ink-3: #1e242c;
+  --color-ink-4: #2a323c;
+  --color-ink-5: #3d4854;
+  --color-ink-6: #5c6977;
+  --color-ink-7: #8593a1;
+  --color-ink-8: #b9c4ce;
+  --color-ink-9: #edf1f5;
 
-  /* Content */
-  --color-ink: #99aabb;
-  --color-ink-high: #aabbcc;
-  --color-ink-higher: #ccddee;
-  --color-heading: #ffffff;
-  --color-meta: #667788;
-  --color-meta-low: #556677;
-  --color-muted: #8899aa;
+  /* --- Semantic roles: five slots each, so each is a system not a colour --- */
+  --color-live-subtle: #04240f;
+  --color-live-border: #0a5c25;
+  --color-live: #00e054;
+  --color-live-hover: #4dff8c;
+  --color-live-on: #04240f;
 
-  /* Accent — one meaning each */
-  --color-green: #00e054;
-  --color-green-surface: #00ac1c;
-  --color-green-hover: #00c030;
-  --color-green-active: #009926;
-  --color-orange: #ff8000;
-  --color-orange-surface: #ee7000;
-  --color-blue: #40bcf4;
-  --color-blue-surface: #209ce4;
-  --color-danger: #ec1200;
+  --color-flag-subtle: #2a1705;
+  --color-flag-border: #7a3f0a;
+  --color-flag: #ff8a2b;
+  --color-flag-hover: #ffa85c;
+  --color-flag-on: #2a1705;
 
-  /* Type */
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-serif: var(--font-source-serif), Georgia, serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-link-subtle: #06202e;
+  --color-link-border: #17546f;
+  --color-link: #4fb8f5;
+  --color-link-hover: #85cffa;
+  --color-link-on: #06202e;
 
-  --text-tiny: 0.6875rem;
-  --text-tiny--line-height: 1.5;
-  --text-meta: 0.75rem;
-  --text-meta--line-height: 1.5;
-  --text-body-sm: 0.8125rem;
-  --text-body-sm--line-height: 1.5;
-  --text-body: 0.9375rem;
-  --text-body--line-height: 1.5;
-  --text-body-lg: 1.0625rem;
-  --text-body-lg--line-height: 1.5;
-  --text-h5: 1rem;
-  --text-h5--line-height: 1.25;
-  --text-h4: 1.125rem;
-  --text-h4--line-height: 1.25;
+  --color-alert-subtle: #2c0b08;
+  --color-alert-border: #7a1d16;
+  --color-alert: #ff4438;
+  --color-alert-hover: #ff7a71;
+  --color-alert-on: #2c0b08;
+
+  /* --- Type: three faces, three jobs --- */
+  --font-ui: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
+  --font-data: var(--font-plex-mono), ui-monospace, monospace;
+  --font-prose: var(--font-source-serif), Georgia, serif;
+
+  --text-display: 3.25rem;
+  --text-display--line-height: 1.02;
+  --text-display--letter-spacing: -0.03em;
+  --text-title: 2rem;
+  --text-title--line-height: 1.1;
+  --text-title--letter-spacing: -0.02em;
   --text-h3: 1.375rem;
-  --text-h3--line-height: 1.25;
-  --text-h2: 1.6875rem;
-  --text-h2--line-height: 1.25;
-  --text-h1: 2rem;
-  --text-h1--line-height: 1.125;
+  --text-h3--line-height: 1.2;
+  --text-h3--letter-spacing: -0.01em;
+  --text-h4: 1.0625rem;
+  --text-h4--line-height: 1.3;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.6;
+  --text-small: 0.8125rem;
+  --text-small--line-height: 1.5;
+  --text-label: 0.6875rem;
+  --text-label--line-height: 1.2;
+  --text-label--letter-spacing: 0.12em;
 
-  /* Motion — one easing across the whole system. Real objects decelerate; the
-     system deliberately has no overshoot curve. */
-  --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  /* --- Radius: varies by role. 0 is the default container. --- */
+  --radius-poster: 2px;
+  --radius-control: 3px;
 
-  /* Shape */
-  --radius-poster: 3px;
-  --radius-poster-lg: 8px;
-  --radius-chip: 3px;
-  --radius-control: 4px;
-  --radius-panel: 0.5rem;
+  /* --- Elevation: every shadow has an offset --- */
+  --shadow-raised: 0 1px 4px rgb(0 0 0 / 0.4);
+  --shadow-poster-lift: 0 6px 18px rgb(0 0 0 / 0.55);
+  --shadow-lifted: 0 8px 24px rgb(0 0 0 / 0.5);
 
-  /* Breakpoints */
+  /* --- Motion: one easing, three durations --- */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* --- Layout --- */
+  --rail-width: 272px;
+  --stage-max: 1120px;
+
   --breakpoint-xs: 480px;
   --breakpoint-sm: 560px;
   --breakpoint-md: 640px;
@@ -83,119 +91,82 @@
   --breakpoint-xl: 1024px;
   --breakpoint-2xl: 1280px;
 
-  /* Named animations */
-  --animate-skeleton: skeleton 2s var(--ease-expo) infinite;
-  --animate-rise: rise 0.5s var(--ease-expo) both;
+  --animate-pulse-cell: pulse-cell 1.8s var(--ease-out) infinite;
 }
 
-@keyframes skeleton {
-  0%,
-  100% {
-    opacity: 0;
-  }
-  50% {
-    opacity: 0.3333;
-  }
+@keyframes pulse-cell {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.6; }
 }
 
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(0.75rem);
-    filter: blur(0.125rem);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-    filter: blur(0);
-  }
+@keyframes stage-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
 }
 
 @layer base {
   html {
     color-scheme: dark;
-    scroll-behavior: smooth;
   }
 
   body {
-    background-color: var(--color-bg);
-    color: var(--color-ink);
-    font-family: var(--font-sans);
+    background-color: var(--color-ink-0);
+    color: var(--color-ink-8);
+    font-family: var(--font-ui);
     font-size: var(--text-body);
-    line-height: 1.5;
+    line-height: 1.6;
     -webkit-font-smoothing: antialiased;
   }
 
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6 {
-    color: var(--color-heading);
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--color-ink-9);
     font-weight: 600;
     text-wrap: balance;
   }
 
-  p {
-    text-wrap: pretty;
-  }
+  p { text-wrap: pretty; }
 
-  /* Browser surfaces belong to the design system too. */
+  /* Browser surfaces carry the design too. */
   ::selection {
-    background: color-mix(in srgb, var(--color-green) 30%, transparent);
-    color: #fff;
+    background: var(--color-live);
+    color: var(--color-live-on);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-blue-surface);
+    outline: 2px solid var(--color-link);
     outline-offset: 2px;
-    border-radius: 2px;
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--color-panel) transparent;
+    scrollbar-color: var(--color-ink-4) transparent;
   }
-
-  ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
-  }
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: var(--color-panel);
-    border-radius: 999px;
-    border: 3px solid var(--color-bg);
+    background: var(--color-ink-4);
+    border: 4px solid var(--color-ink-0);
   }
-  ::-webkit-scrollbar-thumb:hover {
-    background: var(--color-meta);
-  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-ink-5); }
 
-  /* Numerals line up in metadata rows. */
-  time,
-  [data-numeric] {
+  /* Data is measurement: mono, tabular, never decorative. */
+  [data-num] {
+    font-family: var(--font-data);
     font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
   }
 
   select {
     appearance: none;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23667788' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-    background-position: right 0.5rem center;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 16 16'%3e%3cpath stroke='%235C6977' stroke-linecap='square' stroke-width='1.25' d='M4 6.5 8 10l4-3.5'/%3e%3c/svg%3e");
+    background-position: right 0.375rem center;
     background-repeat: no-repeat;
-    background-size: 1.25em 1.25em;
-    padding-right: 2rem;
+    background-size: 1rem 1rem;
+    padding-right: 1.5rem;
   }
 
   @media (prefers-reduced-motion: reduce) {
-    html {
-      scroll-behavior: auto;
-    }
-    *,
-    *::before,
-    *::after {
+    *, *::before, *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
@@ -204,170 +175,205 @@
 }
 
 @layer components {
-  /* Section label: 13px, .075em, uppercase, hairline under. */
-  .label-rule {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 1rem;
-    padding-bottom: 5px;
-    margin-bottom: 12px;
-    border-bottom: 1px solid var(--color-separator);
-    font-size: 0.8125rem;
-    line-height: 1.25;
-    letter-spacing: 0.075em;
+  /* ---------- The rail: dense, hard-cornered, hairline-ruled ---------- */
+  .rail-label {
+    font-size: var(--text-label);
+    line-height: 1.2;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: var(--color-ink);
+    color: var(--color-ink-6);
   }
 
-  /* Poster frame — the ring is an overlay so hover never shifts layout. */
+  /* A section marker in the rail: label with a rule that fills the remainder. */
+  .rail-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: var(--text-label);
+    line-height: 1.2;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-ink-6);
+  }
+  .rail-heading::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--color-ink-4);
+  }
+
+  /* ---------- Stage ---------- */
+  /* Left-aligned to the rail, never centred. The gutter opens up with the
+     viewport so the stage breathes while the rail stays fixed and dense. */
+  .stage-pad {
+    max-width: var(--stage-max);
+    padding-inline: 20px;
+  }
+  @media (min-width: 640px) {
+    .stage-pad { padding-inline: 40px; }
+  }
+  @media (min-width: 1024px) {
+    .stage-pad { padding-inline: 64px; }
+  }
+
+  /* Section rule: heavier on the left, fading right — direction, not decoration. */
+  .stage-rule {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      var(--color-ink-5),
+      var(--color-ink-4) 40%,
+      transparent
+    );
+  }
+
+  .stage-in {
+    animation: stage-in 420ms var(--ease-out) both;
+  }
+
+  /* ---------- Controls: 3px, the only rounded things besides posters ---------- */
+  .ctl {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 36px;
+    padding-inline: 12px;
+    border-radius: var(--radius-control);
+    border: 1px solid transparent;
+    font-size: var(--text-small);
+    font-weight: 600;
+    transition:
+      background-color 120ms var(--ease-out),
+      border-color 120ms var(--ease-out),
+      color 120ms var(--ease-out);
+  }
+  .ctl-tight { height: 28px; padding-inline: 8px; }
+
+  .ctl-live {
+    background: var(--color-live);
+    color: var(--color-live-on);
+  }
+  .ctl-live:hover:not(:disabled) { background: var(--color-live-hover); }
+  .ctl-live:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  .ctl-ghost {
+    background: transparent;
+    border-color: var(--color-ink-4);
+    color: var(--color-ink-8);
+  }
+  .ctl-ghost:hover:not(:disabled) {
+    border-color: var(--color-ink-6);
+    color: var(--color-ink-9);
+  }
+
+  .ctl-bare {
+    background: transparent;
+    color: var(--color-ink-7);
+  }
+  .ctl-bare:hover:not(:disabled) { color: var(--color-ink-9); }
+
+  /* Inputs sit in a recessed fill, not a floating card. */
+  .inp {
+    width: 100%;
+    height: 32px;
+    padding-inline: 8px;
+    border-radius: var(--radius-control);
+    background: var(--color-ink-3);
+    border: 1px solid var(--color-ink-4);
+    color: var(--color-ink-9);
+    font-size: var(--text-small);
+    transition:
+      border-color 120ms var(--ease-out),
+      background-color 120ms var(--ease-out);
+  }
+  .inp:hover:not(:disabled) { border-color: var(--color-ink-5); }
+  .inp:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  /* ---------- Poster: 2px, real shadow, live ring on intent ---------- */
   .poster {
     position: relative;
     display: block;
     overflow: hidden;
     aspect-ratio: 2 / 3;
-    background: var(--color-poster-bg);
-    border-radius: clamp(2px, 2.667%, 8px) / clamp(2px, 1.778%, 8px);
-    box-shadow:
-      0 1px 5px rgba(0, 0, 0, 0.25),
-      0 1px 10px rgba(0, 0, 0, 0.35);
+    background: var(--color-ink-2);
+    border-radius: var(--radius-poster);
+    box-shadow: var(--shadow-raised);
     transition:
-      transform 0.333s var(--ease-expo),
-      box-shadow 0.333s var(--ease-expo);
+      transform 240ms var(--ease-out),
+      box-shadow 240ms var(--ease-out);
   }
-
   .poster::after {
     content: "";
     position: absolute;
     inset: 0;
     border-radius: inherit;
     pointer-events: none;
-    box-shadow: inset 0 0 0 0 var(--color-green);
-    transition: box-shadow 0.333s var(--ease-expo);
+    box-shadow: inset 0 0 0 0 var(--color-live);
+    transition: box-shadow 240ms var(--ease-out);
   }
-
   .poster:focus-within {
     transform: translateY(-2px);
-    box-shadow:
-      0 4px 12px rgba(0, 0, 0, 0.35),
-      0 8px 28px rgba(0, 0, 0, 0.45);
+    box-shadow: var(--shadow-poster-lift);
   }
-  .poster:focus-within::after {
-    box-shadow: inset 0 0 0 3px var(--color-green);
-  }
+  .poster:focus-within::after { box-shadow: inset 0 0 0 2px var(--color-live); }
 
   @media (hover: hover) and (pointer: fine) {
     .poster:hover {
       transform: translateY(-2px);
-      box-shadow:
-        0 4px 12px rgba(0, 0, 0, 0.35),
-        0 8px 28px rgba(0, 0, 0, 0.45);
+      box-shadow: var(--shadow-poster-lift);
     }
-    .poster:hover::after {
-      box-shadow: inset 0 0 0 3px var(--color-green);
-    }
+    .poster:hover::after { box-shadow: inset 0 0 0 2px var(--color-live); }
   }
 
-  .poster:active {
-    transform: none;
-  }
-
-  /* Controls */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    height: 2.375rem;
-    padding-inline: 0.875rem;
-    border-radius: var(--radius-control);
-    font-size: 0.8125rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    transition:
-      background-color 0.15s var(--ease-expo),
-      color 0.15s var(--ease-expo),
-      border-color 0.15s var(--ease-expo);
-  }
-
-  .btn-primary {
-    background: var(--color-green-surface);
-    color: #f4fcf0;
-  }
-  .btn-primary:hover:not(:disabled) {
-    background: var(--color-green-hover);
-    color: #fff;
-  }
-  .btn-primary:active:not(:disabled) {
-    background: var(--color-green-active);
-  }
-  .btn-primary:disabled {
-    opacity: 0.55;
-    cursor: not-allowed;
-  }
-
-  .btn-default {
-    background: var(--color-panel);
-    color: #c8d4e0;
-  }
-  .btn-default:hover:not(:disabled) {
-    background: #667788;
-    color: #fff;
-  }
-  .btn-default:active:not(:disabled) {
-    background: var(--color-panel-high);
-  }
-
-  .btn-quiet {
-    background: transparent;
-    color: var(--color-muted);
-    border: 1px solid var(--color-separator);
-  }
-  .btn-quiet:hover:not(:disabled) {
-    color: #fff;
-    border-color: var(--color-meta);
-  }
-
-  .chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.25rem;
-    padding: 3px 6px;
-    border-radius: var(--radius-chip);
-    background: var(--color-surface);
-    color: var(--color-ink-high);
-    font-size: 0.8125rem;
-    line-height: 19.5px;
-    transition:
-      background-color 0.15s var(--ease-expo),
-      color 0.15s var(--ease-expo);
-  }
-
-  .field {
+  /* ---------- Metadata table: tight, ruled, no box ---------- */
+  .datatable {
     width: 100%;
-    height: 2.375rem;
-    padding-inline: 0.625rem;
-    border-radius: var(--radius-control);
-    background: color-mix(in srgb, var(--color-surface) 70%, transparent);
-    border: 1px solid var(--color-surface-alt);
-    color: var(--color-ink-higher);
-    font-size: 0.8125rem;
+    border-collapse: collapse;
+    font-size: var(--text-small);
+  }
+  .datatable th,
+  .datatable td {
+    height: 28px;
+    padding: 0 12px 0 0;
+    text-align: left;
+    vertical-align: baseline;
+    border-bottom: 1px solid var(--color-ink-4);
+  }
+  .datatable th {
+    width: 8.5rem;
+    font-size: var(--text-label);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--color-ink-6);
+  }
+  .datatable td { color: var(--color-ink-8); }
+  .datatable tr:last-child th,
+  .datatable tr:last-child td { border-bottom: 0; }
+
+  /* ---------- Tag: square, ruled, never a pill ---------- */
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    height: 22px;
+    padding-inline: 7px;
+    border: 1px solid var(--color-ink-4);
+    color: var(--color-ink-7);
+    font-size: var(--text-label);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
     transition:
-      border-color 0.15s var(--ease-expo),
-      background-color 0.15s var(--ease-expo);
+      border-color 120ms var(--ease-out),
+      color 120ms var(--ease-out);
   }
-  .field:hover:not(:disabled) {
-    border-color: var(--color-separator);
-  }
-  .field:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  a.tag:hover, button.tag:hover {
+    border-color: var(--color-ink-6);
+    color: var(--color-ink-9);
   }
 
-  .skeleton {
-    position: absolute;
-    inset: 0;
-    background: var(--color-poster-inset);
-    animation: var(--animate-skeleton);
+  .skeleton-cell {
+    background: var(--color-ink-3);
+    animation: var(--animate-pulse-cell);
   }
 }

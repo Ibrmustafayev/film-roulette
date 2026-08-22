@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
-import { Inter, Source_Serif_4, Geist_Mono } from "next/font/google";
+import { Archivo, IBM_Plex_Mono, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 
-/* Sans carries structure; serif carries prose and numerals. That split is the
-   largest single contributor to the look — see DESIGN.md. */
-const inter = Inter({
-  variable: "--font-inter",
+/* Three faces, three jobs — see DESIGN.md.
+   Archivo: UI and headings. Plex Mono: numerals and measurement only.
+   Source Serif: prose only. No face does two jobs. */
+const archivo = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
+  display: "swap",
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
+  subsets: ["latin"],
+  weight: ["400", "500"],
   display: "swap",
 });
 
@@ -16,16 +24,10 @@ const sourceSerif = Source_Serif_4({
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
-});
-
 export const metadata: Metadata = {
   title: "Film Roulette",
   description:
-    "Roll the Dice, Find Your Movie! Discover random movies with smart filters.",
+    "Set your filters, roll once, and get one film to watch tonight.",
 };
 
 export default function RootLayout({
@@ -36,7 +38,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${inter.variable} ${sourceSerif.variable} ${geistMono.variable} min-h-screen bg-bg text-ink flex flex-col`}
+        className={`${archivo.variable} ${plexMono.variable} ${sourceSerif.variable} min-h-screen bg-ink-0 text-ink-8`}
       >
         {children}
       </body>

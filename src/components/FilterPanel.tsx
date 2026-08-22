@@ -4,6 +4,7 @@ import { useStore } from "@/store/useStore";
 import { Genre, LANGUAGE_CODES } from "@/lib/tmdb";
 import { getTranslations } from "@/lib/i18n";
 
+/** Vertical instrument panel. Dense rows, label above field, no boxes. */
 export function FilterPanel({ genres }: { genres: Genre[] }) {
   const {
     genre,
@@ -27,14 +28,14 @@ export function FilterPanel({ genres }: { genres: Genre[] }) {
   const ratingKeys = ["", "9-10", "8-10", "7-10", "6-10", "5-10", "0-5"];
 
   return (
-    <div className="grid grid-cols-2 gap-x-3 gap-y-4 lg:grid-cols-4">
-      <Field label={t("filters.genre")} htmlFor="f-genre">
+    <div className="space-y-4">
+      <Row label={t("filters.genre")} htmlFor="f-genre">
         <select
           id="f-genre"
           value={genre}
           onChange={(e) => setGenre(e.target.value)}
           disabled={isLoading}
-          className="field"
+          className="inp"
         >
           <option value="">{t("filters.genreAll")}</option>
           {genres.map((g) => (
@@ -43,16 +44,16 @@ export function FilterPanel({ genres }: { genres: Genre[] }) {
             </option>
           ))}
         </select>
-      </Field>
+      </Row>
 
-      <Field label={t("filters.year")} htmlFor="f-year-from">
+      <Row label={t("filters.year")} htmlFor="f-year-from">
         <div className="flex items-center gap-1.5">
           <select
             id="f-year-from"
             value={yearFrom}
             onChange={(e) => setYearFrom(e.target.value)}
             disabled={isLoading}
-            className="field font-serif"
+            className="inp font-(family-name:--font-data)"
             aria-label={t("filters.yearFrom")}
           >
             <option value="">{t("filters.yearFrom")}</option>
@@ -62,12 +63,12 @@ export function FilterPanel({ genres }: { genres: Genre[] }) {
               </option>
             ))}
           </select>
-          <span className="shrink-0 text-meta">–</span>
+          <span className="text-ink-6">–</span>
           <select
             value={yearTo}
             onChange={(e) => setYearTo(e.target.value)}
             disabled={isLoading}
-            className="field font-serif"
+            className="inp font-(family-name:--font-data)"
             aria-label={t("filters.yearTo")}
           >
             <option value="">{t("filters.yearTo")}</option>
@@ -78,15 +79,15 @@ export function FilterPanel({ genres }: { genres: Genre[] }) {
             ))}
           </select>
         </div>
-      </Field>
+      </Row>
 
-      <Field label={t("filters.language")} htmlFor="f-lang">
+      <Row label={t("filters.language")} htmlFor="f-lang">
         <select
           id="f-lang"
           value={originalLanguage}
           onChange={(e) => setOriginalLanguage(e.target.value)}
           disabled={isLoading}
-          className="field"
+          className="inp"
         >
           {LANGUAGE_CODES.map((code) => (
             <option key={code} value={code}>
@@ -94,15 +95,15 @@ export function FilterPanel({ genres }: { genres: Genre[] }) {
             </option>
           ))}
         </select>
-      </Field>
+      </Row>
 
-      <Field label={t("filters.rating")} htmlFor="f-rating">
+      <Row label={t("filters.rating")} htmlFor="f-rating">
         <select
           id="f-rating"
           value={imdbRange}
           onChange={(e) => setImdbRange(e.target.value)}
           disabled={isLoading}
-          className="field"
+          className="inp"
         >
           {ratingKeys.map((key) => (
             <option key={key} value={key}>
@@ -110,12 +111,12 @@ export function FilterPanel({ genres }: { genres: Genre[] }) {
             </option>
           ))}
         </select>
-      </Field>
+      </Row>
     </div>
   );
 }
 
-function Field({
+function Row({
   label,
   htmlFor,
   children,
@@ -126,10 +127,7 @@ function Field({
 }) {
   return (
     <div>
-      <label
-        htmlFor={htmlFor}
-        className="mb-1.5 block text-tiny uppercase tracking-[0.075em] text-meta"
-      >
+      <label htmlFor={htmlFor} className="rail-label mb-1.5 block">
         {label}
       </label>
       {children}

@@ -6,9 +6,11 @@ import { useStore } from "@/store/useStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTranslations } from "@/lib/i18n";
 
-/* The locale strings carry a leading dice emoji from the previous design. The
-   button now has a real drawn icon, so the emoji would read as a second one.
-   Strip it at render rather than editing every translation. */
+const EASE = [0.2, 0.8, 0.2, 1] as const;
+
+/* The locale strings carry a leading dice emoji from an earlier design. The
+   control has a drawn icon, so the emoji would read as a second one. Strip it
+   at render rather than editing every translation. */
 const stripLeadingEmoji = (s: string) =>
   s.replace(/^[\p{Extended_Pictographic}️\s]+/u, "").trim();
 
@@ -23,6 +25,7 @@ export function RouletteButton() {
     isLoading,
     setIsLoading,
     locale,
+    setActiveView,
   } = useStore();
   const [error, setError] = useState("");
   const t = getTranslations(locale);
@@ -31,6 +34,7 @@ export function RouletteButton() {
     setIsLoading(true);
     setError("");
     setMovie(null);
+    setActiveView("random");
 
     try {
       const params = new URLSearchParams();
@@ -58,17 +62,17 @@ export function RouletteButton() {
   };
 
   return (
-    <div className="flex flex-col gap-2">
+    <div>
       <button
         type="button"
         onClick={rollDice}
         disabled={isLoading}
-        className="btn btn-primary h-[2.625rem] w-full px-6 text-body-sm lg:w-auto"
+        className="ctl ctl-live w-full"
       >
         {isLoading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : (
-          <Dice5 className="h-4 w-4" />
+          <Dice5 className="h-3.5 w-3.5" />
         )}
         {stripLeadingEmoji(isLoading ? t("button.rolling") : t("button.roll"))}
       </button>
@@ -77,11 +81,11 @@ export function RouletteButton() {
         {error && (
           <motion.p
             role="alert"
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.15, ease: [0.19, 1, 0.22, 1] }}
-            className="max-w-xs text-body-sm text-danger"
+            transition={{ duration: 0.12, ease: EASE }}
+            className="mt-2 border border-alert-border bg-alert-subtle px-2 py-1.5 text-small text-alert"
           >
             {error}
           </motion.p>

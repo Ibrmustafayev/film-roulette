@@ -8,6 +8,9 @@ import { getTranslations } from "@/lib/i18n";
 import { searchMovies, getMovieDetails, getImageUrl, Movie } from "@/lib/tmdb";
 import { motion, AnimatePresence } from "framer-motion";
 
+const EASE = [0.2, 0.8, 0.2, 1] as const;
+
+/** Sits in the rail. Results drop over the stage, hard-cornered and lifted. */
 export function SearchBar() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Movie[]>([]);
@@ -72,23 +75,23 @@ export function SearchBar() {
   };
 
   return (
-    <div ref={searchRef} className="relative hidden min-w-0 max-w-xs flex-1 md:block">
+    <div ref={searchRef} className="relative">
       <div className="group relative">
-        <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-meta transition-colors group-focus-within:text-blue" />
+        <SearchIcon className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-6 transition-colors group-focus-within:text-link" />
         <input
           type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.length > 2 && setIsOpen(true)}
           placeholder={t("search.placeholder")}
-          className="field h-8 pl-8 pr-8"
+          className="inp pl-7 pr-7"
           aria-label={t("search.placeholder")}
         />
         {query && (
           <button
             type="button"
             onClick={() => setQuery("")}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-meta transition-colors hover:text-heading"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-ink-6 transition-colors hover:text-ink-9"
             aria-label={t("menu.close")}
           >
             <X className="h-3.5 w-3.5" />
@@ -99,45 +102,44 @@ export function SearchBar() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 4 }}
+            initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 4 }}
-            transition={{ duration: 0.15, ease: [0.19, 1, 0.22, 1] }}
-            className="absolute inset-x-0 top-full z-100 mt-1.5 overflow-hidden rounded-panel border border-surface-alt bg-surface shadow-[0_8px_28px_rgba(0,0,0,0.45)]"
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.12, ease: EASE }}
+            className="absolute left-0 right-0 top-full z-50 mt-1 border border-ink-4 bg-ink-2 shadow-lifted"
           >
             {isSearching ? (
-              <div className="flex items-center justify-center gap-2 p-6 text-meta">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-body-sm">{t("search.searching")}</span>
+              <div className="flex items-center gap-2 px-3 py-4 text-ink-6">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span className="text-label uppercase tracking-[0.12em]">
+                  {t("search.searching")}
+                </span>
               </div>
             ) : results.length > 0 ? (
-              <ul className="max-h-[380px] overflow-y-auto p-1.5">
+              <ul className="max-h-[320px] overflow-y-auto">
                 {results.map((movie) => (
-                  <li key={movie.id}>
+                  <li key={movie.id} className="border-b border-ink-4 last:border-0">
                     <button
                       type="button"
                       onClick={() => handleSelect(movie)}
-                      className="group/item flex w-full gap-2.5 rounded-control p-1.5 text-left transition-colors hover:bg-panel/40"
+                      className="group/item flex w-full items-center gap-2.5 p-2 text-left transition-colors duration-[120ms] hover:bg-ink-3"
                     >
-                      <span className="relative block h-[54px] w-9 shrink-0 overflow-hidden rounded-[2px] bg-poster-bg">
+                      <span className="relative block h-12 w-8 shrink-0 overflow-hidden rounded-poster bg-ink-3">
                         {movie.poster_path && (
                           <Image
                             src={getImageUrl(movie.poster_path, "w185")!}
                             alt=""
                             fill
                             className="object-cover"
-                            sizes="36px"
+                            sizes="32px"
                           />
                         )}
                       </span>
-                      <span className="flex min-w-0 flex-col justify-center">
-                        <span className="truncate text-body-sm font-medium text-ink-high transition-colors group-hover/item:text-heading">
+                      <span className="flex min-w-0 flex-col">
+                        <span className="truncate text-small text-ink-8 transition-colors group-hover/item:text-ink-9">
                           {movie.title}
                         </span>
-                        <span
-                          className="font-serif text-tiny text-meta"
-                          data-numeric
-                        >
+                        <span className="text-label text-ink-6" data-num>
                           {movie.release_date?.split("-")[0]}
                         </span>
                       </span>
@@ -146,7 +148,7 @@ export function SearchBar() {
                 ))}
               </ul>
             ) : query.length > 2 ? (
-              <p className="p-6 text-center text-body-sm text-meta">
+              <p className="px-3 py-4 text-label uppercase tracking-[0.12em] text-ink-6">
                 {t("search.noResults")}
               </p>
             ) : null}

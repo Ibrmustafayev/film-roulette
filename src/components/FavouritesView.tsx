@@ -5,6 +5,7 @@ import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
 import { Movie } from "@/lib/tmdb";
 import { PosterTile, PosterWall, EmptyState } from "./PosterTile";
+import { StageHeading } from "./StageHeading";
 
 export function FavouritesView() {
   const { favourites, locale, setMovie, setActiveView, toggleFavourite } =
@@ -19,19 +20,13 @@ export function FavouritesView() {
   return (
     <section
       aria-label={t("favourites.title")}
-      className="mx-auto w-full max-w-[960px] px-6 pt-10"
+      className="stage-pad pt-10 sm:pt-16"
     >
-      <h2 className="label-rule">
-        {t("favourites.title")}
-        {favourites.length > 0 && (
-          <span className="font-serif text-body-sm tracking-normal" data-numeric>
-            {favourites.length}
-          </span>
-        )}
-      </h2>
-      <p className="mb-6 font-serif text-body text-meta">
-        {t("favourites.subtitle")}
-      </p>
+      <StageHeading
+        title={t("favourites.title")}
+        subtitle={t("favourites.subtitle")}
+        count={favourites.length}
+      />
 
       {favourites.length === 0 ? (
         <EmptyState message={t("favourites.empty")} />

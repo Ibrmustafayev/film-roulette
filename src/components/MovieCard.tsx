@@ -4,11 +4,10 @@ import Image from "next/image";
 import { useStore } from "@/store/useStore";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Star, Play, User, ExternalLink, Heart, Loader2,
-  AlertCircle, RefreshCw, ChevronRight, Server, X,
+  Play, User, ExternalLink, Heart, Loader2,
+  AlertCircle, RefreshCw, ChevronRight, X, Link2, Download, Check,
 } from "lucide-react";
 import { getImageUrl } from "@/lib/tmdb";
-import { ShareButton } from "./ShareButton";
 import { getTranslations } from "@/lib/i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -17,7 +16,7 @@ const SOURCES = [
   {
     name: "Server 1 (VidLink)",
     url: (_: string, tmdbId: number) =>
-      `https://vidlink.pro/movie/${tmdbId}?primaryColor=00e054&secondaryColor=00ac1c&icons=vid&autoplay=true`,
+      `https://vidlink.pro/movie/${tmdbId}?primaryColor=00e054&secondaryColor=0a5c25&icons=vid&autoplay=true`,
   },
   {
     name: "Server 2 (VidSrc)",
@@ -49,7 +48,7 @@ type PlayerPhase =
   | { tag: "playing"; sourceIndex: number }
   | { tag: "error" };
 
-const EASE = [0.19, 1, 0.22, 1] as const;
+const EASE = [0.2, 0.8, 0.2, 1] as const;
 
 export function MovieCard() {
   const {
@@ -62,6 +61,7 @@ export function MovieCard() {
 
   const [phase, setPhase] = useState<PlayerPhase>({ tag: "idle" });
   const [lastTime, setLastTime] = useState<number | null>(null);
+  const [copied, setCopied] = useState(false);
 
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
@@ -213,25 +213,38 @@ export function MovieCard() {
   const isFav = isFavourite(movie.id);
   const posterUrl = getImageUrl(movie.poster_path, "w500");
 
+  const ogUrl = `/api/og?title=${encodeURIComponent(movie.title)}&poster=${
+    movie.poster_path ? encodeURIComponent(movie.poster_path) : ""
+  }&rating=${movie.vote_average.toFixed(1)}&year=${releaseYear}&genres=${
+    movie.genres
+      ? encodeURIComponent(movie.genres.map((g) => g.name).join(", "))
+      : ""
+  }`;
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}${ogUrl}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      /* clipboard unavailable */
+    }
+  };
+
+  /* The one authored moment: the result arriving. Stage children stagger in
+     behind the poster; nothing else on the page has an entrance. */
+  const step = (i: number) => ({
+    initial: { opacity: 0, y: 12 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.42, delay: i * 0.04, ease: EASE },
+  });
+
   return (
     <AnimatePresence mode="wait">
-      <motion.article
-        key={movie.id}
-        aria-label={movie.title}
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
-        transition={{ duration: 0.5, ease: EASE }}
-        className="mx-auto w-full max-w-[960px] px-6 pb-12"
-      >
-        <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
-          {/* Poster */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: EASE }}
-            className="mx-auto w-[180px] shrink-0 sm:mx-0 sm:w-[230px]"
-          >
+      <article key={movie.id} className="stage-pad pt-10 sm:pt-16">
+        <div className="grid gap-x-10 gap-y-8 sm:grid-cols-12">
+          {/* Poster — columns 1–4 */}
+          <motion.div {...step(0)} className="sm:col-span-4 lg:col-span-3">
             <div className="poster">
               {posterUrl ? (
                 <Image
@@ -240,130 +253,102 @@ export function MovieCard() {
                   fill
                   priority
                   className="object-cover"
-                  sizes="(max-width: 640px) 180px, 230px"
+                  sizes="(max-width: 640px) 60vw, 260px"
                 />
               ) : (
-                <span className="flex h-full w-full items-center justify-center p-3 text-center text-tiny text-meta">
+                <span className="flex h-full w-full items-center justify-center p-3 text-center text-label uppercase tracking-[0.12em] text-ink-6">
                   {movie.title}
                 </span>
               )}
             </div>
 
-            <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                onClick={() => toggleFavourite(movie)}
-                aria-pressed={isFav}
-                className={`btn flex-1 ${isFav ? "btn-default" : "btn-quiet"}`}
-                title={isFav ? t("favourites.remove") : t("favourites.add")}
-              >
-                <Heart
-                  className={`h-4 w-4 ${isFav ? "fill-orange text-orange" : ""}`}
-                />
-                <span className="truncate">
-                  {isFav ? t("favourites.remove") : t("favourites.add")}
-                </span>
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => toggleFavourite(movie)}
+              aria-pressed={isFav}
+              className={`ctl mt-3 w-full ${
+                isFav
+                  ? "border-flag-border bg-flag-subtle text-flag"
+                  : "ctl-ghost"
+              }`}
+            >
+              <Heart className={`h-3.5 w-3.5 ${isFav ? "fill-flag" : ""}`} />
+              <span className="truncate">
+                {isFav ? t("favourites.remove") : t("favourites.add")}
+              </span>
+            </button>
           </motion.div>
 
-          {/* Detail */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.06, ease: EASE }}
-            className="min-w-0 flex-1"
-          >
-            <h2 className="text-h3 font-semibold leading-[1.15] text-heading sm:text-h2">
-              {movie.title}{" "}
-              <span
-                className="font-serif text-h4 font-normal text-meta"
-                data-numeric
-              >
-                {releaseYear}
-              </span>
-            </h2>
-
-            {movie.original_title !== movie.title && (
-              <p className="mt-1 truncate font-serif text-body-sm italic text-meta">
-                {movie.original_title}
+          {/* Detail — columns 5–12 */}
+          <div className="sm:col-span-8 lg:col-span-9">
+            <motion.header {...step(1)}>
+              <h1 className="max-w-[16ch] text-title leading-[1.1] tracking-[-0.02em] text-ink-9 lg:text-display lg:leading-[1.02] lg:tracking-[-0.03em]">
+                {movie.title}
+              </h1>
+              {movie.original_title !== movie.title && (
+                <p className="mt-2 max-w-[40ch] font-prose text-h4 italic text-ink-6">
+                  {movie.original_title}
+                </p>
+              )}
+              <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-small text-ink-7">
+                <span data-num className="text-ink-8">
+                  {releaseYear}
+                </span>
+                {runtimeText && (
+                  <span data-num>{runtimeText}</span>
+                )}
+                <span className="inline-flex items-baseline gap-1.5">
+                  <span data-num className="text-h4 text-live">
+                    {movie.vote_average.toFixed(1)}
+                  </span>
+                  <span className="text-label uppercase tracking-[0.12em] text-ink-6">
+                    {t("rating.tmdb")}
+                  </span>
+                </span>
+                {imdbUrl && (
+                  <a
+                    href={imdbUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-link transition-colors duration-[120ms] hover:text-link-hover"
+                  >
+                    {t("rating.imdb")}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
               </p>
-            )}
-
-            {/* Metadata row */}
-            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-meta">
-              <span className="inline-flex items-center gap-1.5">
-                <Star className="h-3.5 w-3.5 fill-green-hover text-green-hover" />
-                <span
-                  className="font-serif text-body-lg font-semibold text-ink-higher"
-                  data-numeric
-                >
-                  {movie.vote_average.toFixed(1)}
-                </span>
-                <span className="text-tiny uppercase tracking-[0.075em]">
-                  {t("rating.tmdb")}
-                </span>
-              </span>
-
-              {movie.vote_count !== undefined && (
-                <span className="text-tiny" data-numeric>
-                  {movie.vote_count.toLocaleString()} {t("movie.votes")}
-                </span>
-              )}
-
-              {runtimeText && (
-                <span className="text-body-sm" data-numeric>
-                  {runtimeText}
-                </span>
-              )}
-
-              {movie.original_language && (
-                <span className="text-body-sm uppercase">
-                  {movie.original_language}
-                </span>
-              )}
-
-              {imdbUrl && (
-                <a
-                  href={imdbUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-body-sm text-blue transition-colors hover:text-blue-surface"
-                >
-                  {t("rating.imdb")}
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              )}
-            </div>
+            </motion.header>
 
             {movie.genres && movie.genres.length > 0 && (
-              <ul className="mt-4 flex flex-wrap gap-x-1 gap-y-1.5">
+              <motion.ul {...step(2)} className="mt-5 flex flex-wrap gap-1.5">
                 {movie.genres.map((g) => (
-                  <li key={g.id} className="chip">
+                  <li key={g.id} className="tag">
                     {t(`genres.${g.id}`)}
                   </li>
                 ))}
-              </ul>
+              </motion.ul>
             )}
 
-            <p className="mt-5 max-w-[68ch] font-serif text-[16px] leading-[1.667] text-ink-high">
+            <motion.p
+              {...step(3)}
+              className="mt-6 max-w-[68ch] font-prose text-[1.0625rem] leading-[1.65] text-ink-8"
+            >
               {movie.overview || t("movie.noOverview")}
-            </p>
+            </motion.p>
 
-            {/* Actions */}
-            <div className="mt-6 flex flex-wrap gap-2">
+            <motion.div {...step(4)} className="mt-7 flex flex-wrap gap-2">
               {movie.imdb_id && (
                 <button
                   type="button"
                   onClick={handleWatchMovie}
-                  className={`btn ${isPlayerOpen ? "btn-default" : "btn-primary"}`}
+                  className={`ctl ${isPlayerOpen ? "ctl-ghost" : "ctl-live"}`}
                 >
                   {phase.tag === "probing" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
                   ) : isPlayerOpen ? (
-                    <X className="h-4 w-4" />
+                    <X className="h-3.5 w-3.5" />
                   ) : (
-                    <Play className="h-4 w-4 fill-current" />
+                    <Play className="h-3.5 w-3.5 fill-current" />
                   )}
                   {isPlayerOpen ? t("menu.close") : t("movie.watchMovie")}
                 </button>
@@ -372,64 +357,110 @@ export function MovieCard() {
                 <button
                   type="button"
                   onClick={() => setShowTrailer(!showTrailer)}
-                  className="btn btn-default"
+                  className="ctl ctl-ghost"
                 >
-                  <Play className="h-4 w-4 fill-current" />
+                  <Play className="h-3.5 w-3.5 fill-current" />
                   {t("movie.watchTrailer")}
                 </button>
               )}
-              <ShareButton movie={movie} />
-            </div>
-
-            {/* Cast */}
-            {movie.cast && movie.cast.length > 0 && (
-              <section className="mt-8">
-                <h3 className="label-rule">{t("movie.cast")}</h3>
-                <ul className="flex gap-4 overflow-x-auto pb-2">
-                  {movie.cast.map((actor) => (
-                    <li
-                      key={actor.id}
-                      className="flex w-16 shrink-0 flex-col items-center text-center"
-                    >
-                      <span className="relative block h-14 w-14 overflow-hidden rounded-full bg-poster-inset">
-                        {actor.profile_path ? (
-                          <Image
-                            src={getImageUrl(actor.profile_path, "w185")!}
-                            alt=""
-                            fill
-                            className="object-cover"
-                            sizes="56px"
-                          />
-                        ) : (
-                          <span className="flex h-full w-full items-center justify-center text-meta">
-                            <User className="h-5 w-5" />
-                          </span>
-                        )}
-                      </span>
-                      <span className="mt-1.5 text-tiny font-medium leading-tight text-ink-high">
-                        {actor.name}
-                      </span>
-                      <span className="text-tiny leading-tight text-meta">
-                        {actor.character}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </motion.div>
+              <button type="button" onClick={copyLink} className="ctl ctl-bare">
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-live" />
+                ) : (
+                  <Link2 className="h-3.5 w-3.5" />
+                )}
+                {copied ? t("share.copied") : t("share.copyLink")}
+              </button>
+              <a
+                href={ogUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ctl ctl-bare"
+                title={t("share.download")}
+              >
+                <Download className="h-3.5 w-3.5" />
+                <span className="sr-only">{t("share.download")}</span>
+              </a>
+            </motion.div>
+          </div>
         </div>
 
-        {/* Player — fenced off from the third-party iframe it hosts. */}
+        {/* Dense readout — the density counterweight to the open stage above */}
+        <motion.div {...step(5)} className="mt-12 sm:grid sm:grid-cols-12">
+          <div className="sm:col-span-9">
+            <div className="stage-rule mb-4" />
+            <table className="datatable">
+              <tbody>
+                <tr>
+                  <th scope="row">{t("filters.year")}</th>
+                  <td data-num>{releaseYear}</td>
+                </tr>
+                <tr>
+                  <th scope="row">{t("filters.language")}</th>
+                  <td className="uppercase">{movie.original_language}</td>
+                </tr>
+                <tr>
+                  <th scope="row">{t("filters.rating")}</th>
+                  <td>
+                    <span data-num>{movie.vote_average.toFixed(1)}</span>
+                    {movie.vote_count !== undefined && (
+                      <span className="ml-2 text-ink-6">
+                        <span data-num>{movie.vote_count.toLocaleString()}</span>{" "}
+                        {t("movie.votes")}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+
+        {/* Cast */}
+        {movie.cast && movie.cast.length > 0 && (
+          <motion.section {...step(6)} className="mt-12">
+            <h2 className="rail-heading mb-4 max-w-[42rem]">{t("movie.cast")}</h2>
+            <ul className="flex gap-5 overflow-x-auto pb-2">
+              {movie.cast.map((actor) => (
+                <li key={actor.id} className="w-16 shrink-0">
+                  <span className="relative block h-16 w-16 overflow-hidden rounded-full bg-ink-3">
+                    {actor.profile_path ? (
+                      <Image
+                        src={getImageUrl(actor.profile_path, "w185")!}
+                        alt=""
+                        fill
+                        className="object-cover"
+                        sizes="64px"
+                      />
+                    ) : (
+                      <span className="flex h-full w-full items-center justify-center text-ink-6">
+                        <User className="h-5 w-5" />
+                      </span>
+                    )}
+                  </span>
+                  <span className="mt-2 block text-label leading-tight text-ink-8">
+                    {actor.name}
+                  </span>
+                  <span className="block text-label leading-tight text-ink-6">
+                    {actor.character}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </motion.section>
+        )}
+
+        {/* Player — hard-cornered and ruled, so it never blends with the
+            third-party iframe it hosts. */}
         <AnimatePresence>
           {(showTrailer || isPlayerOpen) && (
             <motion.section
               ref={playerRef}
               initial={{ height: 0, opacity: 0, marginTop: 0 }}
-              animate={{ height: "auto", opacity: 1, marginTop: 32 }}
+              animate={{ height: "auto", opacity: 1, marginTop: 48 }}
               exit={{ height: 0, opacity: 0, marginTop: 0 }}
-              transition={{ duration: 0.333, ease: EASE }}
-              className="scroll-mt-[72px] overflow-hidden rounded-panel border border-surface-alt bg-black"
+              transition={{ duration: 0.24, ease: EASE }}
+              className="scroll-mt-14 overflow-hidden border border-ink-4 bg-black"
             >
               <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
                 {showTrailer && (
@@ -455,13 +486,13 @@ export function MovieCard() {
                       className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
                       aria-hidden
                     />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-bg">
-                      <Loader2 className="h-6 w-6 animate-spin text-green" />
-                      <div className="space-y-1 text-center">
-                        <p className="text-body-sm text-ink-high">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-ink-1">
+                      <Loader2 className="h-5 w-5 animate-spin text-live" />
+                      <div className="space-y-1.5 text-center">
+                        <p className="text-small text-ink-8">
                           {t("movie.autoSearching")}
                         </p>
-                        <p className="text-tiny text-meta">
+                        <p className="text-label uppercase tracking-[0.12em] text-ink-6">
                           {t("movie.testingServer", {
                             server: SOURCES[phase.sourceIndex].name,
                             current: phase.sourceIndex + 1,
@@ -469,17 +500,16 @@ export function MovieCard() {
                           })}
                         </p>
                       </div>
-                      {/* Progress through the failover chain */}
                       <ol className="flex gap-1" aria-hidden="true">
                         {SOURCES.map((_, i) => (
                           <li
                             key={i}
-                            className={`h-[3px] w-6 rounded-full transition-colors duration-300 ${
+                            className={`h-0.5 w-7 transition-colors duration-[240ms] ${
                               i < phase.sourceIndex
-                                ? "bg-meta-low"
+                                ? "bg-ink-5"
                                 : i === phase.sourceIndex
-                                  ? "bg-green"
-                                  : "bg-surface"
+                                  ? "bg-live"
+                                  : "bg-ink-3"
                             }`}
                           />
                         ))}
@@ -489,13 +519,11 @@ export function MovieCard() {
                 )}
 
                 {!showTrailer && phase.tag === "error" && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-bg p-6 text-center">
-                    <AlertCircle className="h-8 w-8 text-danger" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-ink-1 p-6 text-center">
+                    <AlertCircle className="h-6 w-6 text-alert" />
                     <div>
-                      <p className="text-h5 font-semibold text-heading">
-                        {t("errors.noSource")}
-                      </p>
-                      <p className="mt-1 text-body-sm text-meta">
+                      <p className="text-h4 text-ink-9">{t("errors.noSource")}</p>
+                      <p className="mt-1 text-small text-ink-6">
                         {t("movie.allServersChecked", { total: SOURCES.length })}
                       </p>
                     </div>
@@ -505,7 +533,7 @@ export function MovieCard() {
                         abortRef.current = false;
                         trySource(0);
                       }}
-                      className="btn btn-default"
+                      className="ctl ctl-ghost"
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
                       {t("movie.retry")}
@@ -528,21 +556,21 @@ export function MovieCard() {
               </div>
 
               {!showTrailer && phase.tag === "playing" && (
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-surface-alt bg-surface px-4 py-2.5 text-tiny">
-                  <span className="inline-flex items-center gap-2 text-meta">
-                    <Server className="h-3.5 w-3.5 text-green" />
-                    {t("movie.activeServer")}{" "}
-                    <strong className="font-medium text-ink-high">
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-4 bg-ink-2 px-4 py-2">
+                  <span className="inline-flex items-center gap-2 text-label uppercase tracking-[0.12em] text-ink-6">
+                    <span className="h-1.5 w-1.5 rounded-full bg-live" />
+                    {t("movie.activeServer")}
+                    <span className="text-ink-8" data-num>
                       {SOURCES[phase.sourceIndex].name}
-                    </strong>
+                    </span>
                   </span>
                   <button
                     type="button"
                     onClick={handleNextServerManual}
-                    className="inline-flex items-center gap-1 text-blue transition-colors hover:text-blue-surface"
+                    className="inline-flex items-center gap-1 text-label uppercase tracking-[0.12em] text-link transition-colors duration-[120ms] hover:text-link-hover"
                   >
                     {t("movie.nextServer")}
-                    <ChevronRight className="h-3.5 w-3.5" />
+                    <ChevronRight className="h-3 w-3" />
                   </button>
                 </div>
               )}
@@ -551,21 +579,21 @@ export function MovieCard() {
                 phase.tag === "playing" &&
                 lastTime &&
                 lastTime > 10 && (
-                  <div className="flex items-center justify-between border-t border-surface-alt bg-surface px-4 py-2 text-tiny text-meta">
-                    <span data-numeric>
+                  <div className="flex items-center justify-between border-t border-ink-4 bg-ink-2 px-4 py-1.5 text-label uppercase tracking-[0.12em] text-ink-6">
+                    <span data-num>
                       {t("movie.lastWatched", {
                         time: `${Math.floor(lastTime / 60)}:${(lastTime % 60)
                           .toString()
                           .padStart(2, "0")}`,
                       })}
                     </span>
-                    <span className="text-green">{t("movie.resuming")}</span>
+                    <span className="text-live">{t("movie.resuming")}</span>
                   </div>
                 )}
             </motion.section>
           )}
         </AnimatePresence>
-      </motion.article>
+      </article>
     </AnimatePresence>
   );
 }
