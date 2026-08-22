@@ -103,7 +103,8 @@
     "iosStep1": "Linki Safari-də aç",
     "iosStep2": "Paylaşma düyməsinə (□↑) bas",
     "iosStep3": "Aşağı sürüşdür və \"Ana ekrana əlavə et\" seç",
-    "iosStep4": "Sağ üstdə \"Əlavə et\"ə bas"
+    "iosStep4": "Sağ üstdə \"Əlavə et\"ə bas",
+    "guide": "Quraşdırma təlimatı"
   },
   "help": {
     "title": "Kömək Mərkəzi",
@@ -232,5 +233,8 @@
     "placeholder": "Film axtar...",
     "noResults": "Film tapılmadı.",
     "searching": "Axtarılır..."
+  },
+  "home": {
+    "popular": "Populyar"
   }
 }

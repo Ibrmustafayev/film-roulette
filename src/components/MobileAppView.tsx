@@ -3,37 +3,16 @@
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
 import {
   Smartphone,
+  TabletSmartphone,
   Download,
   Wifi,
   Zap,
   Moon,
   ExternalLink,
 } from "lucide-react";
-
-function FeatureChip({
-  icon: Icon,
-  label,
-  desc,
-}: {
-  icon: React.ElementType;
-  label: string;
-  desc: string;
-}) {
-  return (
-    <div className="flex items-start gap-5 p-6  bg-ink-2/30 border border-ink-4/50 hover:border-live-border/20 transition-all hover:bg-ink-2/40 hover:shadow-lg hover:shadow-primary/5 duration-300">
-      <div className="shrink-0 p-3.5  bg-live/10 text-live">
-        <Icon className="w-6 h-6" />
-      </div>
-      <div className="space-y-1">
-        <p className="text-base font-semibold text-ink-9">{label}</p>
-        <p className="text-sm text-ink-6/90 leading-relaxed">{desc}</p>
-      </div>
-    </div>
-  );
-}
+import { StageHeading } from "./StageHeading";
 
 export function MobileAppView() {
   const { locale } = useStore();
@@ -47,196 +26,146 @@ export function MobileAppView() {
     }
   }, []);
 
-  const androidSteps = [
-    t("mobileapp.androidStep1"),
-    t("mobileapp.androidStep2"),
-    t("mobileapp.androidStep3"),
-    t("mobileapp.androidStep4"),
-  ];
+  const steps =
+    activeTab === "android"
+      ? [
+          t("mobileapp.androidStep1"),
+          t("mobileapp.androidStep2"),
+          t("mobileapp.androidStep3"),
+          t("mobileapp.androidStep4"),
+        ]
+      : [
+          t("mobileapp.iosStep1"),
+          t("mobileapp.iosStep2"),
+          t("mobileapp.iosStep3"),
+          t("mobileapp.iosStep4"),
+        ];
 
-  const iosSteps = [
-    t("mobileapp.iosStep1"),
-    t("mobileapp.iosStep2"),
-    t("mobileapp.iosStep3"),
-    t("mobileapp.iosStep4"),
+  const features = [
+    { icon: Wifi, label: t("mobileapp.featureOffline"), desc: t("mobileapp.featureOfflineDesc") },
+    { icon: Zap, label: t("mobileapp.featureFast"), desc: t("mobileapp.featureFastDesc") },
+    { icon: Moon, label: t("mobileapp.featureTheme"), desc: t("mobileapp.featureThemeDesc") },
   ];
 
   return (
-    <div className="stage-pad space-y-10 pt-10 sm:pt-16">
-      <header>
-        <h2 className="label-rule">{t("mobileapp.title")}</h2>
-        <p className="max-w-[62ch] font-prose text-body-lg leading-[1.6] text-ink-6">
-          {t("mobileapp.subtitle")}
-        </p>
-      </header>
+    <section aria-label={t("mobileapp.title")} className="stage-pad pt-10 sm:pt-16">
+      <StageHeading
+        title={t("mobileapp.title")}
+        subtitle={t("mobileapp.subtitle")}
+      />
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start pt-6">
-        {/* Left Column: Phone Mockup */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5 }}
-          className="lg:col-span-5 flex justify-center lg:sticky lg:top-24"
-        >
-          <div className="relative w-[300px] h-[610px] rounded-[56px] border-[14px] border-neutral-900 bg-neutral-950 shadow-2xl overflow-hidden ring-4 ring-neutral-800/10 shadow-primary/5 flex flex-col justify-between">
-            {/* Speaker & Camera (Dynamic Island style Notch) */}
-            <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-32 h-6 bg-neutral-900 rounded-full z-20 flex items-center justify-center">
-              <div className="w-3 h-3 bg-neutral-950 rounded-full absolute left-4" />
-              <div className="w-2 h-2 bg-neutral-800 rounded-full absolute right-4" />
-            </div>
+      {/* Scan block — hairline, hard-cornered, no gradient */}
+      <div className="flex flex-col items-start gap-8 border border-ink-4 p-6 sm:flex-row sm:items-center sm:p-8">
+        <div className="w-36 shrink-0 bg-white p-2.5">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
+              siteUrl
+            )}&margin=8`}
+            alt={t("mobileapp.scanTitle")}
+            className="block h-full w-full"
+          />
+        </div>
 
-            {/* Screen Content - Real Mockup Image */}
-            <div className="w-full h-full relative z-10 overflow-hidden bg-black">
-              <img
-                src="/mobile_app_screenshot.png"
-                alt="Film Roulette Mobile App Screenshot"
-                className="w-full h-full object-cover scale-[1.01]"
-              />
-              {/* Glossy sheen overlay */}
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-white/10 pointer-events-none z-15" />
-            </div>
-
-            {/* Home Bar */}
-            <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 w-36 h-1.5 bg-white/30 rounded-full z-20" />
-          </div>
-        </motion.div>
-
-        {/* Right Column: App details & Guide */}
-        <div className="lg:col-span-7 space-y-10">
-          {/* QR + Download */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.4 }}
-            className="relative overflow-hidden  border border-ink-4 bg-gradient-to-br from-muted/70 via-card to-muted/50 p-8 md:p-10 flex flex-col sm:flex-row items-center gap-10 shadow-sm"
+        <div className="min-w-0 flex-1">
+          <h3 className="text-h4 font-semibold text-ink-9">
+            {t("mobileapp.scanTitle")}
+          </h3>
+          <p className="mt-2 max-w-[52ch] font-prose text-body leading-[1.6] text-ink-7">
+            {t("mobileapp.scanDesc")}
+          </p>
+          <a
+            href={siteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ctl ctl-live mt-5"
           >
-            {/* Glow */}
-            <div className="absolute -top-16 -right-16 w-48 h-48 bg-live/5 rounded-full blur-3xl pointer-events-none" />
-
-            {/* QR Code Visual - Real Scannable QR Code */}
-            <div className="shrink-0 w-40 h-40  bg-white p-3 flex items-center justify-center shadow-xl border border-ink-4/40 overflow-hidden">
-              <img
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(siteUrl)}&color=0f172a&margin=10`}
-                alt="QR Code to download Film Roulette app"
-                className="w-full h-full object-contain"
-              />
-            </div>
-
-            <div className="flex flex-col gap-5 text-center sm:text-left flex-1">
-              <div>
-                <p className="font-semibold text-xl text-ink-9">{t("mobileapp.scanTitle")}</p>
-                <p className="text-sm text-ink-6 mt-2 leading-relaxed">
-                  {t("mobileapp.scanDesc")}
-                </p>
-              </div>
-              <a
-                href={siteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-primary h-[2.625rem] px-6"
-              >
-                <Download className="w-5 h-5" />
-                {t("mobileapp.downloadBtn")}
-                <ExternalLink className="w-4 h-4 opacity-70" />
-              </a>
-            </div>
-          </motion.div>
-
-          {/* Features */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.4 }}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-6"
-          >
-            <FeatureChip icon={Wifi} label={t("mobileapp.featureOffline")} desc={t("mobileapp.featureOfflineDesc")} />
-            <FeatureChip icon={Zap} label={t("mobileapp.featureFast")} desc={t("mobileapp.featureFastDesc")} />
-            <FeatureChip icon={Moon} label={t("mobileapp.featureTheme")} desc={t("mobileapp.featureThemeDesc")} />
-          </motion.div>
-
-          {/* Divider */}
-          <div className="flex items-center gap-4 pt-6">
-            <div className="h-px bg-border/60 flex-1" />
-            <span className="text-xs font-semibold uppercase tracking-widest text-live/80 bg-live/5 border border-live-border/15 px-5 py-2 rounded-full shadow-sm">
-              Installation Guide
-            </span>
-            <div className="h-px bg-border/60 flex-1" />
-          </div>
-
-          {/* Interactive Installation Guide */}
-          <div className="space-y-8">
-            {/* Platform Selection Tabs */}
-            <div className="flex justify-center gap-4">
-              <button
-                onClick={() => setActiveTab("android")}
-                className={`flex items-center gap-3 px-8 py-4  border transition-all font-semibold text-sm uppercase tracking-wider shadow-sm ${
-                  activeTab === "android"
-                    ? "bg-live/10 text-live border-green-500/35 shadow-green-500/5 scale-[1.02]"
-                    : "bg-ink-2/45 text-ink-6 border-transparent hover:bg-ink-2/70 hover:text-ink-9"
-                }`}
-              >
-                <span className="text-lg">🤖</span> {t("mobileapp.androidTitle")}
-              </button>
-              <button
-                onClick={() => setActiveTab("ios")}
-                className={`flex items-center gap-3 px-8 py-4  border transition-all font-semibold text-sm uppercase tracking-wider shadow-sm ${
-                  activeTab === "ios"
-                    ? "bg-blue-surface/10 text-link border-blue-500/35 shadow-blue-500/5 scale-[1.02]"
-                    : "bg-ink-2/45 text-ink-6 border-transparent hover:bg-ink-2/70 hover:text-ink-9"
-                }`}
-              >
-                <span className="text-lg">🍎</span> {t("mobileapp.iosTitle")}
-              </button>
-            </div>
-
-            {/* Vertical timeline for the steps */}
-            <div className="relative border-l-2 border-dashed border-ink-4/80 ml-8 pl-10 space-y-8 pt-4 pb-4">
-              {(activeTab === "android" ? androidSteps : iosSteps).map((step, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, x: -15 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: i * 0.1, type: "spring", stiffness: 120 }}
-                  className="relative group"
-                >
-                  {/* Step number badge */}
-                  <div className={`absolute -left-[60px] top-1.5 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border transition-all shadow-md ${
-                    activeTab === "android"
-                      ? "bg-live/15 text-live border-green-500/35 group-hover:bg-live group-hover:text-white group-hover:shadow-green-500/20"
-                      : "bg-blue-surface/15 text-link border-blue-500/35 group-hover:bg-blue-surface group-hover:text-white group-hover:shadow-blue-500/20"
-                  }`}>
-                    {i + 1}
-                  </div>
-
-                  {/* Step content card */}
-                  <div className="p-6 md:p-7  bg-ink-2/30 border border-ink-4/50 hover:border-live-border/20 transition-all hover:bg-ink-2/45 hover:shadow-lg hover:shadow-primary/5 hover:translate-x-1 duration-300">
-                    <p className="text-base font-bold text-ink-9/90 leading-relaxed">
-                      {step}
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
+            <Download className="h-3.5 w-3.5" />
+            {t("mobileapp.downloadBtn")}
+            <ExternalLink className="h-3 w-3 opacity-70" />
+          </a>
         </div>
       </div>
 
-      {/* CTA Footer */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.6, duration: 0.4 }}
-        className="text-center pt-6 pb-6"
-      >
+      {/* Features — a ruled row, not three equal cards */}
+      <ul className="mt-12 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+        {features.map(({ icon: Icon, label, desc }) => (
+          <li key={label} className="border-t border-ink-4 pt-4">
+            <Icon className="h-4 w-4 text-live" />
+            <h3 className="mt-3 text-h4 font-semibold text-ink-9">{label}</h3>
+            <p className="mt-1.5 max-w-[34ch] font-prose text-body leading-[1.6] text-ink-7">
+              {desc}
+            </p>
+          </li>
+        ))}
+      </ul>
+
+      {/* Installation guide */}
+      <div className="mt-16">
+        <h2 className="rail-heading mb-5">{t("mobileapp.guide")}</h2>
+
+        <div role="tablist" className="flex gap-2">
+          <button
+            role="tab"
+            aria-selected={activeTab === "android"}
+            onClick={() => setActiveTab("android")}
+            className={`ctl ${
+              activeTab === "android"
+                ? "border-live-border bg-live-subtle text-live"
+                : "ctl-ghost"
+            }`}
+          >
+            <Smartphone className="h-3.5 w-3.5" />
+            {t("mobileapp.androidTitle")}
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeTab === "ios"}
+            onClick={() => setActiveTab("ios")}
+            className={`ctl ${
+              activeTab === "ios"
+                ? "border-link-border bg-link-subtle text-link"
+                : "ctl-ghost"
+            }`}
+          >
+            <TabletSmartphone className="h-3.5 w-3.5" />
+            {t("mobileapp.iosTitle")}
+          </button>
+        </div>
+
+        {/* Steps: a numbered list on a single hairline, not stacked cards */}
+        <ol className="mt-8 border-l border-ink-4 pl-6">
+          {steps.map((step, i) => (
+            <li
+              key={`${activeTab}-${i}`}
+              className="relative pb-6 last:pb-0"
+            >
+              <span
+                className="absolute -left-[1.6875rem] top-0.5 flex h-4 w-4 items-center justify-center bg-ink-1 text-label text-ink-6"
+                data-num
+                aria-hidden="true"
+              >
+                {i + 1}
+              </span>
+              <p className="max-w-[56ch] font-prose text-body leading-[1.6] text-ink-8">
+                {step}
+              </p>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <p className="mt-12 border-t border-ink-4 pt-5">
         <a
           href={siteUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-base font-semibold text-live/70 hover:text-live underline underline-offset-4 transition-colors"
+          className="text-small text-link transition-colors duration-[120ms] hover:text-link-hover"
+          data-num
         >
           {siteUrl}
         </a>
-      </motion.div>
-    </div>
+      </p>
+    </section>
   );
 }

@@ -186,6 +186,18 @@ export const getRandomMovie = async ({
   };
 };
 
+// Popular movies — gives the idle home stage something to look at
+export const getPopularMovies = async (language = 'en-US', limit = 18) => {
+  const data = await fetchFromTMDB('/discover/movie', {
+    include_adult: 'false',
+    include_video: 'false',
+    language,
+    sort_by: 'popularity.desc',
+    'vote_count.gte': 200,
+  });
+  return ((data.results || []) as Movie[]).slice(0, limit);
+};
+
 // Search movies by title
 export const searchMovies = async (query: string, language = 'en-US') => {
   if (!query) return [];

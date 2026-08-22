@@ -103,7 +103,8 @@
     "iosStep1": "Open the link in Safari",
     "iosStep2": "Tap the Share button (□↑)",
     "iosStep3": "Scroll down and tap \"Add to Home Screen\"",
-    "iosStep4": "Tap \"Add\" in the top right corner"
+    "iosStep4": "Tap \"Add\" in the top right corner",
+    "guide": "Installation guide"
   },
   "help": {
     "title": "Help Center",
@@ -232,5 +233,8 @@
     "placeholder": "Search for a movie...",
     "noResults": "No movies found.",
     "searching": "Searching..."
+  },
+  "home": {
+    "popular": "Popular now"
   }
 }

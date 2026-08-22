@@ -65,7 +65,7 @@ export function HelpView() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-4">
-              <div className="p-8  bg-ink-2/40 border border-ink-4/60 hover:bg-ink-2/60 hover:border-live-border/20 transition-all hover:shadow-lg hover:shadow-primary/5 space-y-5 duration-300">
+              <div className="p-8  bg-ink-2/40 border border-ink-4/60 hover:bg-ink-2/60 hover:border-live-border/20 transition-all hover:shadow-lg space-y-5 duration-300">
                 <div className="w-14 h-14  bg-live/10 flex items-center justify-center text-live font-prose text-h4 font-semibold">
                   1
                 </div>
@@ -77,7 +77,7 @@ export function HelpView() {
                 </p>
               </div>
 
-              <div className="p-8  bg-ink-2/40 border border-ink-4/60 hover:bg-ink-2/60 hover:border-live-border/20 transition-all hover:shadow-lg hover:shadow-primary/5 space-y-5 duration-300">
+              <div className="p-8  bg-ink-2/40 border border-ink-4/60 hover:bg-ink-2/60 hover:border-live-border/20 transition-all hover:shadow-lg space-y-5 duration-300">
                 <div className="w-14 h-14  bg-live/10 flex items-center justify-center text-live font-prose text-h4 font-semibold">
                   2
                 </div>
@@ -89,7 +89,7 @@ export function HelpView() {
                 </p>
               </div>
 
-              <div className="p-8  bg-ink-2/40 border border-ink-4/60 hover:bg-ink-2/60 hover:border-live-border/20 transition-all hover:shadow-lg hover:shadow-primary/5 space-y-5 duration-300">
+              <div className="p-8  bg-ink-2/40 border border-ink-4/60 hover:bg-ink-2/60 hover:border-live-border/20 transition-all hover:shadow-lg space-y-5 duration-300">
                 <div className="w-14 h-14  bg-live/10 flex items-center justify-center text-live font-prose text-h4 font-semibold">
                   3
                 </div>
@@ -120,7 +120,7 @@ export function HelpView() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all space-y-4 duration-300">
                 <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
                   <span className="w-2.5 h-2.5 rounded-full bg-live" />
                   {t("help.feat1Title")}
@@ -130,7 +130,7 @@ export function HelpView() {
                 </p>
               </div>
 
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all space-y-4 duration-300">
                 <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
                   <span className="w-2.5 h-2.5 rounded-full bg-live" />
                   {t("help.feat2Title")}
@@ -140,7 +140,7 @@ export function HelpView() {
                 </p>
               </div>
 
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all space-y-4 duration-300">
                 <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
                   <span className="w-2.5 h-2.5 rounded-full bg-live" />
                   {t("help.feat3Title")}
@@ -150,7 +150,7 @@ export function HelpView() {
                 </p>
               </div>
 
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all space-y-4 duration-300">
                 <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
                   <span className="w-2.5 h-2.5 rounded-full bg-live" />
                   {t("help.feat4Title")}
@@ -179,7 +179,7 @@ export function HelpView() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all space-y-4 duration-300">
                 <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
                   <Sliders className="w-6 h-6 text-live" />
                   {t("help.filt1Title")}
@@ -189,7 +189,7 @@ export function HelpView() {
                 </p>
               </div>
 
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all space-y-4 duration-300">
                 <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
                   <Sliders className="w-6 h-6 text-live" />
                   {t("help.filt2Title")}
@@ -199,7 +199,7 @@ export function HelpView() {
                 </p>
               </div>
 
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all space-y-4 duration-300">
                 <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
                   <Sliders className="w-6 h-6 text-live" />
                   {t("help.filt3Title")}
@@ -209,7 +209,7 @@ export function HelpView() {
                 </p>
               </div>
 
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all space-y-4 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all space-y-4 duration-300">
                 <h4 className="text-h4 font-semibold text-live flex items-center gap-3">
                   <Sliders className="w-6 h-6 text-live" />
                   {t("help.filt4Title")}
@@ -238,7 +238,7 @@ export function HelpView() {
             </div>
 
             <div className="space-y-8">
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all flex gap-6 duration-300">
                 <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <Film className="w-7 h-7" />
                 </div>
@@ -250,7 +250,7 @@ export function HelpView() {
                 </div>
               </div>
 
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all flex gap-6 duration-300">
                 <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <Film className="w-7 h-7" />
                 </div>
@@ -262,7 +262,7 @@ export function HelpView() {
                 </div>
               </div>
 
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all flex gap-6 duration-300">
                 <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <Film className="w-7 h-7" />
                 </div>
@@ -293,7 +293,7 @@ export function HelpView() {
             </div>
 
             <div className="space-y-8">
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all flex gap-6 duration-300">
                 <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <ShieldAlert className="w-7 h-7" />
                 </div>
@@ -305,7 +305,7 @@ export function HelpView() {
                 </div>
               </div>
 
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all flex gap-6 duration-300">
                 <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <ShieldAlert className="w-7 h-7" />
                 </div>
@@ -317,7 +317,7 @@ export function HelpView() {
                 </div>
               </div>
 
-              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg hover:shadow-primary/5 transition-all flex gap-6 duration-300">
+              <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all flex gap-6 duration-300">
                 <div className="p-4  bg-live/10 text-live h-fit shrink-0">
                   <ShieldAlert className="w-7 h-7" />
                 </div>
@@ -404,7 +404,7 @@ export function HelpView() {
   return (
     <div className="stage-pad space-y-10 pt-10 sm:pt-16">
       <header>
-        <h2 className="label-rule">{t("help.title")}</h2>
+        <h2 className="rail-heading mb-3">{t("help.title")}</h2>
         <p className="max-w-[62ch] font-prose text-body-lg leading-[1.6] text-ink-6">
           {t("help.subtitle")}
         </p>

@@ -13,15 +13,35 @@ const INK_8 = "#B9C4CE";
 const INK_9 = "#EDF1F5";
 const LIVE = "#00E054";
 
+/**
+ * Satori aborts the whole render if an <img> fails to load, which turns one
+ * stale poster path into a dead share image. Confirm the file resolves first
+ * and fall back to the text-only card if it does not.
+ */
+async function posterLoads(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: "GET" });
+    return res.ok && (res.headers.get("content-type") ?? "").startsWith("image/");
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
 
     const title = searchParams.get("title") || "Film Roulette";
-    const poster = searchParams.get("poster");
+    const posterParam = searchParams.get("poster");
     const rating = searchParams.get("rating") || "";
     const year = searchParams.get("year") || "";
     const genres = searchParams.get("genres") || "";
+
+    const poster =
+      posterParam &&
+      (await posterLoads(`https://image.tmdb.org/t/p/w500${posterParam}`))
+        ? posterParam
+        : null;
 
     return new ImageResponse(
       (
@@ -94,8 +114,7 @@ export async function GET(request: NextRequest) {
                 display: "flex",
                 flexDirection: "column",
                 flex: 1,
-                height: 480,
-                justifyContent: "space-between",
+                justifyContent: "center",
               }}
             >
               <div style={{ display: "flex", flexDirection: "column" }}>
@@ -170,16 +189,18 @@ export async function GET(request: NextRequest) {
                 )}
               </div>
 
-              {/* Readout strip, closed by a directional rule */}
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                <div
-                  style={{
-                    display: "flex",
-                    height: 1,
-                    background: `linear-gradient(90deg, ${INK_6}, ${INK_4} 40%, transparent)`,
-                    marginBottom: 20,
-                  }}
-                />
+              {/* Readout strip, closed by a rule. Satori renders gradients
+                  unreliably, so this is a solid hairline. */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  marginTop: 44,
+                  paddingTop: 22,
+                  width: 460,
+                  borderTop: `1px solid ${INK_4}`,
+                }}
+              >
                 <div
                   style={{ display: "flex", alignItems: "baseline", gap: 36 }}
                 >

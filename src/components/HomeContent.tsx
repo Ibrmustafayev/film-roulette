@@ -15,11 +15,18 @@ import { HelpView } from "@/components/HelpView";
 
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
-import { getImageUrl, Genre } from "@/lib/tmdb";
+import { getImageUrl, getMovieDetails, Genre, Movie } from "@/lib/tmdb";
+import { PosterTile, PosterWall } from "@/components/PosterTile";
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
-export function HomeContent({ genres }: { genres: Genre[] }) {
+export function HomeContent({
+  genres,
+  popular = [],
+}: {
+  genres: Genre[];
+  popular?: Movie[];
+}) {
   const { locale, movie, isLoading, activeView, setMenuOpen } = useStore();
   const t = getTranslations(locale);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -93,6 +100,7 @@ export function HomeContent({ genres }: { genres: Genre[] }) {
                   headline={t("site.tagline")}
                   body={t("site.description")}
                   note={t("site.badge")}
+                  popular={popular}
                 />
               )}
               <MovieCard />
@@ -125,11 +133,31 @@ function Idle({
   headline,
   body,
   note,
+  popular,
 }: {
   headline: string;
   body: string;
   note: string;
+  popular: Movie[];
 }) {
+  const { setMovie, setIsLoading, locale } = useStore();
+  const t = getTranslations(locale);
+
+  /* The wall is not decoration: picking a poster loads that film, the same as
+     rolling would. Details are fetched through the internal proxy. */
+  const pick = async (m: Movie) => {
+    setIsLoading(true);
+    try {
+      const details = await getMovieDetails(m.id);
+      setMovie({ ...m, ...details });
+    } catch (error) {
+      console.error("Select error:", error);
+      setMovie(m);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="stage-pad pt-16 sm:pt-24">
       <div className="grid gap-x-10 gap-y-8 sm:grid-cols-12">
@@ -151,6 +179,17 @@ function Idle({
           {note}
         </p>
       </div>
+
+      {popular.length > 0 && (
+        <section className="mt-14">
+          <h2 className="rail-heading mb-5">{t("home.popular")}</h2>
+          <PosterWall>
+            {popular.map((m, i) => (
+              <PosterTile key={m.id} movie={m} index={i} onSelect={pick} />
+            ))}
+          </PosterWall>
+        </section>
+      )}
     </div>
   );
 }
