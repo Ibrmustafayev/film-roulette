@@ -6,6 +6,12 @@ import { useStore } from "@/store/useStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { getTranslations } from "@/lib/i18n";
 
+/* The locale strings carry a leading dice emoji from the previous design. The
+   button now has a real drawn icon, so the emoji would read as a second one.
+   Strip it at render rather than editing every translation. */
+const stripLeadingEmoji = (s: string) =>
+  s.replace(/^[\p{Extended_Pictographic}️\s]+/u, "").trim();
+
 export function RouletteButton() {
   const {
     genre,
@@ -17,7 +23,6 @@ export function RouletteButton() {
     isLoading,
     setIsLoading,
     locale,
-    addToHistory,
   } = useStore();
   const [error, setError] = useState("");
   const t = getTranslations(locale);
@@ -45,7 +50,6 @@ export function RouletteButton() {
 
       const data = await res.json();
       setMovie(data);
-      addToHistory(data);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("errors.generic"));
     } finally {
@@ -54,49 +58,30 @@ export function RouletteButton() {
   };
 
   return (
-    <div className="flex flex-col items-center mt-10 space-y-4">
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.9 }}
+    <div className="flex flex-col gap-2">
+      <button
+        type="button"
         onClick={rollDice}
         disabled={isLoading}
-        className="relative group overflow-hidden bg-gradient-to-r from-red-600 to-red-500 text-white rounded-full px-10 py-5 font-bold text-xl shadow-[0_0_50px_-12px_rgba(239,68,68,0.6)] hover:shadow-[0_0_70px_-15px_rgba(239,68,68,0.8)] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-3"
+        className="btn btn-primary h-[2.625rem] w-full px-6 text-body-sm lg:w-auto"
       >
-        <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <motion.div
-              key="loading"
-              initial={{ rotate: 0 }}
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-            >
-              <Loader2 className="w-7 h-7" />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="dice"
-              initial={{ rotate: -180, opacity: 0 }}
-              animate={{ rotate: 0, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 200 }}
-            >
-              <Dice5 className="w-7 h-7" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <span className="text-lg">
-          {isLoading ? t("button.rolling") : t("button.roll")}
-        </span>
-      </motion.button>
+        {isLoading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : (
+          <Dice5 className="h-4 w-4" />
+        )}
+        {stripLeadingEmoji(isLoading ? t("button.rolling") : t("button.roll"))}
+      </button>
 
       <AnimatePresence>
         {error && (
           <motion.p
-            initial={{ opacity: 0, y: -10 }}
+            role="alert"
+            initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="font-medium text-red-500 text-sm bg-red-500/10 px-4 py-2 rounded-lg"
+            transition={{ duration: 0.15, ease: [0.19, 1, 0.22, 1] }}
+            className="max-w-xs text-body-sm text-danger"
           >
             {error}
           </motion.p>

@@ -1,60 +1,73 @@
 "use client";
 
-import Link from "next/link";
-import { Dice5, Menu } from "lucide-react";
-import { ThemeToggle } from "./ThemeToggle";
+import { Menu } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { getTranslations, LOCALE_LABELS, Locale } from "@/lib/i18n";
 import { SearchBar } from "./SearchBar";
 
 export function Header() {
-  const { locale, setLocale, setMenuOpen } = useStore();
+  const { locale, setLocale, setMenuOpen, setActiveView } = useStore();
   const t = getTranslations(locale);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container mx-auto px-4 h-auto min-h-[64px] py-3 md:py-0 flex flex-wrap items-center justify-between gap-4">
-        <Link href="/" className="flex items-center space-x-2 order-1">
-          <Dice5 className="w-8 h-8 text-primary" />
-          <span className="font-bold text-xl tracking-tight text-foreground hidden sm:inline-block">
+    <header className="sticky top-0 z-50 h-[72px] border-b border-surface-alt bg-bg/90 backdrop-blur-sm">
+      <div className="mx-auto flex h-full max-w-[960px] items-center gap-4 px-6">
+        <button
+          type="button"
+          onClick={() => setActiveView("random")}
+          className="flex shrink-0 items-center gap-2.5"
+        >
+          <Pips />
+          <span className="hidden text-h5 font-semibold tracking-tight text-heading sm:inline">
             {t("site.name")}
           </span>
-        </Link>
+        </button>
 
         <SearchBar />
 
-        <div className="flex items-center gap-2 md:gap-3 order-2 md:order-3">
-          {/* Language Selector */}
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <label className="sr-only" htmlFor="locale">
+            {t("lang.label")}
+          </label>
           <select
+            id="locale"
             value={locale}
             onChange={(e) => setLocale(e.target.value as Locale)}
-            className="bg-muted text-foreground border border-border rounded-lg px-2 pr-8 py-1.5 text-xs md:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer appearance-none"
-            aria-label={t("lang.label")}
+            className="field h-8 w-auto cursor-pointer text-tiny font-semibold uppercase tracking-[0.075em]"
           >
             {(Object.entries(LOCALE_LABELS) as [Locale, string][]).map(
               ([code, label]) => (
-                <option key={code} value={code}>
+                <option key={code} value={code} className="bg-surface">
                   {label}
                 </option>
               )
             )}
           </select>
 
-          <ThemeToggle />
-
-          {/* Menu Button */}
           <button
+            type="button"
             onClick={() => setMenuOpen(true)}
-            className="flex items-center gap-2 px-3 py-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl transition-all border border-primary/20 shadow-sm shadow-primary/5 group"
+            className="btn btn-quiet h-8 px-2.5"
             aria-label={t("menu.open")}
           >
-            <span className="text-xs font-bold tracking-wider uppercase hidden sm:inline-block">
-              {t("menu.title") || "MENU"}
+            <Menu className="h-4 w-4" />
+            <span className="hidden text-tiny uppercase tracking-[0.075em] sm:inline">
+              {t("menu.title") || "Menu"}
             </span>
-            <Menu className="w-5 h-5 group-hover:scale-110 transition-transform" />
           </button>
         </div>
       </div>
     </header>
+  );
+}
+
+/* Three pips: the brand mark, and the only place the three accents sit together. */
+function Pips() {
+  return (
+    <span className="flex items-center gap-1" aria-hidden="true">
+      <span className="h-2.5 w-2.5 rounded-full bg-green" />
+      <span className="h-2.5 w-2.5 rounded-full bg-orange" />
+      <span className="h-2.5 w-2.5 rounded-full bg-blue" />
+    </span>
   );
 }

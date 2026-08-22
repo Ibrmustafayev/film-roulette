@@ -1,87 +1,373 @@
 @import "tailwindcss";
 
-@custom-variant dark (&:is(.dark *));
+/* ---------------------------------------------------------------------------
+   Film Roulette — cinema-dark design system.
+   Token values are measured, not invented; see DESIGN.md for the record.
+   Dark only: the use scene is a dark room, and no light theme was ever measured.
+--------------------------------------------------------------------------- */
 
 @theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-border: var(--border);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
+  /* Surfaces */
+  --color-bg: #14181c;
+  --color-surface: #283038;
+  --color-surface-alt: #2c3440;
+  --color-panel: #445566;
+  --color-panel-high: #334455;
+  --color-poster-bg: #12161a;
+  --color-poster-inset: #21282f;
+  --color-separator: #445566;
+  --color-rating-track: #3c454f;
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Content */
+  --color-ink: #99aabb;
+  --color-ink-high: #aabbcc;
+  --color-ink-higher: #ccddee;
+  --color-heading: #ffffff;
+  --color-meta: #667788;
+  --color-meta-low: #556677;
+  --color-muted: #8899aa;
+
+  /* Accent — one meaning each */
+  --color-green: #00e054;
+  --color-green-surface: #00ac1c;
+  --color-green-hover: #00c030;
+  --color-green-active: #009926;
+  --color-orange: #ff8000;
+  --color-orange-surface: #ee7000;
+  --color-blue: #40bcf4;
+  --color-blue-surface: #209ce4;
+  --color-danger: #ec1200;
+
+  /* Type */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-serif: var(--font-source-serif), Georgia, serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --text-tiny: 0.6875rem;
+  --text-tiny--line-height: 1.5;
+  --text-meta: 0.75rem;
+  --text-meta--line-height: 1.5;
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.5;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.5;
+  --text-body-lg: 1.0625rem;
+  --text-body-lg--line-height: 1.5;
+  --text-h5: 1rem;
+  --text-h5--line-height: 1.25;
+  --text-h4: 1.125rem;
+  --text-h4--line-height: 1.25;
+  --text-h3: 1.375rem;
+  --text-h3--line-height: 1.25;
+  --text-h2: 1.6875rem;
+  --text-h2--line-height: 1.25;
+  --text-h1: 2rem;
+  --text-h1--line-height: 1.125;
+
+  /* Motion — one easing across the whole system. Real objects decelerate; the
+     system deliberately has no overshoot curve. */
+  --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);
+
+  /* Shape */
+  --radius-poster: 3px;
+  --radius-poster-lg: 8px;
+  --radius-chip: 3px;
+  --radius-control: 4px;
+  --radius-panel: 0.5rem;
+
+  /* Breakpoints */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 560px;
+  --breakpoint-md: 640px;
+  --breakpoint-lg: 768px;
+  --breakpoint-xl: 1024px;
+  --breakpoint-2xl: 1280px;
+
+  /* Named animations */
+  --animate-skeleton: skeleton 2s var(--ease-expo) infinite;
+  --animate-rise: rise 0.5s var(--ease-expo) both;
 }
 
-:root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-
-  --primary: #dc2626;
-  --primary-hover: #b91c1c;
-
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-
-  --border: #e2e8f0;
-
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
+@keyframes skeleton {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.3333;
+  }
 }
 
-.dark {
-  --background: #030712;
-  --foreground: #f8fafc;
-
-  --primary: #ef4444;
-  --primary-hover: #f87171;
-
-  --card: #0c1222;
-  --card-foreground: #f1f5f9;
-
-  --border: #1e293b;
-
-  --muted: #111827;
-  --muted-foreground: #94a3b8;
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.75rem);
+    filter: blur(0.125rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
 }
 
-*,
-*::before,
-*::after {
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+@layer base {
+  html {
+    color-scheme: dark;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--color-heading);
+    font-weight: 600;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Browser surfaces belong to the design system too. */
+  ::selection {
+    background: color-mix(in srgb, var(--color-green) 30%, transparent);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-blue-surface);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-panel) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-panel);
+    border-radius: 999px;
+    border: 3px solid var(--color-bg);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-meta);
+  }
+
+  /* Numerals line up in metadata rows. */
+  time,
+  [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23667788' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 2rem;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
-body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, -apple-system, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
+@layer components {
+  /* Section label: 13px, .075em, uppercase, hairline under. */
+  .label-rule {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-bottom: 5px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--color-separator);
+    font-size: 0.8125rem;
+    line-height: 1.25;
+    letter-spacing: 0.075em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+  }
 
-/* Select elementleri için özel ok ikonu */
-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2364748b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-  background-position: right 0.5rem center;
-  background-repeat: no-repeat;
-  background-size: 1.5em 1.5em;
-  padding-right: 2.5rem;
-}
+  /* Poster frame — the ring is an overlay so hover never shifts layout. */
+  .poster {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    aspect-ratio: 2 / 3;
+    background: var(--color-poster-bg);
+    border-radius: clamp(2px, 2.667%, 8px) / clamp(2px, 1.778%, 8px);
+    box-shadow:
+      0 1px 5px rgba(0, 0, 0, 0.25),
+      0 1px 10px rgba(0, 0, 0, 0.35);
+    transition:
+      transform 0.333s var(--ease-expo),
+      box-shadow 0.333s var(--ease-expo);
+  }
 
-/* Smooth scroll */
-html {
-  scroll-behavior: smooth;
-}
+  .poster::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    box-shadow: inset 0 0 0 0 var(--color-green);
+    transition: box-shadow 0.333s var(--ease-expo);
+  }
 
-/* Focus ring */
-*:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-  border-radius: 4px;
+  .poster:focus-within {
+    transform: translateY(-2px);
+    box-shadow:
+      0 4px 12px rgba(0, 0, 0, 0.35),
+      0 8px 28px rgba(0, 0, 0, 0.45);
+  }
+  .poster:focus-within::after {
+    box-shadow: inset 0 0 0 3px var(--color-green);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .poster:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.35),
+        0 8px 28px rgba(0, 0, 0, 0.45);
+    }
+    .poster:hover::after {
+      box-shadow: inset 0 0 0 3px var(--color-green);
+    }
+  }
+
+  .poster:active {
+    transform: none;
+  }
+
+  /* Controls */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.375rem;
+    padding-inline: 0.875rem;
+    border-radius: var(--radius-control);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition:
+      background-color 0.15s var(--ease-expo),
+      color 0.15s var(--ease-expo),
+      border-color 0.15s var(--ease-expo);
+  }
+
+  .btn-primary {
+    background: var(--color-green-surface);
+    color: #f4fcf0;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--color-green-hover);
+    color: #fff;
+  }
+  .btn-primary:active:not(:disabled) {
+    background: var(--color-green-active);
+  }
+  .btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .btn-default {
+    background: var(--color-panel);
+    color: #c8d4e0;
+  }
+  .btn-default:hover:not(:disabled) {
+    background: #667788;
+    color: #fff;
+  }
+  .btn-default:active:not(:disabled) {
+    background: var(--color-panel-high);
+  }
+
+  .btn-quiet {
+    background: transparent;
+    color: var(--color-muted);
+    border: 1px solid var(--color-separator);
+  }
+  .btn-quiet:hover:not(:disabled) {
+    color: #fff;
+    border-color: var(--color-meta);
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 3px 6px;
+    border-radius: var(--radius-chip);
+    background: var(--color-surface);
+    color: var(--color-ink-high);
+    font-size: 0.8125rem;
+    line-height: 19.5px;
+    transition:
+      background-color 0.15s var(--ease-expo),
+      color 0.15s var(--ease-expo);
+  }
+
+  .field {
+    width: 100%;
+    height: 2.375rem;
+    padding-inline: 0.625rem;
+    border-radius: var(--radius-control);
+    background: color-mix(in srgb, var(--color-surface) 70%, transparent);
+    border: 1px solid var(--color-surface-alt);
+    color: var(--color-ink-higher);
+    font-size: 0.8125rem;
+    transition:
+      border-color 0.15s var(--ease-expo),
+      background-color 0.15s var(--ease-expo);
+  }
+  .field:hover:not(:disabled) {
+    border-color: var(--color-separator);
+  }
+  .field:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .skeleton {
+    position: absolute;
+    inset: 0;
+    background: var(--color-poster-inset);
+    animation: var(--animate-skeleton);
+  }
 }
-/* <label> */

@@ -23,13 +23,13 @@ function FeatureChip({
   desc: string;
 }) {
   return (
-    <div className="flex items-start gap-5 p-6 rounded-[24px] bg-muted/30 border border-border/50 hover:border-primary/20 transition-all hover:bg-muted/40 hover:shadow-lg hover:shadow-primary/5 duration-300">
-      <div className="shrink-0 p-3.5 rounded-2xl bg-primary/10 text-primary">
+    <div className="flex items-start gap-5 p-6 rounded-panel bg-surface/30 border border-surface-alt/50 hover:border-green/20 transition-all hover:bg-surface/40 hover:shadow-lg hover:shadow-primary/5 duration-300">
+      <div className="shrink-0 p-3.5 rounded-[8px] bg-green-surface/10 text-green">
         <Icon className="w-6 h-6" />
       </div>
       <div className="space-y-1">
-        <p className="text-base font-black text-foreground">{label}</p>
-        <p className="text-sm text-muted-foreground/90 leading-relaxed">{desc}</p>
+        <p className="text-base font-semibold text-heading">{label}</p>
+        <p className="text-sm text-meta/90 leading-relaxed">{desc}</p>
       </div>
     </div>
   );
@@ -62,35 +62,13 @@ export function MobileAppView() {
   ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Hero */}
-      <div className="text-center space-y-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="inline-flex items-center gap-2.5 bg-primary/10 text-primary px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider border border-primary/20 shadow-sm"
-        >
-          <Smartphone className="w-4 h-4" />
-          <span>{t("mobileapp.badge")}</span>
-        </motion.div>
-        <motion.h2
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.4 }}
-          className="text-4xl md:text-5xl font-black text-foreground tracking-tight"
-        >
-          {t("mobileapp.title")}
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.2, duration: 0.4 }}
-          className="text-muted-foreground text-base md:text-lg max-w-xl mx-auto leading-relaxed"
-        >
+    <div className="mx-auto w-full max-w-[960px] space-y-10 px-6 pt-10">
+      <header>
+        <h2 className="label-rule">{t("mobileapp.title")}</h2>
+        <p className="max-w-[62ch] font-serif text-body-lg leading-[1.6] text-meta">
           {t("mobileapp.subtitle")}
-        </motion.p>
-      </div>
+        </p>
+      </header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start pt-6">
         {/* Left Column: Phone Mockup */}
@@ -130,13 +108,13 @@ export function MobileAppView() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.4 }}
-            className="relative overflow-hidden rounded-[32px] border border-border bg-gradient-to-br from-muted/70 via-card to-muted/50 p-8 md:p-10 flex flex-col sm:flex-row items-center gap-10 shadow-sm"
+            className="relative overflow-hidden rounded-panel border border-surface-alt bg-gradient-to-br from-muted/70 via-card to-muted/50 p-8 md:p-10 flex flex-col sm:flex-row items-center gap-10 shadow-sm"
           >
             {/* Glow */}
-            <div className="absolute -top-16 -right-16 w-48 h-48 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute -top-16 -right-16 w-48 h-48 bg-green-surface/5 rounded-full blur-3xl pointer-events-none" />
 
             {/* QR Code Visual - Real Scannable QR Code */}
-            <div className="shrink-0 w-40 h-40 rounded-2xl bg-white p-3 flex items-center justify-center shadow-xl border border-border/40 overflow-hidden">
+            <div className="shrink-0 w-40 h-40 rounded-[8px] bg-white p-3 flex items-center justify-center shadow-xl border border-surface-alt/40 overflow-hidden">
               <img
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(siteUrl)}&color=0f172a&margin=10`}
                 alt="QR Code to download Film Roulette app"
@@ -146,8 +124,8 @@ export function MobileAppView() {
 
             <div className="flex flex-col gap-5 text-center sm:text-left flex-1">
               <div>
-                <p className="font-black text-xl text-foreground">{t("mobileapp.scanTitle")}</p>
-                <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
+                <p className="font-semibold text-xl text-heading">{t("mobileapp.scanTitle")}</p>
+                <p className="text-sm text-meta mt-2 leading-relaxed">
                   {t("mobileapp.scanDesc")}
                 </p>
               </div>
@@ -155,7 +133,7 @@ export function MobileAppView() {
                 href={siteUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-3 bg-primary hover:bg-primary/95 text-primary-foreground px-8 py-4 rounded-2xl font-bold text-base transition-all shadow-lg shadow-primary/10 hover:shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] duration-200"
+                className="btn btn-primary h-[2.625rem] px-6"
               >
                 <Download className="w-5 h-5" />
                 {t("mobileapp.downloadBtn")}
@@ -179,7 +157,7 @@ export function MobileAppView() {
           {/* Divider */}
           <div className="flex items-center gap-4 pt-6">
             <div className="h-px bg-border/60 flex-1" />
-            <span className="text-xs font-black uppercase tracking-widest text-primary/80 bg-primary/5 border border-primary/15 px-5 py-2 rounded-full shadow-sm">
+            <span className="text-xs font-semibold uppercase tracking-widest text-green/80 bg-green-surface/5 border border-green/15 px-5 py-2 rounded-full shadow-sm">
               Installation Guide
             </span>
             <div className="h-px bg-border/60 flex-1" />
@@ -191,20 +169,20 @@ export function MobileAppView() {
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => setActiveTab("android")}
-                className={`flex items-center gap-3 px-8 py-4 rounded-2xl border transition-all font-black text-sm uppercase tracking-wider shadow-sm ${
+                className={`flex items-center gap-3 px-8 py-4 rounded-[8px] border transition-all font-semibold text-sm uppercase tracking-wider shadow-sm ${
                   activeTab === "android"
-                    ? "bg-green-500/10 text-green-500 border-green-500/35 shadow-green-500/5 scale-[1.02]"
-                    : "bg-muted/45 text-muted-foreground border-transparent hover:bg-muted/70 hover:text-foreground"
+                    ? "bg-green-surface/10 text-green border-green-500/35 shadow-green-500/5 scale-[1.02]"
+                    : "bg-surface/45 text-meta border-transparent hover:bg-surface/70 hover:text-heading"
                 }`}
               >
                 <span className="text-lg">🤖</span> {t("mobileapp.androidTitle")}
               </button>
               <button
                 onClick={() => setActiveTab("ios")}
-                className={`flex items-center gap-3 px-8 py-4 rounded-2xl border transition-all font-black text-sm uppercase tracking-wider shadow-sm ${
+                className={`flex items-center gap-3 px-8 py-4 rounded-[8px] border transition-all font-semibold text-sm uppercase tracking-wider shadow-sm ${
                   activeTab === "ios"
-                    ? "bg-blue-500/10 text-blue-500 border-blue-500/35 shadow-blue-500/5 scale-[1.02]"
-                    : "bg-muted/45 text-muted-foreground border-transparent hover:bg-muted/70 hover:text-foreground"
+                    ? "bg-blue-surface/10 text-blue border-blue-500/35 shadow-blue-500/5 scale-[1.02]"
+                    : "bg-surface/45 text-meta border-transparent hover:bg-surface/70 hover:text-heading"
                 }`}
               >
                 <span className="text-lg">🍎</span> {t("mobileapp.iosTitle")}
@@ -212,7 +190,7 @@ export function MobileAppView() {
             </div>
 
             {/* Vertical timeline for the steps */}
-            <div className="relative border-l-2 border-dashed border-border/80 ml-8 pl-10 space-y-8 pt-4 pb-4">
+            <div className="relative border-l-2 border-dashed border-surface-alt/80 ml-8 pl-10 space-y-8 pt-4 pb-4">
               {(activeTab === "android" ? androidSteps : iosSteps).map((step, i) => (
                 <motion.div
                   key={i}
@@ -222,17 +200,17 @@ export function MobileAppView() {
                   className="relative group"
                 >
                   {/* Step number badge */}
-                  <div className={`absolute -left-[60px] top-1.5 w-10 h-10 rounded-full flex items-center justify-center text-sm font-black border transition-all shadow-md ${
+                  <div className={`absolute -left-[60px] top-1.5 w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold border transition-all shadow-md ${
                     activeTab === "android"
-                      ? "bg-green-500/15 text-green-500 border-green-500/35 group-hover:bg-green-500 group-hover:text-white group-hover:shadow-green-500/20"
-                      : "bg-blue-500/15 text-blue-500 border-blue-500/35 group-hover:bg-blue-500 group-hover:text-white group-hover:shadow-blue-500/20"
+                      ? "bg-green-surface/15 text-green border-green-500/35 group-hover:bg-green-surface group-hover:text-white group-hover:shadow-green-500/20"
+                      : "bg-blue-surface/15 text-blue border-blue-500/35 group-hover:bg-blue-surface group-hover:text-white group-hover:shadow-blue-500/20"
                   }`}>
                     {i + 1}
                   </div>
 
                   {/* Step content card */}
-                  <div className="p-6 md:p-7 rounded-[24px] bg-muted/30 border border-border/50 hover:border-primary/20 transition-all hover:bg-muted/45 hover:shadow-lg hover:shadow-primary/5 hover:translate-x-1 duration-300">
-                    <p className="text-base font-bold text-foreground/90 leading-relaxed">
+                  <div className="p-6 md:p-7 rounded-panel bg-surface/30 border border-surface-alt/50 hover:border-green/20 transition-all hover:bg-surface/45 hover:shadow-lg hover:shadow-primary/5 hover:translate-x-1 duration-300">
+                    <p className="text-base font-bold text-heading/90 leading-relaxed">
                       {step}
                     </p>
                   </div>
@@ -254,7 +232,7 @@ export function MobileAppView() {
           href={siteUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-base font-semibold text-primary/70 hover:text-primary underline underline-offset-4 transition-colors"
+          className="text-base font-semibold text-green/70 hover:text-green underline underline-offset-4 transition-colors"
         >
           {siteUrl}
         </a>

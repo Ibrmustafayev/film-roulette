@@ -4,8 +4,8 @@ import Image from "next/image";
 import { useStore } from "@/store/useStore";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Star, Calendar, Clock, Play, Globe, User,
-  ExternalLink, Heart, Loader2, AlertCircle, RefreshCw, ChevronRight, Server
+  Star, Play, User, ExternalLink, Heart, Loader2,
+  AlertCircle, RefreshCw, ChevronRight, Server, X,
 } from "lucide-react";
 import { getImageUrl } from "@/lib/tmdb";
 import { ShareButton } from "./ShareButton";
@@ -17,17 +17,15 @@ const SOURCES = [
   {
     name: "Server 1 (VidLink)",
     url: (_: string, tmdbId: number) =>
-      `https://vidlink.pro/movie/${tmdbId}?primaryColor=d97706&secondaryColor=b45309&icons=vid&autoplay=true`,
+      `https://vidlink.pro/movie/${tmdbId}?primaryColor=00e054&secondaryColor=00ac1c&icons=vid&autoplay=true`,
   },
   {
     name: "Server 2 (VidSrc)",
-    url: (_: string, tmdbId: number) =>
-      `https://vidsrc.su/embed/movie/${tmdbId}`,
+    url: (_: string, tmdbId: number) => `https://vidsrc.su/embed/movie/${tmdbId}`,
   },
   {
     name: "Server 3 (2Embed)",
-    url: (_: string, tmdbId: number) =>
-      `https://www.2embed.cc/embed/${tmdbId}`,
+    url: (_: string, tmdbId: number) => `https://www.2embed.cc/embed/${tmdbId}`,
   },
   {
     name: "Server 4 (AutoEmbed)",
@@ -41,8 +39,7 @@ const SOURCES = [
   },
   {
     name: "Server 6 (EmbedSu)",
-    url: (_: string, tmdbId: number) =>
-      `https://embed.su/embed/movie/${tmdbId}`,
+    url: (_: string, tmdbId: number) => `https://embed.su/embed/movie/${tmdbId}`,
   },
 ];
 
@@ -51,6 +48,8 @@ type PlayerPhase =
   | { tag: "probing"; sourceIndex: number }
   | { tag: "playing"; sourceIndex: number }
   | { tag: "error" };
+
+const EASE = [0.19, 1, 0.22, 1] as const;
 
 export function MovieCard() {
   const {
@@ -62,7 +61,6 @@ export function MovieCard() {
   } = useStore();
 
   const [phase, setPhase] = useState<PlayerPhase>({ tag: "idle" });
-  const [favAnim, setFavAnim] = useState(false);
   const [lastTime, setLastTime] = useState<number | null>(null);
 
   const t = getTranslations(locale);
@@ -88,7 +86,9 @@ export function MovieCard() {
   useEffect(() => {
     stopPlayer();
     setLastTime(movie ? watchProgress[movie.id] || null : null);
-    setTimeout(() => { abortRef.current = false; }, 0);
+    setTimeout(() => {
+      abortRef.current = false;
+    }, 0);
   }, [movie?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -107,7 +107,9 @@ export function MovieCard() {
           const time = Math.floor(d.progress.time);
           if (time > 0) setWatchProgress(movie.id, time);
         }
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
     };
     window.addEventListener("message", handleMsg);
     return () => window.removeEventListener("message", handleMsg);
@@ -123,21 +125,24 @@ export function MovieCard() {
     return () => window.removeEventListener("blur", refocus);
   }, [phase.tag]);
 
-  const trySource = useCallback((index: number) => {
-    if (abortRef.current) return;
-    if (index >= SOURCES.length) {
-      setPhase({ tag: "error" });
-      return;
-    }
+  const trySource = useCallback(
+    (index: number) => {
+      if (abortRef.current) return;
+      if (index >= SOURCES.length) {
+        setPhase({ tag: "error" });
+        return;
+      }
 
-    setPhase({ tag: "probing", sourceIndex: index });
-    clearProbeTimer();
+      setPhase({ tag: "probing", sourceIndex: index });
+      clearProbeTimer();
 
-    // Give each server 5 seconds to load html or auto-switch
-    probeTimerRef.current = setTimeout(() => {
-      if (!abortRef.current) trySource(index + 1);
-    }, 5500);
-  }, [clearProbeTimer]);
+      // Give each server 5 seconds to load html or auto-switch
+      probeTimerRef.current = setTimeout(() => {
+        if (!abortRef.current) trySource(index + 1);
+      }, 5500);
+    },
+    [clearProbeTimer]
+  );
 
   const handleWatchMovie = () => {
     if (phase.tag !== "idle") {
@@ -155,25 +160,28 @@ export function MovieCard() {
     trySource(0);
   };
 
-  const handleIframeLoad = useCallback((
-    e: React.SyntheticEvent<HTMLIFrameElement>,
-    sourceIndex: number,
-  ) => {
-    clearProbeTimer();
-    if (!abortRef.current) {
-      setPhase({ tag: "playing", sourceIndex });
-    }
+  const handleIframeLoad = useCallback(
+    (e: React.SyntheticEvent<HTMLIFrameElement>, sourceIndex: number) => {
+      clearProbeTimer();
+      if (!abortRef.current) {
+        setPhase({ tag: "playing", sourceIndex });
+      }
 
-    if (movie && watchProgress[movie.id]) {
-      const time = watchProgress[movie.id];
-      const iframe = e.currentTarget;
-      setTimeout(() => {
-        iframe.contentWindow?.postMessage({ type: "seek", time }, "*");
-        iframe.contentWindow?.postMessage({ command: "seek", time }, "*");
-        iframe.contentWindow?.postMessage(JSON.stringify({ type: "seek", time }), "*");
-      }, 2500);
-    }
-  }, [clearProbeTimer, movie, watchProgress]);
+      if (movie && watchProgress[movie.id]) {
+        const time = watchProgress[movie.id];
+        const iframe = e.currentTarget;
+        setTimeout(() => {
+          iframe.contentWindow?.postMessage({ type: "seek", time }, "*");
+          iframe.contentWindow?.postMessage({ command: "seek", time }, "*");
+          iframe.contentWindow?.postMessage(
+            JSON.stringify({ type: "seek", time }),
+            "*"
+          );
+        }, 2500);
+      }
+    },
+    [clearProbeTimer, movie, watchProgress]
+  );
 
   const handleNextServerManual = () => {
     if (phase.tag === "playing" || phase.tag === "probing") {
@@ -182,20 +190,18 @@ export function MovieCard() {
     }
   };
 
-  const handleToggleFavourite = () => {
-    if (!movie) return;
-    toggleFavourite(movie);
-    setFavAnim(true);
-    setTimeout(() => setFavAnim(false), 600);
-  };
-
   if (isLoading || !movie) return null;
 
   const releaseYear = movie.release_date?.split("-")[0] ?? t("movie.unknown");
   const runtimeText = movie.runtime
-    ? t("movie.runtime", { h: Math.floor(movie.runtime / 60), m: movie.runtime % 60 })
+    ? t("movie.runtime", {
+        h: Math.floor(movie.runtime / 60),
+        m: movie.runtime % 60,
+      })
     : null;
-  const imdbUrl = movie.imdb_id ? `https://www.imdb.com/title/${movie.imdb_id}/` : null;
+  const imdbUrl = movie.imdb_id
+    ? `https://www.imdb.com/title/${movie.imdb_id}/`
+    : null;
 
   const activeSourceIndex =
     phase.tag === "probing" || phase.tag === "playing" ? phase.sourceIndex : 0;
@@ -205,210 +211,234 @@ export function MovieCard() {
 
   const isPlayerOpen = phase.tag !== "idle";
   const isFav = isFavourite(movie.id);
+  const posterUrl = getImageUrl(movie.poster_path, "w500");
 
   return (
     <AnimatePresence mode="wait">
-      <label className="hidden">Movie</label>
-      <motion.div
-        aria-label="Movie Card"
+      <motion.article
         key={movie.id}
-        initial={{ opacity: 0, y: 60, scale: 0.92 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: -30 }}
-        transition={{ type: "spring", stiffness: 180, damping: 22 }}
-        className="w-full max-w-4xl mx-auto mt-12"
+        aria-label={movie.title}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -8 }}
+        transition={{ duration: 0.5, ease: EASE }}
+        className="mx-auto w-full max-w-[960px] px-6 pb-12"
       >
-        {/* Card */}
-        <div className="bg-card text-card-foreground rounded-2xl shadow-xl border border-border overflow-hidden flex flex-col md:flex-row">
-          {movie.poster_path && (
-            <div className="w-full md:w-72 shrink-0 relative min-h-[420px] bg-muted">
-              <Image
-                src={getImageUrl(movie.poster_path, "w500")!}
-                alt={movie.title}
-                fill priority
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 288px"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:hidden" />
-            </div>
-          )}
-
-          <div className="p-6 md:p-8 flex flex-col justify-between flex-1 min-w-0">
-            <div>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-2xl md:text-3xl font-bold leading-tight truncate">
-                      {movie.title}
-                    </h2>
-                    <motion.button
-                      onClick={handleToggleFavourite}
-                      animate={favAnim ? { scale: [1, 1.3, 1] } : {}}
-                      transition={{ duration: 0.4 }}
-                      className={`shrink-0 p-2 rounded-full transition-all ${
-                        isFav
-                          ? "bg-red-500/15 text-red-500 hover:bg-red-500/25"
-                          : "bg-muted text-muted-foreground hover:bg-red-500/10 hover:text-red-500"
-                      }`}
-                      title={isFav ? t("favourites.remove") : t("favourites.add")}
-                    >
-                      <Heart className={`w-5 h-5 transition-all ${isFav ? "fill-current" : ""}`} />
-                    </motion.button>
-                  </div>
-                  {movie.original_title !== movie.title && (
-                    <p className="text-sm text-muted-foreground mt-1 truncate">
-                      {movie.original_title}
-                    </p>
-                  )}
-                </div>
-                <div className="flex flex-col gap-1.5 shrink-0">
-                  <div className="flex items-center gap-1.5 bg-yellow-500/15 text-yellow-500 px-3 py-1.5 rounded-full font-bold text-sm">
-                    <Star className="w-3.5 h-3.5 fill-current" />
-                    <span>{movie.vote_average.toFixed(1)}</span>
-                    <span className="text-[10px] opacity-70 font-normal">{t("rating.tmdb")}</span>
-                  </div>
-                  {imdbUrl && (
-                    <a
-                      href={imdbUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1 bg-amber-600/15 text-amber-500 px-3 py-1 rounded-full text-xs font-semibold hover:bg-amber-600/25 transition-colors"
-                    >
-                      <span>{t("rating.imdb")}</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center gap-3 mt-3 text-sm text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />{releaseYear}
+        <div className="flex flex-col gap-6 sm:flex-row sm:gap-8">
+          {/* Poster */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: EASE }}
+            className="mx-auto w-[180px] shrink-0 sm:mx-0 sm:w-[230px]"
+          >
+            <div className="poster">
+              {posterUrl ? (
+                <Image
+                  src={posterUrl}
+                  alt={movie.title}
+                  fill
+                  priority
+                  className="object-cover"
+                  sizes="(max-width: 640px) 180px, 230px"
+                />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center p-3 text-center text-tiny text-meta">
+                  {movie.title}
                 </span>
-                {runtimeText && (
-                  <span className="flex items-center gap-1">
-                    <Clock className="w-3.5 h-3.5" />{runtimeText}
-                  </span>
-                )}
-                {movie.original_language && (
-                  <span className="flex items-center gap-1">
-                    <Globe className="w-3.5 h-3.5" />
-                    {movie.original_language.toUpperCase()}
-                  </span>
-                )}
-                {movie.vote_count !== undefined && (
-                  <span className="text-xs opacity-70">
-                    ({movie.vote_count.toLocaleString()} {t("movie.votes")})
-                  </span>
-                )}
-              </div>
-
-              {movie.genres && movie.genres.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-4">
-                  {movie.genres.map((g) => (
-                    <span
-                      key={g.id}
-                      className="text-xs px-2.5 py-1 rounded-full bg-primary/10 text-primary font-medium"
-                    >
-                      {t(`genres.${g.id}`)}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              <p className="mt-4 text-muted-foreground leading-relaxed text-sm line-clamp-4">
-                {movie.overview || t("movie.noOverview")}
-              </p>
-
-              {movie.cast && movie.cast.length > 0 && (
-                <div className="mt-5">
-                  <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                    <User className="w-3.5 h-3.5" />
-                    {t("movie.cast")}
-                  </h3>
-                  <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1">
-                    {movie.cast.map((actor) => (
-                      <div key={actor.id} className="flex flex-col items-center shrink-0 w-16">
-                        <div className="w-12 h-12 rounded-full overflow-hidden bg-muted border-2 border-border">
-                          {actor.profile_path ? (
-                            <Image
-                              src={getImageUrl(actor.profile_path, "w185")!}
-                              alt={actor.name}
-                              width={48} height={48}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                              <User className="w-5 h-5" />
-                            </div>
-                          )}
-                        </div>
-                        <span className="text-[10px] text-center mt-1 font-medium leading-tight line-clamp-2">
-                          {actor.name}
-                        </span>
-                        <span className="text-[9px] text-muted-foreground text-center leading-tight line-clamp-1">
-                          {actor.character}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
               )}
             </div>
 
-            <div className="mt-6 flex flex-col gap-3">
-              <div className="flex gap-3">
-                {movie.imdb_id && (
-                  <button
-                    onClick={handleWatchMovie}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl transition-all font-bold text-sm shadow-lg ${
-                      isPlayerOpen
-                        ? "bg-muted text-muted-foreground hover:bg-muted/80 shadow-none"
-                        : "bg-amber-600 hover:bg-amber-700 text-white shadow-amber-900/20"
-                    }`}
-                  >
-                    {phase.tag === "probing" ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Play className="w-4 h-4 fill-current" />
-                    )}
-                    {isPlayerOpen ? t("menu.close") : t("movie.watchMovie")}
-                  </button>
-                )}
-                {movie.trailer_key && (
-                  <button
-                    onClick={() => setShowTrailer(!showTrailer)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-xl transition-colors font-bold text-sm shadow-lg shadow-red-900/20"
-                  >
-                    <Play className="w-4 h-4 fill-current" />
-                    {t("movie.watchTrailer")}
-                  </button>
-                )}
-              </div>
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={() => toggleFavourite(movie)}
+                aria-pressed={isFav}
+                className={`btn flex-1 ${isFav ? "btn-default" : "btn-quiet"}`}
+                title={isFav ? t("favourites.remove") : t("favourites.add")}
+              >
+                <Heart
+                  className={`h-4 w-4 ${isFav ? "fill-orange text-orange" : ""}`}
+                />
+                <span className="truncate">
+                  {isFav ? t("favourites.remove") : t("favourites.add")}
+                </span>
+              </button>
+            </div>
+          </motion.div>
+
+          {/* Detail */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.06, ease: EASE }}
+            className="min-w-0 flex-1"
+          >
+            <h2 className="text-h3 font-semibold leading-[1.15] text-heading sm:text-h2">
+              {movie.title}{" "}
+              <span
+                className="font-serif text-h4 font-normal text-meta"
+                data-numeric
+              >
+                {releaseYear}
+              </span>
+            </h2>
+
+            {movie.original_title !== movie.title && (
+              <p className="mt-1 truncate font-serif text-body-sm italic text-meta">
+                {movie.original_title}
+              </p>
+            )}
+
+            {/* Metadata row */}
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-meta">
+              <span className="inline-flex items-center gap-1.5">
+                <Star className="h-3.5 w-3.5 fill-green-hover text-green-hover" />
+                <span
+                  className="font-serif text-body-lg font-semibold text-ink-higher"
+                  data-numeric
+                >
+                  {movie.vote_average.toFixed(1)}
+                </span>
+                <span className="text-tiny uppercase tracking-[0.075em]">
+                  {t("rating.tmdb")}
+                </span>
+              </span>
+
+              {movie.vote_count !== undefined && (
+                <span className="text-tiny" data-numeric>
+                  {movie.vote_count.toLocaleString()} {t("movie.votes")}
+                </span>
+              )}
+
+              {runtimeText && (
+                <span className="text-body-sm" data-numeric>
+                  {runtimeText}
+                </span>
+              )}
+
+              {movie.original_language && (
+                <span className="text-body-sm uppercase">
+                  {movie.original_language}
+                </span>
+              )}
+
+              {imdbUrl && (
+                <a
+                  href={imdbUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-body-sm text-blue transition-colors hover:text-blue-surface"
+                >
+                  {t("rating.imdb")}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </div>
+
+            {movie.genres && movie.genres.length > 0 && (
+              <ul className="mt-4 flex flex-wrap gap-x-1 gap-y-1.5">
+                {movie.genres.map((g) => (
+                  <li key={g.id} className="chip">
+                    {t(`genres.${g.id}`)}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <p className="mt-5 max-w-[68ch] font-serif text-[16px] leading-[1.667] text-ink-high">
+              {movie.overview || t("movie.noOverview")}
+            </p>
+
+            {/* Actions */}
+            <div className="mt-6 flex flex-wrap gap-2">
+              {movie.imdb_id && (
+                <button
+                  type="button"
+                  onClick={handleWatchMovie}
+                  className={`btn ${isPlayerOpen ? "btn-default" : "btn-primary"}`}
+                >
+                  {phase.tag === "probing" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : isPlayerOpen ? (
+                    <X className="h-4 w-4" />
+                  ) : (
+                    <Play className="h-4 w-4 fill-current" />
+                  )}
+                  {isPlayerOpen ? t("menu.close") : t("movie.watchMovie")}
+                </button>
+              )}
+              {movie.trailer_key && (
+                <button
+                  type="button"
+                  onClick={() => setShowTrailer(!showTrailer)}
+                  className="btn btn-default"
+                >
+                  <Play className="h-4 w-4 fill-current" />
+                  {t("movie.watchTrailer")}
+                </button>
+              )}
               <ShareButton movie={movie} />
             </div>
-          </div>
+
+            {/* Cast */}
+            {movie.cast && movie.cast.length > 0 && (
+              <section className="mt-8">
+                <h3 className="label-rule">{t("movie.cast")}</h3>
+                <ul className="flex gap-4 overflow-x-auto pb-2">
+                  {movie.cast.map((actor) => (
+                    <li
+                      key={actor.id}
+                      className="flex w-16 shrink-0 flex-col items-center text-center"
+                    >
+                      <span className="relative block h-14 w-14 overflow-hidden rounded-full bg-poster-inset">
+                        {actor.profile_path ? (
+                          <Image
+                            src={getImageUrl(actor.profile_path, "w185")!}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="56px"
+                          />
+                        ) : (
+                          <span className="flex h-full w-full items-center justify-center text-meta">
+                            <User className="h-5 w-5" />
+                          </span>
+                        )}
+                      </span>
+                      <span className="mt-1.5 text-tiny font-medium leading-tight text-ink-high">
+                        {actor.name}
+                      </span>
+                      <span className="text-tiny leading-tight text-meta">
+                        {actor.character}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </motion.div>
         </div>
 
-        {/* Player Section */}
+        {/* Player — fenced off from the third-party iframe it hosts. */}
         <AnimatePresence>
           {(showTrailer || isPlayerOpen) && (
-            <motion.div
+            <motion.section
               ref={playerRef}
               initial={{ height: 0, opacity: 0, marginTop: 0 }}
-              animate={{ height: "auto", opacity: 1, marginTop: 24 }}
+              animate={{ height: "auto", opacity: 1, marginTop: 32 }}
               exit={{ height: 0, opacity: 0, marginTop: 0 }}
-              className="overflow-hidden bg-black rounded-2xl shadow-2xl border border-border"
+              transition={{ duration: 0.333, ease: EASE }}
+              className="scroll-mt-[72px] overflow-hidden rounded-panel border border-surface-alt bg-black"
             >
               <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
-
                 {showTrailer && (
                   <iframe
                     src={`https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1`}
                     title="Trailer"
                     allow="autoplay; encrypted-media; fullscreen"
                     allowFullScreen
-                    className="absolute inset-0 w-full h-full"
+                    className="absolute inset-0 h-full w-full"
                   />
                 )}
 
@@ -422,62 +452,62 @@ export function MovieCard() {
                       allowFullScreen
                       referrerPolicy="no-referrer"
                       onLoad={(e) => handleIframeLoad(e, phase.sourceIndex)}
-                      className="absolute inset-0 w-full h-full opacity-0 pointer-events-none"
+                      className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
                       aria-hidden
                     />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 bg-[#08080f]">
-                      <div className="relative flex items-center justify-center w-20 h-20">
-                        <div className="absolute inset-0 rounded-full border-2 border-amber-500/20 animate-ping" />
-                        <div className="absolute inset-2 rounded-full border-2 border-amber-500/30 animate-ping" style={{ animationDelay: "0.4s" }} />
-                        <Loader2 className="w-8 h-8 text-amber-400 animate-spin relative z-10" />
-                      </div>
-                      <div className="text-center space-y-1">
-                        <p className="text-white font-semibold text-sm">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-bg">
+                      <Loader2 className="h-6 w-6 animate-spin text-green" />
+                      <div className="space-y-1 text-center">
+                        <p className="text-body-sm text-ink-high">
                           {t("movie.autoSearching")}
                         </p>
-                        <p className="text-white/40 text-xs">
+                        <p className="text-tiny text-meta">
                           {t("movie.testingServer", {
                             server: SOURCES[phase.sourceIndex].name,
                             current: phase.sourceIndex + 1,
                             total: SOURCES.length,
                           })}
                         </p>
-                        <div className="flex justify-center gap-1.5 mt-3">
-                          {SOURCES.map((_, i) => (
-                            <div
-                              key={i}
-                              className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                                i < phase.sourceIndex
-                                  ? "bg-red-500/60"
-                                  : i === phase.sourceIndex
-                                  ? "bg-amber-400 scale-125"
-                                  : "bg-white/10"
-                              }`}
-                            />
-                          ))}
-                        </div>
                       </div>
+                      {/* Progress through the failover chain */}
+                      <ol className="flex gap-1" aria-hidden="true">
+                        {SOURCES.map((_, i) => (
+                          <li
+                            key={i}
+                            className={`h-[3px] w-6 rounded-full transition-colors duration-300 ${
+                              i < phase.sourceIndex
+                                ? "bg-meta-low"
+                                : i === phase.sourceIndex
+                                  ? "bg-green"
+                                  : "bg-surface"
+                            }`}
+                          />
+                        ))}
+                      </ol>
                     </div>
                   </>
                 )}
 
                 {!showTrailer && phase.tag === "error" && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-card p-6 text-center">
-                    <AlertCircle className="w-10 h-10 text-red-500" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-bg p-6 text-center">
+                    <AlertCircle className="h-8 w-8 text-danger" />
                     <div>
-                      <p className="text-lg font-bold text-red-500">{t("errors.noSource")}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
+                      <p className="text-h5 font-semibold text-heading">
+                        {t("errors.noSource")}
+                      </p>
+                      <p className="mt-1 text-body-sm text-meta">
                         {t("movie.allServersChecked", { total: SOURCES.length })}
                       </p>
                     </div>
                     <button
+                      type="button"
                       onClick={() => {
                         abortRef.current = false;
                         trySource(0);
                       }}
-                      className="flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-600/15 text-amber-500 hover:bg-amber-600/25 text-sm font-semibold transition-colors"
+                      className="btn btn-default"
                     >
-                      <RefreshCw className="w-3.5 h-3.5" />
+                      <RefreshCw className="h-3.5 w-3.5" />
                       {t("movie.retry")}
                     </button>
                   </div>
@@ -492,42 +522,50 @@ export function MovieCard() {
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen
                     referrerPolicy="no-referrer"
-                    className="absolute inset-0 w-full h-full"
+                    className="absolute inset-0 h-full w-full"
                   />
                 )}
               </div>
 
-              {/* Sub-bar for quiet status & optional manual next server fallback */}
               {!showTrailer && phase.tag === "playing" && (
-                <div className="px-5 py-3 bg-muted/20 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <Server className="w-3.5 h-3.5 text-amber-500" />
-                    <span>{t("movie.activeServer")} <strong className="text-foreground">{SOURCES[phase.sourceIndex].name}</strong></span>
-                  </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-surface-alt bg-surface px-4 py-2.5 text-tiny">
+                  <span className="inline-flex items-center gap-2 text-meta">
+                    <Server className="h-3.5 w-3.5 text-green" />
+                    {t("movie.activeServer")}{" "}
+                    <strong className="font-medium text-ink-high">
+                      {SOURCES[phase.sourceIndex].name}
+                    </strong>
+                  </span>
                   <button
+                    type="button"
                     onClick={handleNextServerManual}
-                    className="flex items-center gap-1 text-amber-500 hover:text-amber-400 font-medium transition-colors"
+                    className="inline-flex items-center gap-1 text-blue transition-colors hover:text-blue-surface"
                   >
-                    <span>{t("movie.nextServer")}</span>
-                    <ChevronRight className="w-3.5 h-3.5" />
+                    {t("movie.nextServer")}
+                    <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 </div>
               )}
 
-              {!showTrailer && phase.tag === "playing" && lastTime && lastTime > 10 && (
-                <div className="px-5 py-2.5 bg-muted/30 border-t border-border flex items-center justify-between text-[11px]">
-                  <span className="text-muted-foreground">
-                    {t("movie.lastWatched", {
-                      time: `${Math.floor(lastTime / 60)}:${(lastTime % 60).toString().padStart(2, "0")}`
-                    })}
-                  </span>
-                  <span className="text-primary/70 animate-pulse font-medium">{t("movie.resuming")}</span>
-                </div>
-              )}
-            </motion.div>
+              {!showTrailer &&
+                phase.tag === "playing" &&
+                lastTime &&
+                lastTime > 10 && (
+                  <div className="flex items-center justify-between border-t border-surface-alt bg-surface px-4 py-2 text-tiny text-meta">
+                    <span data-numeric>
+                      {t("movie.lastWatched", {
+                        time: `${Math.floor(lastTime / 60)}:${(lastTime % 60)
+                          .toString()
+                          .padStart(2, "0")}`,
+                      })}
+                    </span>
+                    <span className="text-green">{t("movie.resuming")}</span>
+                  </div>
+                )}
+            </motion.section>
           )}
         </AnimatePresence>
-      </motion.div>
+      </motion.article>
     </AnimatePresence>
   );
 }

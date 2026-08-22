@@ -13,11 +13,11 @@ export function SearchBar() {
   const [results, setResults] = useState<Movie[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const { locale, setMovie, setIsLoading, setActiveView, setMenuOpen } = useStore();
+  const { locale, setMovie, setIsLoading, setActiveView, setMenuOpen } =
+    useStore();
   const t = getTranslations(locale);
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -28,14 +28,16 @@ export function SearchBar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Debounced search logic
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (query.trim().length > 2) {
         setIsSearching(true);
         setIsOpen(true);
         try {
-          const movies = await searchMovies(query, locale === 'az' ? 'az-AZ' : locale === 'ru' ? 'ru-RU' : 'en-US');
+          const movies = await searchMovies(
+            query,
+            locale === "az" ? "az-AZ" : locale === "ru" ? "ru-RU" : "en-US"
+          );
           setResults(movies.slice(0, 6));
         } catch (error) {
           console.error("Search error:", error);
@@ -61,9 +63,7 @@ export function SearchBar() {
     try {
       const details = await getMovieDetails(movie.id);
       setMovie({ ...movie, ...details });
-      
-      // Auto scroll to movie card after selection
-      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.error("Select error:", error);
     } finally {
@@ -72,23 +72,26 @@ export function SearchBar() {
   };
 
   return (
-    <div ref={searchRef} className="relative w-full max-w-sm order-3 md:order-2">
-      <div className="relative group">
-        <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+    <div ref={searchRef} className="relative hidden min-w-0 max-w-xs flex-1 md:block">
+      <div className="group relative">
+        <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-meta transition-colors group-focus-within:text-blue" />
         <input
-          type="text"
+          type="search"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.length > 2 && setIsOpen(true)}
           placeholder={t("search.placeholder")}
-          className="w-full bg-secondary/50 hover:bg-secondary/80 focus:bg-secondary border-none rounded-full pl-10 pr-10 py-2 text-sm transition-all focus:ring-2 focus:ring-primary/20"
+          className="field h-8 pl-8 pr-8"
+          aria-label={t("search.placeholder")}
         />
         {query && (
           <button
+            type="button"
             onClick={() => setQuery("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-muted rounded-full transition-colors"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-meta transition-colors hover:text-heading"
+            aria-label={t("menu.close")}
           >
-            <X className="w-3.5 h-3.5 text-muted-foreground" />
+            <X className="h-3.5 w-3.5" />
           </button>
         )}
       </div>
@@ -96,54 +99,56 @@ export function SearchBar() {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-2xl shadow-2xl overflow-hidden z-[100]"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.15, ease: [0.19, 1, 0.22, 1] }}
+            className="absolute inset-x-0 top-full z-100 mt-1.5 overflow-hidden rounded-panel border border-surface-alt bg-surface shadow-[0_8px_28px_rgba(0,0,0,0.45)]"
           >
             {isSearching ? (
-              <div className="p-8 flex flex-col items-center justify-center gap-3 text-muted-foreground">
-                <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                <span className="text-sm font-medium">{t("search.searching")}</span>
+              <div className="flex items-center justify-center gap-2 p-6 text-meta">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span className="text-body-sm">{t("search.searching")}</span>
               </div>
             ) : results.length > 0 ? (
-              <div className="p-2 max-h-[380px] overflow-y-auto">
+              <ul className="max-h-[380px] overflow-y-auto p-1.5">
                 {results.map((movie) => (
-                  <button
-                    key={movie.id}
-                    onClick={() => handleSelect(movie)}
-                    className="w-full flex gap-3 p-2 hover:bg-muted rounded-xl transition-colors text-left group"
-                  >
-                    <div className="w-12 h-16 shrink-0 rounded-lg overflow-hidden bg-muted border border-border relative">
-                      {movie.poster_path ? (
-                        <Image
-                          src={getImageUrl(movie.poster_path, "w185")!}
-                          alt={movie.title}
-                          fill
-                          className="object-cover"
-                          sizes="48px"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <SearchIcon className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex flex-col justify-center min-w-0">
-                      <span className="text-sm font-semibold truncate group-hover:text-primary transition-colors">
-                        {movie.title}
+                  <li key={movie.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleSelect(movie)}
+                      className="group/item flex w-full gap-2.5 rounded-control p-1.5 text-left transition-colors hover:bg-panel/40"
+                    >
+                      <span className="relative block h-[54px] w-9 shrink-0 overflow-hidden rounded-[2px] bg-poster-bg">
+                        {movie.poster_path && (
+                          <Image
+                            src={getImageUrl(movie.poster_path, "w185")!}
+                            alt=""
+                            fill
+                            className="object-cover"
+                            sizes="36px"
+                          />
+                        )}
                       </span>
-                      <span className="text-xs text-muted-foreground">
-                        {movie.release_date?.split("-")[0]}
+                      <span className="flex min-w-0 flex-col justify-center">
+                        <span className="truncate text-body-sm font-medium text-ink-high transition-colors group-hover/item:text-heading">
+                          {movie.title}
+                        </span>
+                        <span
+                          className="font-serif text-tiny text-meta"
+                          data-numeric
+                        >
+                          {movie.release_date?.split("-")[0]}
+                        </span>
                       </span>
-                    </div>
-                  </button>
+                    </button>
+                  </li>
                 ))}
-              </div>
+              </ul>
             ) : query.length > 2 ? (
-              <div className="p-8 text-center text-muted-foreground">
-                <span className="text-sm">{t("search.noResults")}</span>
-              </div>
+              <p className="p-6 text-center text-body-sm text-meta">
+                {t("search.noResults")}
+              </p>
             ) : null}
           </motion.div>
         )}
