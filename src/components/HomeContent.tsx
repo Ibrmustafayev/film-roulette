@@ -15,6 +15,7 @@ import { HelpView } from "@/components/HelpView";
 import { RouletteButton } from "@/components/RouletteButton";
 import { SearchBar } from "@/components/SearchBar";
 import { ContinueWatching } from "@/components/WatchHistory";
+import { AdGuardBanner } from "@/components/AdGuardBanner";
 
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
@@ -251,6 +252,9 @@ function Idle({
           {note}
         </p>
       </div>
+
+      {/* Responsive AdGuard Recommendation Banner */}
+      <AdGuardBanner />
 
       {/* Quick Search & Roll button on Mobile idle view (between site badge and Popular Now) */}
       <div className="mt-6 max-w-xs space-y-3 xl:hidden">

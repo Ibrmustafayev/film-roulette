@@ -19,6 +19,7 @@ export function FeedbackModal({ open, onClose, prefillMedia }: FeedbackModalProp
   const t = getTranslations(locale);
 
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [issueType, setIssueType] = useState("broken");
   const [mediaTitle, setMediaTitle] = useState(prefillMedia ? `${prefillMedia.title} (ID: ${prefillMedia.id})` : "");
   const [message, setMessage] = useState("");
@@ -44,8 +45,10 @@ export function FeedbackModal({ open, onClose, prefillMedia }: FeedbackModalProp
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim() || undefined,
+          email: email.trim() || undefined,
           issueType: selectedType?.label || issueType,
           mediaTitle: mediaTitle.trim() || undefined,
+          tmdbId: prefillMedia?.id || undefined,
           message: message.trim(),
         }),
       });
@@ -56,6 +59,7 @@ export function FeedbackModal({ open, onClose, prefillMedia }: FeedbackModalProp
           onClose();
           setStatus("idle");
           setName("");
+          setEmail("");
           setIssueType("broken");
           setMediaTitle("");
           setMessage("");
