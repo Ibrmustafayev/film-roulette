@@ -45,6 +45,7 @@ export function MovieCard() {
 
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
 
   const isTv = movie?.media_type === "tv" || !!movie?.number_of_seasons;
 
@@ -102,9 +103,9 @@ export function MovieCard() {
 
   const handleToggleFullscreen = useCallback(() => {
     /* eslint-disable @typescript-eslint/no-explicit-any */
-    const el = playerRef.current as any;
+    const iframeEl = iframeRef.current as any;
+    const containerEl = playerRef.current as any;
     const doc = document as any;
-    if (!el) return;
 
     const isCurrentFull = !!(
       doc.fullscreenElement ||
@@ -114,14 +115,22 @@ export function MovieCard() {
     );
 
     if (!isCurrentFull) {
-      if (el.requestFullscreen) {
-        el.requestFullscreen().catch(() => {});
-      } else if (el.webkitRequestFullscreen) {
-        el.webkitRequestFullscreen();
-      } else if (el.mozRequestFullScreen) {
-        el.mozRequestFullScreen();
-      } else if (el.msRequestFullscreen) {
-        el.msRequestFullscreen();
+      // Prioritize direct native iframe fullscreen, fallback to container
+      const targetEl = iframeEl || containerEl;
+      if (targetEl) {
+        if (targetEl.requestFullscreen) {
+          targetEl.requestFullscreen().catch(() => {
+            if (containerEl && containerEl !== targetEl && containerEl.requestFullscreen) {
+              containerEl.requestFullscreen().catch(() => {});
+            }
+          });
+        } else if (targetEl.webkitRequestFullscreen) {
+          targetEl.webkitRequestFullscreen();
+        } else if (targetEl.mozRequestFullScreen) {
+          targetEl.mozRequestFullScreen();
+        } else if (targetEl.msRequestFullscreen) {
+          targetEl.msRequestFullscreen();
+        }
       }
     } else {
       if (doc.exitFullscreen) {
@@ -661,7 +670,13 @@ export function MovieCard() {
                 isFullscreen ? "fixed inset-0 z-50 m-0 h-screen w-screen border-none" : ""
               }`}
             >
-              <div className="relative w-full" style={{ paddingTop: isFullscreen ? "0" : "56.25%", height: isFullscreen ? "calc(100vh - 46px)" : "auto" }}>
+              <div
+                className="relative w-full"
+                style={{
+                  paddingTop: isFullscreen ? "0" : "56.25%",
+                  height: isFullscreen ? "100vh" : "auto",
+                }}
+              >
                 {showTrailer && (
                   <iframe
                     src={`https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1`}
@@ -724,6 +739,7 @@ export function MovieCard() {
                 {!showTrailer && phase.tag === "playing" && currentPlayUrl && (
                   <div className="absolute inset-0 h-full w-full">
                     <iframe
+                      ref={iframeRef}
                       key={`play-${currentEpisodeKey}-${phase.sourceIndex}`}
                       id="stream-iframe"
                       src={currentPlayUrl}
@@ -737,7 +753,7 @@ export function MovieCard() {
                     />
 
                     {/* Non-blocking Ad Shield visual indicator (pointer-events-none on container) */}
-                    {shieldActive && (
+                    {shieldActive && !isFullscreen && (
                       <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3 select-none">
                         <span className="pointer-events-auto inline-flex items-center gap-1.5 border border-ink-4/80 bg-ink-1/90 px-2.5 py-1 text-[11px] font-medium text-ink-8 backdrop-blur-sm shadow-md transition-opacity duration-200">
                           <ShieldCheck className="h-3 w-3 text-live shrink-0" />
@@ -747,7 +763,7 @@ export function MovieCard() {
                     )}
 
                     {/* Subtle inline loader during provider initial connection */}
-                    {iframeLoading && (
+                    {iframeLoading && !isFullscreen && (
                       <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 bg-ink-1/80 px-2.5 py-1 text-xs text-ink-7 backdrop-blur-sm">
                         <Loader2 className="h-3.5 w-3.5 animate-spin text-live" />
                         <span>Connecting to {sources[phase.sourceIndex]?.name}...</span>
@@ -757,9 +773,9 @@ export function MovieCard() {
                 )}
               </div>
 
-              {/* Player Status & Control Bar */}
-              {!showTrailer && (phase.tag === "playing" || phase.tag === "hls") && (
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-4 bg-ink-2 px-4 py-2 min-h-[42px]">
+              {/* Player Status & Control Bar — Fully hidden in fullscreen mode */}
+              {!showTrailer && !isFullscreen && (phase.tag === "playing" || phase.tag === "hls") && (
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-4 bg-ink-2 px-4 py-2 min-h-[42px] [:fullscreen_&]:hidden [:-webkit-full-screen_&]:hidden [:-moz-full-screen_&]:hidden [:-ms-fullscreen_&]:hidden">
                   <div className="flex flex-wrap items-center gap-2 min-w-0">
                     <span className="inline-flex items-center gap-2 text-label uppercase tracking-[0.12em] text-ink-6 whitespace-nowrap">
                       <span className="h-1.5 w-1.5 rounded-full bg-live shrink-0" />
@@ -837,10 +853,11 @@ export function MovieCard() {
               )}
 
               {!showTrailer &&
+                !isFullscreen &&
                 (phase.tag === "playing" || phase.tag === "hls") &&
                 lastTime &&
                 lastTime > 10 && (
-                  <div className="flex items-center justify-between border-t border-ink-4 bg-ink-2 px-4 py-1.5 text-label uppercase tracking-[0.12em] text-ink-6">
+                  <div className="flex items-center justify-between border-t border-ink-4 bg-ink-2 px-4 py-1.5 text-label uppercase tracking-[0.12em] text-ink-6 [:fullscreen_&]:hidden [:-webkit-full-screen_&]:hidden [:-moz-full-screen_&]:hidden [:-ms-fullscreen_&]:hidden">
                     <span data-num>
                       {t("movie.lastWatched", {
                         time: `${Math.floor(lastTime / 60)}:${(lastTime % 60)
