@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
 import { Movie, getMovieDetails, getTVDetails } from "@/lib/tmdb";
@@ -9,7 +10,14 @@ import { ContinueWatching } from "./WatchHistory";
 
 export function HistoryView() {
   const { history, locale, setMovie, setActiveView, setIsLoading } = useStore();
+  const [, setTick] = useState(0);
   const t = getTranslations(locale);
+
+  useEffect(() => {
+    const handleUpdate = () => setTick((prev) => prev + 1);
+    window.addEventListener("film_roulette_history_updated", handleUpdate);
+    return () => window.removeEventListener("film_roulette_history_updated", handleUpdate);
+  }, []);
 
   const handleSelect = async (movie: Movie) => {
     setActiveView("random");

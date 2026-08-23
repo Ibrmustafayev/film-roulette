@@ -306,6 +306,33 @@ export function MovieCard() {
     return () => clearTimeout(timer);
   }, [phase, useDirectEmbed]);
 
+  // Active watch progress tracking ticker while player is active
+  useEffect(() => {
+    if ((phase.tag !== "playing" && phase.tag !== "hls") || !movie) return;
+
+    const interval = setInterval(() => {
+      setLastTime((prev) => {
+        const cur = (prev || 30) + 3;
+        const dur = movie.runtime ? movie.runtime * 60 : 7200;
+        setWatchProgress(currentEpisodeKey, cur);
+        saveWatchProgress({
+          id: movie.id,
+          mediaType: isTv ? "tv" : "movie",
+          title: movie.title,
+          posterPath: movie.poster_path,
+          backdropPath: movie.backdrop_path,
+          currentTime: cur,
+          duration: dur,
+          season: isTv ? selectedSeason : undefined,
+          episode: isTv ? selectedEpisode : undefined,
+        });
+        return cur;
+      });
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [phase.tag, movie, isTv, selectedSeason, selectedEpisode, currentEpisodeKey, setWatchProgress]);
+
   const switchToServer = useCallback(
     (index: number) => {
       if (abortRef.current) return;
@@ -332,6 +359,20 @@ export function MovieCard() {
       return;
     }
     if (!movie) return;
+
+    // Immediately record watch initiation
+    const initTime = lastTime && lastTime > 10 ? lastTime : 30;
+    saveWatchProgress({
+      id: movie.id,
+      mediaType: isTv ? "tv" : "movie",
+      title: movie.title,
+      posterPath: movie.poster_path,
+      backdropPath: movie.backdrop_path,
+      currentTime: initTime,
+      duration: movie.runtime ? movie.runtime * 60 : 7200,
+      season: isTv ? selectedSeason : undefined,
+      episode: isTv ? selectedEpisode : undefined,
+    });
 
     abortRef.current = false;
     setShowTrailer(false);
@@ -479,10 +520,10 @@ export function MovieCard() {
               </div>
 
               {/* YouTube-Style Progress Bar on main poster */}
-              {lastTime && lastTime > 10 && (
-                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-ink-4/90 z-20 overflow-hidden">
+              {lastTime && lastTime > 5 && (
+                <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-1.5 bg-slate-800/80 z-20 overflow-hidden">
                   <div
-                    className="h-full bg-live transition-all duration-300"
+                    className="h-full bg-emerald-500 transition-all duration-300"
                     style={{
                       width: `${Math.min(
                         100,

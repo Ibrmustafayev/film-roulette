@@ -13,6 +13,7 @@ export interface WatchHistoryItem {
 }
 
 const STORAGE_KEY = "film_roulette_history";
+const ZUSTAND_KEY = "film-roulette-v3";
 const MAX_HISTORY_ITEMS = 30;
 
 function isBrowser(): boolean {
@@ -26,8 +27,46 @@ export function getWatchHistory(): WatchHistoryItem[] {
   if (!isBrowser()) return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const items: WatchHistoryItem[] = JSON.parse(raw);
+    let items: WatchHistoryItem[] = raw ? JSON.parse(raw) : [];
+
+    // Fallback: If empty, check zustand persisted store to migrate
+    if (!Array.isArray(items) || items.length === 0) {
+      const zRaw = localStorage.getItem(ZUSTAND_KEY);
+      if (zRaw) {
+        const zData = JSON.parse(zRaw);
+        const zHist = zData?.state?.history || [];
+        const zProg = zData?.state?.watchProgress || {};
+
+        if (Array.isArray(zHist) && zHist.length > 0) {
+          items = zHist
+            .filter((m) => !!m && !!m.id)
+            .map((m, idx) => {
+              const time = zProg[String(m.id)] || zProg[`${m.id}_s1_e1`] || (m.runtime ? Math.min(300, m.runtime * 60) : 0);
+              const duration = m.runtime && m.runtime > 0 ? m.runtime * 60 : 7200;
+              const isTv = m.media_type === "tv" || !!m.number_of_seasons;
+              return {
+                id: m.id,
+                mediaType: isTv ? "tv" : "movie",
+                title: m.title || m.original_title || "Unknown",
+                posterPath: m.poster_path || null,
+                backdropPath: m.backdrop_path || null,
+                currentTime: time,
+                duration,
+                progressPercent: Math.min(100, Math.max(0, Math.round((time / duration) * 100))),
+                season: isTv ? 1 : undefined,
+                episode: isTv ? 1 : undefined,
+                lastWatchedAt: Date.now() - idx * 60000,
+              };
+            });
+
+          // Save migrated items
+          if (items.length > 0) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+          }
+        }
+      }
+    }
+
     return Array.isArray(items)
       ? items.sort((a, b) => b.lastWatchedAt - a.lastWatchedAt)
       : [];
@@ -46,15 +85,48 @@ export function getMediaProgress(
   episode?: number
 ): WatchHistoryItem | null {
   const history = getWatchHistory();
-  return (
-    history.find((item) => {
-      if (item.id !== id) return false;
-      if (item.mediaType === "tv") {
-        return item.season === season && item.episode === episode;
+  const found = history.find((item) => {
+    if (item.id !== id) return false;
+    if (item.mediaType === "tv" && season) {
+      return item.season === season && (episode ? item.episode === episode : true);
+    }
+    return true;
+  });
+
+  if (found) return found;
+
+  // Fallback to check zustand watchProgress store
+  if (isBrowser()) {
+    try {
+      const zRaw = localStorage.getItem(ZUSTAND_KEY);
+      if (zRaw) {
+        const zData = JSON.parse(zRaw);
+        const zProg = zData?.state?.watchProgress || {};
+        const key = season && episode ? `${id}_s${season}_e${episode}` : String(id);
+        const time = zProg[key] || zProg[String(id)];
+        if (time && time > 0) {
+          const duration = 7200;
+          return {
+            id,
+            mediaType: season ? "tv" : "movie",
+            title: "",
+            posterPath: null,
+            backdropPath: null,
+            currentTime: time,
+            duration,
+            progressPercent: Math.min(100, Math.max(0, Math.round((time / duration) * 100))),
+            season,
+            episode,
+            lastWatchedAt: Date.now(),
+          };
+        }
       }
-      return true;
-    }) || null
-  );
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -66,7 +138,7 @@ export function saveWatchProgress(
     progressPercent?: number;
   }
 ): void {
-  if (!isBrowser() || !item.id || item.currentTime < 5) return;
+  if (!isBrowser() || !item.id) return;
 
   try {
     const history = getWatchHistory();
@@ -94,6 +166,21 @@ export function saveWatchProgress(
 
     const updated = [fullItem, ...filtered].slice(0, MAX_HISTORY_ITEMS);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+    // Also sync to zustand localStorage for backward compatibility
+    const zRaw = localStorage.getItem(ZUSTAND_KEY);
+    if (zRaw) {
+      try {
+        const zData = JSON.parse(zRaw);
+        if (!zData.state) zData.state = {};
+        if (!zData.state.watchProgress) zData.state.watchProgress = {};
+        const key = item.season && item.episode ? `${item.id}_s${item.season}_e${item.episode}` : String(item.id);
+        zData.state.watchProgress[key] = item.currentTime;
+        localStorage.setItem(ZUSTAND_KEY, JSON.stringify(zData));
+      } catch {
+        /* ignore */
+      }
+    }
 
     // Dispatch a custom event so other components update synchronously
     window.dispatchEvent(new CustomEvent("film_roulette_history_updated"));

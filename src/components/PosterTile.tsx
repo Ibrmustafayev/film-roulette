@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { X, Tv, Film } from "lucide-react";
 import { getImageUrl, Movie } from "@/lib/tmdb";
-import { getMediaProgress, WatchHistoryItem } from "@/lib/history";
+import { getMediaProgress, formatTime, WatchHistoryItem } from "@/lib/history";
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
@@ -72,13 +72,13 @@ export function PosterTile({
 
         {/* Progress & Episode Badge (Top Left) */}
         {hasProgress && (
-          <span className="absolute top-1 left-1 z-20 flex items-center gap-1 bg-ink-0/90 px-1.5 py-0.5 text-[9px] font-semibold text-live backdrop-blur-xs shadow-xs">
+          <div className="pointer-events-none absolute top-1 left-1 z-30 flex items-center gap-1 bg-black/85 border border-emerald-500/40 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 backdrop-blur-xs shadow-xs">
             <span>
               {progress.mediaType === "tv" && progress.season
                 ? `S${progress.season} E${progress.episode}`
                 : `${Math.round(progress.progressPercent)}%`}
             </span>
-          </span>
+          </div>
         )}
 
         {/* Small corner media badge (Bottom Right) */}
@@ -86,11 +86,11 @@ export function PosterTile({
           {isTv ? <Tv className="h-2.5 w-2.5 text-live inline mr-0.5" /> : <Film className="h-2.5 w-2.5 text-link inline mr-0.5" />}
         </span>
 
-        {/* YouTube-Style Progress Bar at the bottom of the thumbnail */}
+        {/* YouTube-Style Emerald / Red Progress Bar at the bottom of the thumbnail */}
         {hasProgress && (
-          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-ink-4/90 z-30 overflow-hidden">
+          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-1.5 bg-slate-800/80 z-30 overflow-hidden">
             <div
-              className="h-full bg-live transition-all duration-300"
+              className="h-full bg-emerald-500 transition-all duration-300"
               style={{ width: `${Math.min(100, Math.max(0, progress.progressPercent))}%` }}
             />
           </div>
@@ -110,14 +110,23 @@ export function PosterTile({
       )}
 
       <p className="mt-2 truncate text-small text-ink-8">{movie.title}</p>
-      <p className="flex items-center gap-2 text-label text-ink-6">
-        <span data-num>{year}</span>
-        {typeof movie.vote_average === "number" && movie.vote_average > 0 && (
-          <span data-num className="text-live">
-            {movie.vote_average.toFixed(1)}
-          </span>
-        )}
-      </p>
+      
+      {/* Progress Timestamp Text */}
+      {hasProgress ? (
+        <p className="flex items-center justify-between text-[11px] text-emerald-400 font-medium">
+          <span>{formatTime(progress.currentTime)} / {formatTime(progress.duration)}</span>
+          <span className="text-ink-6 text-label">{year}</span>
+        </p>
+      ) : (
+        <p className="flex items-center gap-2 text-label text-ink-6">
+          <span data-num>{year}</span>
+          {typeof movie.vote_average === "number" && movie.vote_average > 0 && (
+            <span data-num className="text-live">
+              {movie.vote_average.toFixed(1)}
+            </span>
+          )}
+        </p>
+      )}
     </motion.li>
   );
 }
