@@ -42,7 +42,7 @@ export function SearchBar() {
             "all",
             locale === "az" ? "az-AZ" : locale === "ru" ? "ru-RU" : "en-US"
           );
-          setResults(items.slice(0, 8));
+          setResults(items);
         } catch (error) {
           console.error("Search error:", error);
         } finally {
@@ -52,7 +52,7 @@ export function SearchBar() {
         setResults([]);
         setIsOpen(false);
       }
-    }, 400);
+    }, 300);
 
     return () => clearTimeout(timer);
   }, [query, locale]);
@@ -114,7 +114,7 @@ export function SearchBar() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.12, ease: EASE }}
-            className="absolute left-0 right-0 top-full z-50 mt-1 border border-ink-4 bg-ink-2 shadow-lifted"
+            className="absolute left-0 right-0 top-full z-50 mt-1 max-h-[460px] overflow-hidden rounded-sm border border-ink-4 bg-ink-2 shadow-lifted"
           >
             {isSearching ? (
               <div className="flex items-center gap-2 px-3 py-4 text-ink-6">
@@ -124,54 +124,74 @@ export function SearchBar() {
                 </span>
               </div>
             ) : results.length > 0 ? (
-              <ul className="max-h-[360px] overflow-y-auto">
-                {results.map((item) => {
-                  const isTv = item.media_type === "tv";
-                  const year = (isTv ? item.first_air_date : item.release_date)?.split("-")[0];
-                  return (
-                    <li key={`${item.media_type || "item"}-${item.id}`} className="border-b border-ink-4 last:border-0">
-                      <button
-                        type="button"
-                        onClick={() => handleSelect(item)}
-                        className="group/item flex w-full items-center gap-2.5 p-2 text-left transition-colors duration-[120ms] hover:bg-ink-3"
-                      >
-                        <span className="relative block h-12 w-8 shrink-0 overflow-hidden rounded-poster bg-ink-3">
-                          {item.poster_path && (
-                            <Image
-                              src={getImageUrl(item.poster_path, "w185")!}
-                              alt=""
-                              fill
-                              className="object-cover"
-                              sizes="32px"
-                            />
-                          )}
-                        </span>
-                        <span className="flex min-w-0 flex-1 flex-col">
-                          <span className="truncate text-small text-ink-8 transition-colors group-hover/item:text-ink-9">
-                            {item.title}
+              <div className="flex flex-col">
+                <ul className="max-h-[400px] overflow-y-auto divide-y divide-ink-4">
+                  {results.map((item) => {
+                    const isTv = item.media_type === "tv";
+                    const year = (isTv ? item.first_air_date : item.release_date)?.split("-")[0];
+                    const rating = item.vote_average ? item.vote_average.toFixed(1) : null;
+                    return (
+                      <li key={`${item.media_type || "item"}-${item.id}`}>
+                        <button
+                          type="button"
+                          onClick={() => handleSelect(item)}
+                          className="group/item flex w-full items-center gap-2.5 p-2.5 text-left transition-colors duration-[120ms] hover:bg-ink-3"
+                        >
+                          <span className="relative block h-14 w-9 shrink-0 overflow-hidden rounded-sm bg-ink-3">
+                            {item.poster_path ? (
+                              <Image
+                                src={getImageUrl(item.poster_path, "w185")!}
+                                alt=""
+                                fill
+                                className="object-cover"
+                                sizes="36px"
+                              />
+                            ) : (
+                              <span className="flex h-full w-full items-center justify-center text-[10px] text-ink-6">
+                                {isTv ? <Tv className="h-4 w-4" /> : <Film className="h-4 w-4" />}
+                              </span>
+                            )}
                           </span>
-                          <span className="flex items-center gap-2 text-label text-ink-6" data-num>
-                            <span>{year || "—"}</span>
-                            <span className="inline-flex items-center gap-0.5 text-[9px] uppercase tracking-wider text-ink-6">
-                              {isTv ? (
-                                <>
-                                  <Tv className="h-2.5 w-2.5 text-live" />
-                                  <span>{t("tv.badge")}</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Film className="h-2.5 w-2.5 text-link" />
-                                  <span>{t("tv.movieBadge")}</span>
-                                </>
+                          <span className="flex min-w-0 flex-1 flex-col">
+                            <span className="truncate text-small font-medium text-ink-8 transition-colors group-hover/item:text-ink-9">
+                              {item.title}
+                            </span>
+                            {item.original_title && item.original_title !== item.title && (
+                              <span className="truncate text-[11px] text-ink-6 italic">
+                                {item.original_title}
+                              </span>
+                            )}
+                            <span className="mt-0.5 flex items-center gap-2 text-label text-ink-6" data-num>
+                              <span>{year || "—"}</span>
+                              {rating && Number(rating) > 0 && (
+                                <span className="inline-flex items-center gap-0.5 text-link font-semibold">
+                                  ★ {rating}
+                                </span>
                               )}
+                              <span className="inline-flex items-center gap-0.5 text-[9px] uppercase tracking-wider text-ink-6">
+                                {isTv ? (
+                                  <>
+                                    <Tv className="h-2.5 w-2.5 text-live" />
+                                    <span>{t("tv.badge")}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Film className="h-2.5 w-2.5 text-link" />
+                                    <span>{t("tv.movieBadge")}</span>
+                                  </>
+                                )}
+                              </span>
                             </span>
                           </span>
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <div className="border-t border-ink-4 bg-ink-1 px-3 py-1.5 text-right text-[10px] text-ink-6">
+                  {results.length} {results.length === 1 ? 'result' : 'results'}
+                </div>
+              </div>
             ) : query.length > 2 ? (
               <p className="px-3 py-4 text-label uppercase tracking-[0.12em] text-ink-6">
                 {t("search.noResults")}

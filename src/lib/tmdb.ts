@@ -257,6 +257,11 @@ const FALLBACK_MOVIES: Movie[] = [
     original_language: 'en',
     imdb_id: 'tt1375666',
     trailer_key: 'YoHD9XEInc0',
+    cast: [
+      { id: 6193, name: 'Leonardo DiCaprio', character: 'Dom Cobb', profile_path: '/wo2AlXaqBt0bv9t4bSlUmBo9HvS.jpg' },
+      { id: 24045, name: 'Joseph Gordon-Levitt', character: 'Arthur', profile_path: '/dhv9f3A4k5d5V4jWqQ7H4K7u.jpg' },
+      { id: 27578, name: 'Elliot Page', character: 'Ariadne', profile_path: '/tp15h1sB9L04wT9N5fD2K4s.jpg' },
+    ],
   },
   {
     id: 157336,
@@ -275,6 +280,11 @@ const FALLBACK_MOVIES: Movie[] = [
     original_language: 'en',
     imdb_id: 'tt0816692',
     trailer_key: 'zSWdZVtXT7E',
+    cast: [
+      { id: 10297, name: 'Matthew McConaughey', character: 'Cooper', profile_path: '/sY2waasYeSdF0noN46oDyo78GqL.jpg' },
+      { id: 1813, name: 'Anne Hathaway', character: 'Brand', profile_path: '/tLpq59N7EP7L.jpg' },
+      { id: 83002, name: 'Jessica Chastain', character: 'Murph', profile_path: '/ArlywG3W43f8j.jpg' },
+    ],
   },
   {
     id: 155,
@@ -293,6 +303,11 @@ const FALLBACK_MOVIES: Movie[] = [
     original_language: 'en',
     imdb_id: 'tt0468569',
     trailer_key: 'EXeTwQWrcwY',
+    cast: [
+      { id: 3894, name: 'Christian Bale', character: 'Bruce Wayne / Batman', profile_path: '/b7fTC9WFkgqGOv771ttCHx.jpg' },
+      { id: 1810, name: 'Heath Ledger', character: 'Joker', profile_path: '/pMhK31aK6nCgB9g8.jpg' },
+      { id: 3895, name: 'Michael Caine', character: 'Alfred Pennyworth', profile_path: '/bV3b9pD7H0J.jpg' },
+    ],
   },
   {
     id: 680,
@@ -311,6 +326,11 @@ const FALLBACK_MOVIES: Movie[] = [
     original_language: 'en',
     imdb_id: 'tt0110912',
     trailer_key: 's7EdQ4FqbhY',
+    cast: [
+      { id: 8891, name: 'John Travolta', character: 'Vincent Vega', profile_path: '/ap88q1.jpg' },
+      { id: 2231, name: 'Samuel L. Jackson', character: 'Jules Winnfield', profile_path: '/mXNdt.jpg' },
+      { id: 139, name: 'Uma Thurman', character: 'Mia Wallace', profile_path: '/99.jpg' },
+    ],
   },
   {
     id: 603,
@@ -328,6 +348,12 @@ const FALLBACK_MOVIES: Movie[] = [
     runtime: 136,
     original_language: 'en',
     imdb_id: 'tt0133093',
+    trailer_key: 'vKQi3bBA1y8',
+    cast: [
+      { id: 6384, name: 'Keanu Reeves', character: 'Thomas A. Anderson / Neo', profile_path: '/4D0PpWM.jpg' },
+      { id: 2975, name: 'Laurence Fishburne', character: 'Morpheus', profile_path: '/8suOh.jpg' },
+      { id: 530, name: 'Carrie-Anne Moss', character: 'Trinity', profile_path: '/xD4j.jpg' },
+    ],
   },
 ];
 
@@ -349,6 +375,11 @@ const FALLBACK_TVS: Movie[] = [
     original_language: 'en',
     imdb_id: 'tt0944947',
     trailer_key: 'KPLWWIOCOOQ',
+    cast: [
+      { id: 22970, name: 'Peter Dinklage', character: 'Tyrion Lannister', profile_path: '/lRsRjh.jpg' },
+      { id: 1223786, name: 'Emilia Clarke', character: 'Daenerys Targaryen', profile_path: '/86.jpg' },
+      { id: 239019, name: 'Kit Harington', character: 'Jon Snow', profile_path: '/44.jpg' },
+    ],
     number_of_seasons: 8,
     number_of_episodes: 73,
     seasons: [
@@ -373,6 +404,12 @@ const FALLBACK_TVS: Movie[] = [
     genres: [{ id: 18, name: 'Drama' }, { id: 80, name: 'Crime' }],
     original_language: 'en',
     imdb_id: 'tt0903747',
+    trailer_key: 'HhesaQXLuRY',
+    cast: [
+      { id: 17419, name: 'Bryan Cranston', character: 'Walter White', profile_path: '/7JNd.jpg' },
+      { id: 84497, name: 'Aaron Paul', character: 'Jesse Pinkman', profile_path: '/8N9.jpg' },
+      { id: 134531, name: 'Anna Gunn', character: 'Skyler White', profile_path: '/99.jpg' },
+    ],
     number_of_seasons: 5,
     number_of_episodes: 62,
     seasons: [
@@ -396,6 +433,12 @@ const FALLBACK_TVS: Movie[] = [
     genres: [{ id: 18, name: 'Drama' }, { id: 10759, name: 'Action & Adventure' }],
     original_language: 'en',
     imdb_id: 'tt3581920',
+    trailer_key: 'uLtkt8BonwM',
+    cast: [
+      { id: 1253360, name: 'Pedro Pascal', character: 'Joel Miller', profile_path: '/9.jpg' },
+      { id: 2056075, name: 'Bella Ramsey', character: 'Ellie Williams', profile_path: '/8.jpg' },
+      { id: 71536, name: 'Gabriel Luna', character: 'Tommy Miller', profile_path: '/7.jpg' },
+    ],
     number_of_seasons: 1,
     number_of_episodes: 9,
     seasons: [
@@ -418,6 +461,12 @@ const FALLBACK_TVS: Movie[] = [
     genres: [{ id: 18, name: 'Drama' }, { id: 10765, name: 'Sci-Fi & Fantasy' }],
     original_language: 'en',
     imdb_id: 'tt4574334',
+    trailer_key: 'b9EkMc79ZSU',
+    cast: [
+      { id: 1356210, name: 'Millie Bobby Brown', character: 'Eleven', profile_path: '/8.jpg' },
+      { id: 1445388, name: 'Finn Wolfhard', character: 'Mike Wheeler', profile_path: '/9.jpg' },
+      { id: 2157, name: 'Winona Ryder', character: 'Joyce Byers', profile_path: '/7.jpg' },
+    ],
     number_of_seasons: 4,
     number_of_episodes: 34,
     seasons: [
@@ -440,6 +489,12 @@ const FALLBACK_TVS: Movie[] = [
     genres: [{ id: 18, name: 'Drama' }],
     original_language: 'en',
     imdb_id: 'tt7366338',
+    trailer_key: 's9APLXM9Ei8',
+    cast: [
+      { id: 154, name: 'Jared Harris', character: 'Valery Legasov', profile_path: '/8.jpg' },
+      { id: 1640, name: 'Stellan Skarsgård', character: 'Boris Shcherbina', profile_path: '/9.jpg' },
+      { id: 2043, name: 'Emily Watson', character: 'Ulana Khomyuk', profile_path: '/7.jpg' },
+    ],
     number_of_seasons: 1,
     number_of_episodes: 5,
     seasons: [
@@ -673,8 +728,31 @@ export const getFullMovie = async (movieId: number | string, language = 'en-US')
     }, 600);
 
     const base = normalizeMovie(data);
-    const details = await getMovieDetails(idNum, language);
-    return { ...base, ...details };
+    const credits = data.credits as Record<string, unknown> | undefined;
+    const cast: CastMember[] = ((credits?.cast || []) as Record<string, unknown>[]).slice(0, 12).map((c) => ({
+      id: Number(c.id || 0),
+      name: String(c.name || ''),
+      character: String(c.character || ''),
+      profile_path: (c.profile_path as string) || null,
+    }));
+
+    const videos = data.videos as Record<string, unknown> | undefined;
+    const videoList = (videos?.results || []) as { site?: string; type?: string; key?: string }[];
+    const trailer = videoList.find(
+      (v) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
+    );
+
+    const externalIds = data.external_ids as Record<string, unknown> | undefined;
+    const imdb_id = (externalIds?.imdb_id as string) || (data.imdb_id as string) || null;
+
+    return {
+      ...base,
+      genres: Array.isArray(data.genres) ? (data.genres as Genre[]) : base.genres || [],
+      runtime: data.runtime ? Number(data.runtime) : base.runtime,
+      cast: cast.length > 0 ? cast : base.cast || [],
+      trailer_key: trailer?.key || base.trailer_key || null,
+      imdb_id: imdb_id || base.imdb_id || null,
+    };
   } catch {
     const fallback = FALLBACK_MOVIES.find((m) => m.id === idNum);
     return fallback || null;
@@ -692,8 +770,30 @@ export const getFullTV = async (tvId: number | string, language = 'en-US'): Prom
     }, 600);
 
     const base = normalizeTVShow(data);
-    const details = await getTVDetails(idNum, language);
-    return { ...base, ...details };
+    const credits = data.credits as Record<string, unknown> | undefined;
+    const cast: CastMember[] = ((credits?.cast || []) as Record<string, unknown>[]).slice(0, 12).map((c) => ({
+      id: Number(c.id || 0),
+      name: String(c.name || ''),
+      character: String(c.character || ''),
+      profile_path: (c.profile_path as string) || null,
+    }));
+
+    const videos = data.videos as Record<string, unknown> | undefined;
+    const videoList = (videos?.results || []) as { site?: string; type?: string; key?: string }[];
+    const trailer = videoList.find(
+      (v) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
+    );
+
+    const externalIds = data.external_ids as Record<string, unknown> | undefined;
+    const imdb_id = (externalIds?.imdb_id as string) || (data.imdb_id as string) || null;
+
+    return {
+      ...base,
+      genres: Array.isArray(data.genres) ? (data.genres as Genre[]) : base.genres || [],
+      cast: cast.length > 0 ? cast : base.cast || [],
+      trailer_key: trailer?.key || base.trailer_key || null,
+      imdb_id: imdb_id || base.imdb_id || null,
+    };
   } catch {
     const fallback = FALLBACK_TVS.find((t) => t.id === idNum);
     return fallback || null;
@@ -979,36 +1079,84 @@ export const searchMedia = async (
   type: 'movie' | 'tv' | 'all' = 'all',
   language = 'en-US'
 ): Promise<Movie[]> => {
-  if (!query.trim()) return [];
+  const cleanQuery = query.trim();
+  if (!cleanQuery) return [];
 
   if (typeof window !== 'undefined') {
-    const res = await fetch(`/api/search?query=${encodeURIComponent(query)}&type=${type}&language=${language}`);
+    const res = await fetch(`/api/search?query=${encodeURIComponent(cleanQuery)}&type=${type}&language=${language}`);
     if (!res.ok) return [];
     const data = await res.json();
     return (data.results || []) as Movie[];
   }
 
   try {
+    const fetchPromises = [];
+
     if (type === 'movie') {
-      const data = await fetchFromTMDB('/search/movie', { query, language, include_adult: 'false' }, 120);
-      return ((data.results || []) as Record<string, unknown>[]).map(normalizeMovie);
+      fetchPromises.push(
+        fetchFromTMDB('/search/movie', { query: cleanQuery, language, include_adult: 'false', page: 1 }, 120),
+        fetchFromTMDB('/search/movie', { query: cleanQuery, language: 'en-US', include_adult: 'false', page: 1 }, 120)
+      );
+    } else if (type === 'tv') {
+      fetchPromises.push(
+        fetchFromTMDB('/search/tv', { query: cleanQuery, language, include_adult: 'false', page: 1 }, 120),
+        fetchFromTMDB('/search/tv', { query: cleanQuery, language: 'en-US', include_adult: 'false', page: 1 }, 120)
+      );
+    } else {
+      fetchPromises.push(
+        fetchFromTMDB('/search/multi', { query: cleanQuery, language, include_adult: 'false', page: 1 }, 120),
+        fetchFromTMDB('/search/multi', { query: cleanQuery, language: 'en-US', include_adult: 'false', page: 1 }, 120),
+        fetchFromTMDB('/search/multi', { query: cleanQuery, language: 'en-US', include_adult: 'false', page: 2 }, 120)
+      );
     }
 
-    if (type === 'tv') {
-      const data = await fetchFromTMDB('/search/tv', { query, language, include_adult: 'false' }, 120);
-      return ((data.results || []) as Record<string, unknown>[]).map(normalizeTVShow);
+    const responses = await Promise.allSettled(fetchPromises);
+    const seen = new Set<string>();
+    const combined: Movie[] = [];
+
+    for (const resp of responses) {
+      if (resp.status !== 'fulfilled' || !resp.value?.results) continue;
+      const rawList = resp.value.results as (Record<string, unknown> & { media_type?: string })[];
+
+      for (const item of rawList) {
+        const itemType = item.media_type || type;
+        if (itemType !== 'movie' && itemType !== 'tv') continue;
+        const key = `${itemType}_${item.id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        const normalized = itemType === 'tv' ? normalizeTVShow(item) : normalizeMovie(item);
+        if (normalized.title && normalized.title !== 'Untitled' && normalized.title !== 'Untitled Series') {
+          combined.push(normalized);
+        }
+      }
     }
 
-    const multiData = await fetchFromTMDB('/search/multi', { query, language, include_adult: 'false' }, 120);
-    const results = (multiData.results || []) as (Record<string, unknown> & { media_type?: string })[];
+    const qLower = cleanQuery.toLowerCase();
+    combined.sort((a, b) => {
+      const aTitle = a.title.toLowerCase();
+      const bTitle = b.title.toLowerCase();
+      const aExact = aTitle === qLower ? 2 : aTitle.startsWith(qLower) ? 1 : 0;
+      const bExact = bTitle === qLower ? 2 : bTitle.startsWith(qLower) ? 1 : 0;
+      if (aExact !== bExact) return bExact - aExact;
+      return (b.vote_count || 0) - (a.vote_count || 0);
+    });
 
-    return results
-      .filter((item) => item.media_type === 'movie' || item.media_type === 'tv')
-      .map((item) => (item.media_type === 'tv' ? normalizeTVShow(item) : normalizeMovie(item)));
+    if (combined.length === 0) {
+      const q = cleanQuery.toLowerCase();
+      const all = [...FALLBACK_MOVIES, ...FALLBACK_TVS];
+      return all.filter(
+        (m) =>
+          m.title.toLowerCase().includes(q) ||
+          (m.original_title && m.original_title.toLowerCase().includes(q))
+      );
+    }
+
+    return combined.slice(0, 30);
   } catch {
-    const q = query.toLowerCase();
+    const q = cleanQuery.toLowerCase();
     const all = [...FALLBACK_MOVIES, ...FALLBACK_TVS];
-    return all.filter((m) => m.title.toLowerCase().includes(q));
+    return all.filter((m) => m.title.toLowerCase().includes(q) || (m.original_title && m.original_title.toLowerCase().includes(q)));
   }
 };
 
