@@ -41,6 +41,7 @@ interface AppState {
   // Player state (for resume)
   showPlayer: boolean;
   showTrailer: boolean;
+  autoPlayNext: boolean;
   watchProgress: Record<string, number>; // Media ID / Episode Key -> Time in seconds
 
   // Actions
@@ -50,7 +51,8 @@ interface AppState {
   setYearTo: (y: string) => void;
   setOriginalLanguage: (l: string) => void;
   setImdbRange: (r: string) => void;
-  setMovie: (m: Movie | null) => void;
+  setMovie: (m: Movie | null, autoPlay?: boolean) => void;
+  setAutoPlayNext: (auto: boolean) => void;
   setIsLoading: (l: boolean) => void;
   setSelectedSeason: (season: number) => void;
   setSelectedEpisode: (episode: number) => void;
@@ -89,6 +91,7 @@ export const useStore = create<AppState>()(
       favourites: [],
       showPlayer: false,
       showTrailer: false,
+      autoPlayNext: false,
       watchProgress: {},
 
       setContentType: (contentType) => set({ contentType }),
@@ -97,11 +100,13 @@ export const useStore = create<AppState>()(
       setYearTo: (yearTo) => set({ yearTo }),
       setOriginalLanguage: (originalLanguage) => set({ originalLanguage }),
       setImdbRange: (imdbRange) => set({ imdbRange }),
-      setMovie: (movie) => {
+      setAutoPlayNext: (autoPlayNext) => set({ autoPlayNext }),
+      setMovie: (movie, autoPlay = false) => {
         set({
           movie,
-          showPlayer: false,
+          showPlayer: autoPlay,
           showTrailer: false,
+          autoPlayNext: autoPlay,
           selectedSeason: 1,
           selectedEpisode: 1,
         });

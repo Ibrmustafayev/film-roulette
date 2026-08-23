@@ -17,8 +17,15 @@ import { getTranslations } from "@/lib/i18n";
 
 export function ContinueWatching() {
   const [items, setItems] = useState<WatchHistoryItem[]>([]);
-  const { setMovie, setIsLoading, locale, setSelectedSeason, setSelectedEpisode, setShowPlayer } =
-    useStore();
+  const {
+    setMovie,
+    setIsLoading,
+    locale,
+    setSelectedSeason,
+    setSelectedEpisode,
+    setShowPlayer,
+    setActiveView,
+  } = useStore();
   const t = getTranslations(locale);
 
   const refreshHistory = () => {
@@ -36,6 +43,7 @@ export function ContinueWatching() {
   if (items.length === 0) return null;
 
   const handleResume = async (item: WatchHistoryItem) => {
+    setActiveView("random");
     setIsLoading(true);
     try {
       const isTv = item.mediaType === "tv";
@@ -51,16 +59,19 @@ export function ContinueWatching() {
         }
       }
 
-      setMovie({
-        id: item.id,
-        title: item.title,
-        poster_path: item.posterPath,
-        backdrop_path: item.backdropPath,
-        vote_average: 0,
-        overview: "",
-        ...details,
-        media_type: item.mediaType,
-      } as Movie);
+      setMovie(
+        {
+          id: item.id,
+          title: item.title,
+          poster_path: item.posterPath,
+          backdrop_path: item.backdropPath,
+          vote_average: 0,
+          overview: "",
+          ...details,
+          media_type: item.mediaType,
+        } as Movie,
+        true
+      );
       setShowPlayer(true);
     } catch (err) {
       console.error("Failed to load continue watching item:", err);
@@ -99,7 +110,8 @@ export function ContinueWatching() {
           return (
             <div
               key={`${item.mediaType}-${item.id}-s${item.season || 0}-e${item.episode || 0}`}
-              className="group relative flex-none w-[220px] sm:w-[260px] border border-ink-4 bg-ink-2/90 overflow-hidden transition-all duration-200 hover:border-ink-6"
+              onClick={() => handleResume(item)}
+              className="group relative flex-none w-[220px] sm:w-[260px] border border-ink-4 bg-ink-2/90 overflow-hidden transition-all duration-200 hover:border-ink-6 cursor-pointer"
             >
               {/* Thumbnail with YouTube-Style Progress Bar */}
               <div

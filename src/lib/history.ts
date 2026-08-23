@@ -21,6 +21,16 @@ function isBrowser(): boolean {
 }
 
 /**
+ * Returns accurate default duration based on media type:
+ * TV Episode -> 45 min (2700s)
+ * Movie -> 105 min (6300s)
+ */
+export function getDefaultDuration(mediaType: "movie" | "tv", runtime?: number): number {
+  if (runtime && runtime > 0) return runtime * 60;
+  return mediaType === "tv" ? 45 * 60 : 105 * 60;
+}
+
+/**
  * Retrieve full watch history ordered by most recently watched
  */
 export function getWatchHistory(): WatchHistoryItem[] {
@@ -41,9 +51,9 @@ export function getWatchHistory(): WatchHistoryItem[] {
           items = zHist
             .filter((m) => !!m && !!m.id)
             .map((m, idx) => {
-              const time = zProg[String(m.id)] || zProg[`${m.id}_s1_e1`] || (m.runtime ? Math.min(300, m.runtime * 60) : 0);
-              const duration = m.runtime && m.runtime > 0 ? m.runtime * 60 : 7200;
               const isTv = m.media_type === "tv" || !!m.number_of_seasons;
+              const time = zProg[String(m.id)] || zProg[`${m.id}_s1_e1`] || (m.runtime ? Math.min(300, m.runtime * 60) : 0);
+              const duration = getDefaultDuration(isTv ? "tv" : "movie", m.runtime || m.episode_run_time?.[0]);
               return {
                 id: m.id,
                 mediaType: isTv ? "tv" : "movie",
@@ -65,6 +75,18 @@ export function getWatchHistory(): WatchHistoryItem[] {
           }
         }
       }
+    }
+
+    // Sanitize & normalize old default 2-hour durations for TV shows
+    if (Array.isArray(items)) {
+      items = items.map((item) => {
+        if (item.mediaType === "tv" && (!item.duration || item.duration >= 7200)) {
+          const duration = 45 * 60; // 45 minutes for standard TV episode
+          const progressPercent = Math.min(100, Math.max(0, Math.round((item.currentTime / duration) * 100)));
+          return { ...item, duration, progressPercent };
+        }
+        return item;
+      });
     }
 
     return Array.isArray(items)
@@ -105,7 +127,7 @@ export function getMediaProgress(
         const key = season && episode ? `${id}_s${season}_e${episode}` : String(id);
         const time = zProg[key] || zProg[String(id)];
         if (time && time > 0) {
-          const duration = 7200;
+          const duration = getDefaultDuration(season ? "tv" : "movie");
           return {
             id,
             mediaType: season ? "tv" : "movie",
@@ -142,7 +164,11 @@ export function saveWatchProgress(
 
   try {
     const history = getWatchHistory();
-    const duration = item.duration && item.duration > 0 ? item.duration : 120 * 60; // default 120 min if duration not supplied
+    const duration =
+      item.duration && item.duration > 0
+        ? item.duration
+        : getDefaultDuration(item.mediaType);
+
     const progressPercent = Math.min(
       100,
       Math.max(0, Math.round((item.currentTime / duration) * 100))
@@ -240,7 +266,7 @@ export function formatTime(seconds: number): string {
 }
 
 /**
- * Format remaining time (e.g. "25m remaining")
+ * Format remaining time (e.g. "43m remaining")
  */
 export function formatRemaining(currentTime: number, duration: number): string {
   if (!duration || duration <= currentTime) return "";

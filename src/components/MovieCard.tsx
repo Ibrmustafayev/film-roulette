@@ -17,6 +17,7 @@ import {
   getMediaProgress,
   formatTime,
   removeHistoryItem,
+  getDefaultDuration,
 } from "@/lib/history";
 import { HlsPlayer } from "./HlsPlayer";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -35,6 +36,7 @@ export function MovieCard() {
     movie, isLoading, locale,
     toggleFavourite, isFavourite,
     showPlayer, setShowPlayer,
+    autoPlayNext, setAutoPlayNext,
     showTrailer, setShowTrailer,
     watchProgress, setWatchProgress,
     selectedSeason, setSelectedSeason,
@@ -206,12 +208,19 @@ export function MovieCard() {
     };
   }, [movie?.id, isTv, selectedSeason, locale, seasonCache, setSeasonDetails, setIsLoadingSeason]);
 
+  const lastMovieIdRef = useRef<number | null>(null);
+
   useEffect(() => {
-    stopPlayer();
+    if (movie?.id && lastMovieIdRef.current !== movie.id) {
+      lastMovieIdRef.current = movie.id;
+      if (!showPlayer) {
+        stopPlayer();
+      }
+    }
     setTimeout(() => {
       abortRef.current = false;
     }, 0);
-  }, [movie?.id, currentEpisodeKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [movie?.id, showPlayer, stopPlayer]);
 
   useEffect(() => {
     if ((showTrailer || phase.tag !== "idle") && playerRef.current) {
@@ -362,6 +371,7 @@ export function MovieCard() {
 
     // Immediately record watch initiation
     const initTime = lastTime && lastTime > 10 ? lastTime : 30;
+    const dur = getDefaultDuration(isTv ? "tv" : "movie", movie.runtime);
     saveWatchProgress({
       id: movie.id,
       mediaType: isTv ? "tv" : "movie",
@@ -369,7 +379,7 @@ export function MovieCard() {
       posterPath: movie.poster_path,
       backdropPath: movie.backdrop_path,
       currentTime: initTime,
-      duration: movie.runtime ? movie.runtime * 60 : 7200,
+      duration: dur,
       season: isTv ? selectedSeason : undefined,
       episode: isTv ? selectedEpisode : undefined,
     });
@@ -401,6 +411,18 @@ export function MovieCard() {
       switchToServer(0);
     }
   };
+
+  // Start player automatically if showPlayer / autoPlayNext becomes true (e.g. from Continue Watching)
+  useEffect(() => {
+    if ((showPlayer || autoPlayNext) && phase.tag === "idle" && movie) {
+      abortRef.current = false;
+      if (autoPlayNext) setAutoPlayNext(false);
+      const timer = setTimeout(() => {
+        handleWatchContent();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [showPlayer, autoPlayNext, phase.tag, movie]);
 
   const handleIframeLoad = useCallback(
     (e: React.SyntheticEvent<HTMLIFrameElement>) => {
