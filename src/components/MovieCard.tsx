@@ -216,6 +216,38 @@ export function MovieCard() {
     return () => window.removeEventListener("blur", refocus);
   }, [phase.tag, shieldActive]);
 
+  // Pointer click-shield on player container to intercept rogue redirects
+  useEffect(() => {
+    const el = playerRef.current;
+    if (!el) return;
+
+    const handlePlayerClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      const anchor = target?.closest("a") as HTMLAnchorElement | null;
+      if (anchor && anchor.href) {
+        const href = anchor.href.toLowerCase();
+        if (
+          !href.includes("imdb.com") &&
+          !href.includes("youtube.com") &&
+          !href.includes("themoviedb.org") &&
+          !href.startsWith("/") &&
+          !href.startsWith(window.location.origin)
+        ) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+        }
+      }
+    };
+
+    el.addEventListener("click", handlePlayerClick, { capture: true });
+    el.addEventListener("auxclick", handlePlayerClick, { capture: true });
+    return () => {
+      el.removeEventListener("click", handlePlayerClick, { capture: true });
+      el.removeEventListener("auxclick", handlePlayerClick, { capture: true });
+    };
+  }, [phase.tag]);
+
   const switchToServer = useCallback(
     (index: number) => {
       if (abortRef.current) return;
