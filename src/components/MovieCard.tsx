@@ -40,6 +40,7 @@ export function MovieCard() {
   const [lastTime, setLastTime] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [shieldActive, setShieldActive] = useState(true);
+  const [firstClickDismissed, setFirstClickDismissed] = useState(false);
   const [iframeLoading, setIframeLoading] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -72,6 +73,7 @@ export function MovieCard() {
     setPhase({ tag: "idle" });
     setShowPlayer(false);
     setIframeLoading(false);
+    setFirstClickDismissed(false);
   }, [setShowPlayer]);
 
   // Fullscreen change listener across vendor prefixes
@@ -256,6 +258,7 @@ export function MovieCard() {
         return;
       }
       setIframeLoading(true);
+      setFirstClickDismissed(false);
       setPhase({ tag: "playing", sourceIndex: index });
     },
     [sources.length]
@@ -264,7 +267,7 @@ export function MovieCard() {
   /**
    * 2-Tier Strategy Execution:
    * Tier 1: Direct HLS Extraction (with fast timeout)
-   * Tier 2: Instant Iframe Embed Fallback
+   * Tier 2: Instant Iframe Embed Fallback via Local Server-Side Proxy
    */
   const handleWatchContent = async () => {
     if (phase.tag !== "idle") {
@@ -355,7 +358,11 @@ export function MovieCard() {
     : null;
 
   const activeSourceIndex = phase.tag === "playing" ? phase.sourceIndex : 0;
-  const currentPlayUrl = sources[activeSourceIndex]?.url ?? null;
+  const rawPlayUrl = sources[activeSourceIndex]?.url ?? null;
+  // Proxy the embed URL server-side to strip ad scripts and inject anti-popup protections
+  const currentPlayUrl = rawPlayUrl
+    ? `/api/embed-proxy?url=${encodeURIComponent(rawPlayUrl)}`
+    : null;
 
   const isPlayerOpen = phase.tag !== "idle";
   const isFav = isFavourite(movie.id);
@@ -767,9 +774,22 @@ export function MovieCard() {
                   </div>
                 )}
 
-                {/* Fallback Embed Iframe Player with Strict Security Sandbox */}
+                {/* Fallback Embed Iframe Player with Server-Side Ad-Stripping Proxy */}
                 {!showTrailer && phase.tag === "playing" && currentPlayUrl && (
-                  <div className="absolute inset-0 h-full w-full">
+                  <div className="relative h-full w-full">
+                    {/* Transparent Click-Shield Layer for 1st click */}
+                    {!firstClickDismissed && shieldActive && (
+                      <div
+                        id="transparent-click-shield"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setFirstClickDismissed(true);
+                        }}
+                        className="absolute inset-0 z-20 cursor-pointer bg-transparent"
+                        title="Click to play"
+                      />
+                    )}
+
                     <iframe
                       ref={iframeRef}
                       key={`play-${currentEpisodeKey}-${phase.sourceIndex}`}
@@ -784,9 +804,9 @@ export function MovieCard() {
                       className="h-full w-full border-0 pointer-events-auto"
                     />
 
-                    {/* Non-blocking Ad Shield visual indicator (pointer-events-none on container) */}
+                    {/* Non-blocking Ad Shield visual indicator */}
                     {shieldActive && !isFullscreen && (
-                      <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3 select-none">
+                      <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3 select-none z-10">
                         <span className="pointer-events-auto inline-flex items-center gap-1.5 border border-ink-4/80 bg-ink-1/90 px-2.5 py-1 text-[11px] font-medium text-ink-8 backdrop-blur-sm shadow-md transition-opacity duration-200">
                           <ShieldCheck className="h-3 w-3 text-live shrink-0" />
                           <span>Ad Shield Active</span>
@@ -796,7 +816,7 @@ export function MovieCard() {
 
                     {/* Subtle inline loader during provider initial connection */}
                     {iframeLoading && !isFullscreen && (
-                      <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 bg-ink-1/80 px-2.5 py-1 text-xs text-ink-7 backdrop-blur-sm">
+                      <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 bg-ink-1/80 px-2.5 py-1 text-xs text-ink-7 backdrop-blur-sm z-10">
                         <Loader2 className="h-3.5 w-3.5 animate-spin text-live" />
                         <span>Connecting to {sources[phase.sourceIndex]?.name}...</span>
                       </div>
