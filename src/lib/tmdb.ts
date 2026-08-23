@@ -554,6 +554,17 @@ export const normalizeTVShow = (raw: Record<string, unknown>): Movie => {
 };
 
 export const getMovieDetails = async (movieId: number, language = 'en-US'): Promise<Partial<Movie>> => {
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch(`/api/movies/${movieId}?language=${language}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      /* fallback */
+    }
+  }
+
   try {
     const data = await fetchFromTMDB(`/movie/${movieId}`, {
       language,
@@ -589,6 +600,17 @@ export const getMovieDetails = async (movieId: number, language = 'en-US'): Prom
 };
 
 export const getTVDetails = async (tvId: number, language = 'en-US'): Promise<Partial<Movie>> => {
+  if (typeof window !== 'undefined') {
+    try {
+      const res = await fetch(`/api/tv/${tvId}?language=${language}`);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      /* fallback */
+    }
+  }
+
   try {
     const data = await fetchFromTMDB(`/tv/${tvId}`, {
       language,
@@ -637,6 +659,44 @@ export const getTVDetails = async (tvId: number, language = 'en-US'): Promise<Pa
       number_of_seasons: 1,
       seasons: [{ id: 1, season_number: 1, name: 'Season 1', episode_count: 10, poster_path: null }],
     };
+  }
+};
+
+export const getFullMovie = async (movieId: number | string, language = 'en-US'): Promise<Movie | null> => {
+  const idNum = Number(movieId);
+  if (isNaN(idNum) || idNum <= 0) return null;
+
+  try {
+    const data = await fetchFromTMDB(`/movie/${idNum}`, {
+      language,
+      append_to_response: 'credits,videos,external_ids',
+    }, 600);
+
+    const base = normalizeMovie(data);
+    const details = await getMovieDetails(idNum, language);
+    return { ...base, ...details };
+  } catch {
+    const fallback = FALLBACK_MOVIES.find((m) => m.id === idNum);
+    return fallback || null;
+  }
+};
+
+export const getFullTV = async (tvId: number | string, language = 'en-US'): Promise<Movie | null> => {
+  const idNum = Number(tvId);
+  if (isNaN(idNum) || idNum <= 0) return null;
+
+  try {
+    const data = await fetchFromTMDB(`/tv/${idNum}`, {
+      language,
+      append_to_response: 'credits,videos,external_ids',
+    }, 600);
+
+    const base = normalizeTVShow(data);
+    const details = await getTVDetails(idNum, language);
+    return { ...base, ...details };
+  } catch {
+    const fallback = FALLBACK_TVS.find((t) => t.id === idNum);
+    return fallback || null;
   }
 };
 

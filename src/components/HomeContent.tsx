@@ -26,13 +26,78 @@ const EASE = [0.2, 0.8, 0.2, 1] as const;
 export function HomeContent({
   genres,
   popular = [],
+  initialMovie,
+  initialSeason,
+  initialEpisode,
 }: {
   genres: Genre[];
   popular?: Movie[];
+  initialMovie?: Movie;
+  initialSeason?: number;
+  initialEpisode?: number;
 }) {
-  const { locale, movie, isLoading, activeView, setMenuOpen } = useStore();
+  const {
+    locale,
+    movie,
+    setMovie,
+    isLoading,
+    activeView,
+    setActiveView,
+    setMenuOpen,
+    selectedSeason,
+    setSelectedSeason,
+    selectedEpisode,
+    setSelectedEpisode,
+  } = useStore();
   const t = getTranslations(locale);
   const stageRef = useRef<HTMLDivElement>(null);
+
+  // Initialize store from deep link on mount
+  useEffect(() => {
+    if (initialMovie) {
+      setMovie(initialMovie);
+      setActiveView("random");
+      if (initialSeason) setSelectedSeason(initialSeason);
+      if (initialEpisode) setSelectedEpisode(initialEpisode);
+    }
+  }, [initialMovie, initialSeason, initialEpisode, setMovie, setActiveView, setSelectedSeason, setSelectedEpisode]);
+
+  // Sync browser URL dynamically with the current active movie or view
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const currentMedia = movie || initialMovie;
+
+    if (activeView === "random" && currentMedia) {
+      const isTv = currentMedia.media_type === "tv" || !!currentMedia.number_of_seasons;
+      let targetPath = "";
+      if (isTv) {
+        if (selectedSeason && selectedEpisode && (selectedSeason > 1 || selectedEpisode > 1)) {
+          targetPath = `/tv/${currentMedia.id}?season=${selectedSeason}&episode=${selectedEpisode}`;
+        } else {
+          targetPath = `/tv/${currentMedia.id}`;
+        }
+      } else {
+        targetPath = `/movie/${currentMedia.id}`;
+      }
+
+      if (window.location.pathname + window.location.search !== targetPath) {
+        window.history.replaceState(
+          { ...window.history.state, as: targetPath, url: targetPath },
+          "",
+          targetPath
+        );
+      }
+    } else if (!initialMovie && (activeView === "history" || activeView === "favourites" || !movie)) {
+      if (window.location.pathname !== "/" && !window.location.pathname.startsWith("/api")) {
+        window.history.replaceState(
+          { ...window.history.state, as: "/", url: "/" },
+          "",
+          "/"
+        );
+      }
+    }
+  }, [movie, initialMovie, activeView, selectedSeason, selectedEpisode]);
 
   useEffect(() => {
     if (movie && stageRef.current && activeView === "random") {
@@ -98,7 +163,7 @@ export function HomeContent({
 
             <div ref={stageRef} className="relative scroll-mt-14">
               {isLoading && <StageSkeleton />}
-              {!isLoading && !movie && (
+              {!isLoading && !movie && !initialMovie && (
                 <Idle
                   headline={t("site.tagline")}
                   body={t("site.description")}
@@ -106,7 +171,7 @@ export function HomeContent({
                   popular={popular}
                 />
               )}
-              <MovieCard />
+              <MovieCard initialMovie={initialMovie} />
             </div>
           </>
         )}

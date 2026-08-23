@@ -9,7 +9,7 @@ import {
   Tv, Film, ListFilter, ShieldCheck, ShieldAlert, Maximize, Minimize,
   Clock, RotateCcw,
 } from "lucide-react";
-import { getImageUrl, getSeasonDetails, SeasonDetails } from "@/lib/tmdb";
+import { getImageUrl, getSeasonDetails, SeasonDetails, Movie } from "@/lib/tmdb";
 import { getTranslations } from "@/lib/i18n";
 import { resolveStreamSources } from "@/lib/providers";
 import {
@@ -31,9 +31,9 @@ type PlayerPhase =
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
-export function MovieCard() {
+export function MovieCard({ initialMovie }: { initialMovie?: Movie } = {}) {
   const {
-    movie, isLoading, locale,
+    movie: storeMovie, isLoading, locale,
     toggleFavourite, isFavourite,
     showPlayer, setShowPlayer,
     autoPlayNext, setAutoPlayNext,
@@ -45,6 +45,8 @@ export function MovieCard() {
     isLoadingSeason, setIsLoadingSeason,
   } = useStore();
 
+  const movie = storeMovie || initialMovie || null;
+
   const [phase, setPhase] = useState<PlayerPhase>({ tag: "idle" });
   const [lastTime, setLastTime] = useState<number | null>(null);
   const [resumePrompt, setResumePrompt] = useState<{ visible: boolean; time: number; formatted: string } | null>(null);
@@ -54,6 +56,7 @@ export function MovieCard() {
   const [useDirectEmbed, setUseDirectEmbed] = useState(false);
   const [iframeLoading, setIframeLoading] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
@@ -500,11 +503,50 @@ export function MovieCard() {
 
   const copyLink = async () => {
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}${ogUrl}`);
+      const canonicalPath = isTv
+        ? `/tv/${movie.id}${selectedSeason && selectedEpisode && (selectedSeason > 1 || selectedEpisode > 1) ? `?season=${selectedSeason}&episode=${selectedEpisode}` : ""}`
+        : `/movie/${movie.id}`;
+      const fullUrl = typeof window !== "undefined"
+        ? `${window.location.origin}${canonicalPath}`
+        : canonicalPath;
+
+      await navigator.clipboard.writeText(fullUrl);
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
       /* clipboard unavailable */
+    }
+  };
+
+  const handleDownloadCover = async () => {
+    setIsDownloading(true);
+    try {
+      const response = await fetch(ogUrl);
+      if (!response.ok) throw new Error("OG fetch failed");
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = blobUrl;
+      const safeTitle = (movie.title || "cover")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-|-$)/g, "");
+      a.download = `${safeTitle}-cover.png`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+    } catch {
+      const fallbackUrl = posterUrl || ogUrl;
+      const a = document.createElement("a");
+      a.href = fallbackUrl;
+      a.target = "_blank";
+      a.download = `${movie.title.toLowerCase().replace(/\s+/g, "-")}-cover.jpg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -783,16 +825,22 @@ export function MovieCard() {
                 {copied ? t("share.copied") : t("share.copyLink")}
               </button>
 
-              <a
-                href={ogUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ctl ctl-bare"
+              <button
+                type="button"
+                id="download-cover-btn"
+                onClick={handleDownloadCover}
+                disabled={isDownloading}
+                className="ctl ctl-bare disabled:opacity-50"
                 title={t("share.download")}
+                aria-label={t("share.download")}
               >
-                <Download className="h-3.5 w-3.5" />
+                {isDownloading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Download className="h-3.5 w-3.5" />
+                )}
                 <span className="sr-only">{t("share.download")}</span>
-              </a>
+              </button>
             </motion.div>
           </div>
         </div>
