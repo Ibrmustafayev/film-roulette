@@ -735,7 +735,7 @@ export function MovieCard() {
                   </div>
                 )}
 
-                {/* Fallback Embed Iframe Player (Tier 2: Directly visible, Fullscreen Enabled, 100% interactive) */}
+                {/* Fallback Embed Iframe Player with Strict Security Sandbox */}
                 {!showTrailer && phase.tag === "playing" && currentPlayUrl && (
                   <div className="absolute inset-0 h-full w-full">
                     <iframe
@@ -745,6 +745,7 @@ export function MovieCard() {
                       src={currentPlayUrl}
                       title="Player"
                       onLoad={handleIframeLoad}
+                      sandbox="allow-scripts allow-same-origin allow-forms"
                       allow="fullscreen; autoplay; encrypted-media; picture-in-picture; accelerometer; gyroscope"
                       allowFullScreen={true}
                       {...{ webkitallowfullscreen: "true", mozallowfullscreen: "true" }}

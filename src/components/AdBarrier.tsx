@@ -23,12 +23,31 @@ const WHITELISTED_DOMAINS = [
   "youtube.com",
   "themoviedb.org",
   "github.com",
-  "localhost",
-  "127.0.0.1",
 ];
 
+// Pre-emptive immediate window.open suppression if executed in browser context
+if (typeof window !== "undefined") {
+  try {
+    const originalOpen = window.open;
+    window.open = function (...args) {
+      const urlStr = args[0] ? String(args[0]).toLowerCase() : "";
+      const isWhitelisted = WHITELISTED_DOMAINS.some((domain) => urlStr.includes(domain));
+      const isInternal = urlStr.startsWith("/") || (window.location && urlStr.startsWith(window.location.origin));
+
+      if (isWhitelisted || isInternal) {
+        return originalOpen ? originalOpen.apply(window, args as [string, string, string]) : null;
+      }
+
+      console.warn("[AdGuard Barrier] Hard-blocked popup attempt:", args[0]);
+      return null; // Instantly suppress creation so no window flashes on screen
+    };
+  } catch {
+    /* ignore */
+  }
+}
+
 /**
- * Site-Wide AdGuard-Style Barrier
+ * Site-Wide Hardened AdGuard-Style Barrier
  * Intercepts popup creation, ad redirects, and popunders at the global window and DOM level
  * while ensuring 100% responsive pass-through for legitimate controls.
  */
@@ -36,44 +55,34 @@ export function AdBarrier() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // 1. Global Window Interceptor: Neutralize unauthorized window.open popup attempts
+    // 1. Global Pre-emptive Window.open Overwrite
     const originalOpen = window.open;
-    window.open = function (
-      url?: string | URL,
-      target?: string,
-      features?: string
-    ): WindowProxy | null {
-      const urlStr = url ? String(url).toLowerCase() : "";
-
-      const isAd = AD_DOMAIN_PATTERNS.some((pattern) => urlStr.includes(pattern));
+    window.open = function (...args): WindowProxy | null {
+      const urlStr = args[0] ? String(args[0]).toLowerCase() : "";
       const isWhitelisted = WHITELISTED_DOMAINS.some((domain) => urlStr.includes(domain));
-      const isInternal = urlStr.startsWith("/") || (urlStr.startsWith(window.location.origin));
+      const isInternal = urlStr.startsWith("/") || urlStr.startsWith(window.location.origin);
 
-      // Block known ad domains and unauthorized blank/script popups
-      if (isAd || (!isWhitelisted && !isInternal && urlStr.length > 0 && !urlStr.startsWith("blob:"))) {
-        console.warn("[AdGuard Barrier] Neutralized unauthorized window.open popup:", urlStr);
-        return null;
+      if (isWhitelisted || isInternal) {
+        return originalOpen ? originalOpen.apply(window, args as [string, string, string]) : null;
       }
 
-      if (!urlStr || urlStr === "about:blank") {
-        console.warn("[AdGuard Barrier] Neutralized blank popup attempt");
-        return null;
-      }
-
-      return originalOpen.call(window, url, target, features);
+      console.warn("[AdGuard Barrier] Hard-blocked popup attempt:", args[0]);
+      return null; // Instantly suppress creation so no window flashes on screen
     };
 
-    // 2. Global Event Capture Shield: Intercept click events attempting ad redirects
+    // 2. Global Event Capture Shield & Target Blank Neutralizer
     const handleCaptureClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
 
       const anchor = target.closest("a") as HTMLAnchorElement | null;
-      if (anchor && anchor.href) {
-        const href = anchor.href.toLowerCase();
+      if (anchor) {
+        const href = (anchor.href || "").toLowerCase();
         const isAd = AD_DOMAIN_PATTERNS.some((pattern) => href.includes(pattern));
+        const isWhitelisted = WHITELISTED_DOMAINS.some((domain) => href.includes(domain));
+        const isInternal = href.startsWith("/") || href.startsWith(window.location.origin) || href.startsWith("#");
 
-        if (isAd) {
+        if (isAd || (!isWhitelisted && !isInternal && href.startsWith("http"))) {
           e.preventDefault();
           e.stopPropagation();
           e.stopImmediatePropagation();
@@ -82,37 +91,60 @@ export function AdBarrier() {
       }
     };
 
-    // 3. Anti-Popunder Refocus: Prevent third-party frames from unfocusing the parent app
+    // 3. Anti-Popunder Refocus
     const handleBlur = () => {
       setTimeout(() => {
         try {
           if (document.activeElement?.tagName === "IFRAME") {
-            // User interacted with legitimate iframe player -> allow interaction
             return;
           }
           window.focus();
         } catch {
           /* ignore */
         }
-      }, 80);
+      }, 50);
     };
 
-    // 4. DOM Mutation Observer: Clean up injected malicious ad scripts / popunder elements
+    // 4. Target="_blank" Neutralizer & Pointer Hijack Shield via MutationObserver
+    const sanitizeNode = (node: Node) => {
+      if (node instanceof HTMLAnchorElement) {
+        const href = (node.href || "").toLowerCase();
+        const isWhitelisted = WHITELISTED_DOMAINS.some((domain) => href.includes(domain));
+        const isInternal = href.startsWith("/") || href.startsWith(window.location.origin);
+
+        if (!isWhitelisted && !isInternal && node.target === "_blank") {
+          node.target = "_self";
+          node.rel = "noopener noreferrer";
+        }
+      } else if (node instanceof HTMLScriptElement) {
+        const src = (node.src || "").toLowerCase();
+        if (AD_DOMAIN_PATTERNS.some((pattern) => src.includes(pattern))) {
+          node.remove();
+          console.warn("[AdGuard Barrier] Removed injected ad script:", src);
+        }
+      } else if (node instanceof HTMLIFrameElement) {
+        const src = (node.src || "").toLowerCase();
+        if (AD_DOMAIN_PATTERNS.some((pattern) => src.includes(pattern))) {
+          node.remove();
+          console.warn("[AdGuard Barrier] Removed injected ad iframe:", src);
+        }
+      }
+    };
+
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         for (const node of Array.from(mutation.addedNodes)) {
-          if (node instanceof HTMLScriptElement) {
-            const src = (node.src || "").toLowerCase();
-            if (AD_DOMAIN_PATTERNS.some((pattern) => src.includes(pattern))) {
-              node.remove();
-              console.warn("[AdGuard Barrier] Removed injected ad script:", src);
-            }
-          } else if (node instanceof HTMLIFrameElement) {
-            const src = (node.src || "").toLowerCase();
-            if (AD_DOMAIN_PATTERNS.some((pattern) => src.includes(pattern))) {
-              node.remove();
-              console.warn("[AdGuard Barrier] Removed injected ad iframe:", src);
-            }
+          sanitizeNode(node);
+          if (node instanceof HTMLElement) {
+            node.querySelectorAll("a[target='_blank']").forEach((a) => {
+              const anchor = a as HTMLAnchorElement;
+              const href = (anchor.href || "").toLowerCase();
+              const isWhitelisted = WHITELISTED_DOMAINS.some((domain) => href.includes(domain));
+              const isInternal = href.startsWith("/") || href.startsWith(window.location.origin);
+              if (!isWhitelisted && !isInternal) {
+                anchor.target = "_self";
+              }
+            });
           }
         }
       }
