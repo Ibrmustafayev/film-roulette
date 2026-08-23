@@ -6,15 +6,18 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, User, ExternalLink, Heart, Loader2,
   AlertCircle, RefreshCw, ChevronRight, X, Link2, Download, Check,
-  Tv, Film, ListFilter,
+  Tv, Film, ListFilter, ShieldCheck,
 } from "lucide-react";
 import { getImageUrl, getSeasonDetails, SeasonDetails } from "@/lib/tmdb";
 import { getTranslations } from "@/lib/i18n";
 import { resolveStreamSources } from "@/lib/providers";
+import { HlsPlayer } from "./HlsPlayer";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type PlayerPhase =
   | { tag: "idle" }
+  | { tag: "extracting" }
+  | { tag: "hls"; streamUrl: string }
   | { tag: "probing"; sourceIndex: number }
   | { tag: "playing"; sourceIndex: number }
   | { tag: "error" };
@@ -37,6 +40,7 @@ export function MovieCard() {
   const [phase, setPhase] = useState<PlayerPhase>({ tag: "idle" });
   const [lastTime, setLastTime] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+  const [shieldActive, setShieldActive] = useState(true);
 
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
@@ -74,9 +78,10 @@ export function MovieCard() {
     clearProbeTimer();
     setPhase({ tag: "idle" });
     setShowPlayer(false);
+    setShieldActive(true);
   }, [clearProbeTimer, setShowPlayer]);
 
-  // Fetch season breakdown when a TV show or season changes
+  // Fetch season breakdown when TV series or season changes
   useEffect(() => {
     if (!movie || !isTv) return;
 
@@ -120,6 +125,7 @@ export function MovieCard() {
     }
   }, [showTrailer, phase.tag]);
 
+  // Handle postMessage media progress from embedded players
   useEffect(() => {
     const handleMsg = (e: MessageEvent) => {
       try {
@@ -136,7 +142,7 @@ export function MovieCard() {
     return () => window.removeEventListener("message", handleMsg);
   }, [movie, currentEpisodeKey, setWatchProgress]);
 
-  // Anti-ad-popup focus protection
+  // Anti-ad-popup focus protection for fallback iframes
   useEffect(() => {
     if (phase.tag !== "playing" && phase.tag !== "probing") return;
     const refocus = () => {
@@ -157,7 +163,7 @@ export function MovieCard() {
       setPhase({ tag: "probing", sourceIndex: index });
       clearProbeTimer();
 
-      // Give server 5.5s to resolve iframe or auto-switch
+      // Probe timeout: 5.5s to resolve iframe or auto-switch
       probeTimerRef.current = setTimeout(() => {
         if (!abortRef.current) trySource(index + 1);
       }, 5500);
@@ -165,20 +171,41 @@ export function MovieCard() {
     [clearProbeTimer, sources.length]
   );
 
-  const handleWatchContent = () => {
+  /**
+   * 2-Tier Strategy Execution:
+   * Tier 1: Direct HLS Extraction
+   * Tier 2: Graceful Iframe Embed Fallback
+   */
+  const handleWatchContent = async () => {
     if (phase.tag !== "idle") {
       stopPlayer();
       return;
     }
-    if (!sources.length) {
-      setPhase({ tag: "error" });
-      return;
-    }
+    if (!movie) return;
 
     abortRef.current = false;
     setShowTrailer(false);
     setShowPlayer(true);
-    trySource(0);
+    setPhase({ tag: "extracting" });
+
+    try {
+      // Tier 1: Attempt direct extraction
+      const extractUrl = `/api/extract?tmdbId=${movie.id}&imdbId=${movie.imdb_id || ""}&mediaType=${isTv ? "tv" : "movie"}&season=${selectedSeason}&episode=${selectedEpisode}`;
+      const res = await fetch(extractUrl);
+      const data = await res.json().catch(() => ({}));
+
+      if (!abortRef.current && data.success && data.streamUrl) {
+        setPhase({ tag: "hls", streamUrl: data.streamUrl });
+        return;
+      }
+    } catch {
+      // Direct extraction failed -> gracefully fall through to Tier 2
+    }
+
+    // Tier 2: Fallback to high-uptime embed providers
+    if (!abortRef.current) {
+      trySource(0);
+    }
   };
 
   const handleIframeLoad = useCallback(
@@ -215,7 +242,7 @@ export function MovieCard() {
     setSelectedEpisode(epNum);
     if (phase.tag !== "idle") {
       abortRef.current = false;
-      trySource(0);
+      handleWatchContent();
     }
   };
 
@@ -452,7 +479,7 @@ export function MovieCard() {
                 onClick={handleWatchContent}
                 className={`ctl ${isPlayerOpen ? "ctl-ghost" : "ctl-live"}`}
               >
-                {phase.tag === "probing" ? (
+                {phase.tag === "extracting" || phase.tag === "probing" ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : isPlayerOpen ? (
                   <X className="h-3.5 w-3.5" />
@@ -569,7 +596,7 @@ export function MovieCard() {
           </motion.section>
         )}
 
-        {/* Video Player Frame with Automatic Failover */}
+        {/* Video Player Frame with 2-Tier Execution */}
         <AnimatePresence>
           {(showTrailer || isPlayerOpen) && (
             <motion.section
@@ -591,52 +618,72 @@ export function MovieCard() {
                   />
                 )}
 
-                {!showTrailer && phase.tag === "probing" && (
-                  <>
-                    <iframe
-                      key={`probe-${currentEpisodeKey}-${phase.sourceIndex}`}
-                      src={currentPlayUrl!}
-                      title="probe"
-                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                      allowFullScreen
-                      referrerPolicy="no-referrer"
-                      sandbox="allow-scripts allow-same-origin allow-fullscreen allow-forms allow-presentation"
-                      onLoad={(e) => handleIframeLoad(e, phase.sourceIndex)}
-                      className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
-                      aria-hidden
+                {/* Direct HLS Stream Player (Tier 1) */}
+                {!showTrailer && phase.tag === "hls" && (
+                  <div className="absolute inset-0 h-full w-full">
+                    <HlsPlayer
+                      src={phase.streamUrl}
+                      poster={getImageUrl(movie.backdrop_path || movie.poster_path, "original")}
+                      initialTime={lastTime}
+                      onTimeUpdate={(time) => setWatchProgress(currentEpisodeKey, time)}
+                      onError={() => trySource(0)}
                     />
+                  </div>
+                )}
+
+                {/* Extracting / Probing Loader */}
+                {!showTrailer && (phase.tag === "extracting" || phase.tag === "probing") && (
+                  <>
+                    {phase.tag === "probing" && currentPlayUrl && (
+                      <iframe
+                        key={`probe-${currentEpisodeKey}-${phase.sourceIndex}`}
+                        src={currentPlayUrl}
+                        title="probe"
+                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                        allowFullScreen
+                        referrerPolicy="no-referrer"
+                        onLoad={(e) => handleIframeLoad(e, phase.sourceIndex)}
+                        className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
+                        aria-hidden
+                      />
+                    )}
                     <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-ink-1">
                       <Loader2 className="h-5 w-5 animate-spin text-live" />
                       <div className="space-y-1.5 text-center">
                         <p className="text-small text-ink-8">
-                          {t("movie.autoSearching")}
+                          {phase.tag === "extracting" ? "Extracting direct ad-free stream..." : t("movie.autoSearching")}
                         </p>
-                        <p className="text-label uppercase tracking-[0.12em] text-ink-6">
-                          {t("movie.testingServer", {
-                            server: sources[phase.sourceIndex]?.name || `Server ${phase.sourceIndex + 1}`,
-                            current: phase.sourceIndex + 1,
-                            total: sources.length,
-                          })}
-                        </p>
+                        {phase.tag === "probing" && (
+                          <p className="text-label uppercase tracking-[0.12em] text-ink-6">
+                            {t("movie.testingServer", {
+                              server: sources[phase.sourceIndex]?.name || `Server ${phase.sourceIndex + 1}`,
+                              current: phase.sourceIndex + 1,
+                              total: sources.length,
+                            })}
+                          </p>
+                        )}
                       </div>
-                      <ol className="flex gap-1" aria-hidden="true">
-                        {sources.map((_, i) => (
-                          <li
-                            key={i}
-                            className={`h-0.5 w-7 transition-colors duration-[240ms] ${
-                              i < phase.sourceIndex
-                                ? "bg-ink-5"
-                                : i === phase.sourceIndex
-                                  ? "bg-live"
-                                  : "bg-ink-3"
-                            }`}
-                          />
-                        ))}
-                      </ol>
+                      {phase.tag === "probing" && (
+                        <ol className="flex gap-1" aria-hidden="true">
+                          {sources.map((_, i) => (
+                            <li
+                              key={i}
+                              className={`h-0.5 w-7 transition-colors duration-[240ms] ${
+                                i < phase.sourceIndex
+                                  ? "bg-ink-5"
+                                  : i === phase.sourceIndex
+                                    ? "bg-live"
+                                    : "bg-ink-3"
+                              }`}
+                            />
+                          ))}
+                        </ol>
+                      )}
                     </div>
                   </>
                 )}
 
+                {/* Error State */}
                 {!showTrailer && phase.tag === "error" && (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-ink-1 p-6 text-center">
                     <AlertCircle className="h-6 w-6 text-alert" />
@@ -650,7 +697,7 @@ export function MovieCard() {
                       type="button"
                       onClick={() => {
                         abortRef.current = false;
-                        trySource(0);
+                        handleWatchContent();
                       }}
                       className="ctl ctl-ghost"
                     >
@@ -660,30 +707,52 @@ export function MovieCard() {
                   </div>
                 )}
 
+                {/* Fallback Embed Iframe Player (Tier 2: Sandbox Removed for 100% Compatibility) */}
                 {!showTrailer && phase.tag === "playing" && currentPlayUrl && (
-                  <iframe
-                    key={`play-${currentEpisodeKey}-${phase.sourceIndex}`}
-                    src={currentPlayUrl}
-                    title="Player"
-                    onLoad={(e) => handleIframeLoad(e, phase.sourceIndex)}
-                    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                    allowFullScreen
-                    referrerPolicy="no-referrer"
-                    sandbox="allow-scripts allow-same-origin allow-fullscreen allow-forms allow-presentation"
-                    className="absolute inset-0 h-full w-full"
-                  />
+                  <div className="relative h-full w-full">
+                    <iframe
+                      key={`play-${currentEpisodeKey}-${phase.sourceIndex}`}
+                      src={currentPlayUrl}
+                      title="Player"
+                      onLoad={(e) => handleIframeLoad(e, phase.sourceIndex)}
+                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                      allowFullScreen
+                      referrerPolicy="no-referrer"
+                      className="absolute inset-0 h-full w-full"
+                    />
+
+                    {/* Transparent Click Shield & Ad Blocker Overlay */}
+                    {shieldActive && (
+                      <div
+                        onClick={() => setShieldActive(false)}
+                        className="absolute inset-0 z-10 flex cursor-pointer items-start justify-end p-3 bg-transparent"
+                      >
+                        <span className="flex items-center gap-1.5 border border-ink-4 bg-ink-1/90 px-2.5 py-1 text-[11px] font-medium text-ink-8 backdrop-blur-sm transition-opacity duration-200 hover:text-white">
+                          <ShieldCheck className="h-3.5 w-3.5 text-live" />
+                          <span>Ad Shield Active — Click to Interact</span>
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
-              {!showTrailer && phase.tag === "playing" && (
+              {/* Player Status & Control Bar */}
+              {!showTrailer && (phase.tag === "playing" || phase.tag === "hls") && (
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-4 bg-ink-2 px-4 py-2">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center gap-2 text-label uppercase tracking-[0.12em] text-ink-6">
                       <span className="h-1.5 w-1.5 rounded-full bg-live" />
-                      {t("movie.activeServer")}
-                      <span className="text-ink-8" data-num>
-                        {sources[phase.sourceIndex]?.name}
-                      </span>
+                      {phase.tag === "hls" ? (
+                        <span className="text-live font-semibold">Direct Native Player (Ad-Free)</span>
+                      ) : (
+                        <>
+                          {t("movie.activeServer")}
+                          <span className="text-ink-8" data-num>
+                            {sources[phase.sourceIndex]?.name}
+                          </span>
+                        </>
+                      )}
                     </span>
                     {isTv && (
                       <span className="border-l border-ink-4 pl-2 text-label text-ink-7">
@@ -691,19 +760,31 @@ export function MovieCard() {
                       </span>
                     )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={handleNextServerManual}
-                    className="inline-flex items-center gap-1 text-label uppercase tracking-[0.12em] text-link transition-colors duration-[120ms] hover:text-link-hover"
-                  >
-                    {t("movie.nextServer")}
-                    <ChevronRight className="h-3 w-3" />
-                  </button>
+
+                  <div className="flex items-center gap-3">
+                    {phase.tag === "playing" && (
+                      <button
+                        type="button"
+                        onClick={() => setShieldActive(!shieldActive)}
+                        className="text-label text-ink-7 hover:text-ink-9"
+                      >
+                        {shieldActive ? "Shield: ON" : "Shield: OFF"}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleNextServerManual}
+                      className="inline-flex items-center gap-1 text-label uppercase tracking-[0.12em] text-link transition-colors duration-[120ms] hover:text-link-hover"
+                    >
+                      {t("movie.nextServer")}
+                      <ChevronRight className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
               )}
 
               {!showTrailer &&
-                phase.tag === "playing" &&
+                (phase.tag === "playing" || phase.tag === "hls") &&
                 lastTime &&
                 lastTime > 10 && (
                   <div className="flex items-center justify-between border-t border-ink-4 bg-ink-2 px-4 py-1.5 text-label uppercase tracking-[0.12em] text-ink-6">

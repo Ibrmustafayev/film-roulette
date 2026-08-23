@@ -13,6 +13,42 @@ export async function OPTIONS() {
   });
 }
 
+/**
+ * Rewrites relative and absolute URLs inside m3u8 playlist manifests to pass through this proxy.
+ */
+function rewriteM3U8Manifest(content: string, manifestUrl: string, proxyOrigin: string): string {
+  const manifestBase = new URL(manifestUrl);
+  const lines = content.split('\n');
+
+  const rewrittenLines = lines.map((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return line;
+
+    // Handle URI attributes in tags like #EXT-X-KEY:METHOD=...,URI="..."
+    if (trimmed.startsWith('#')) {
+      return line.replace(/URI="([^"]+)"/g, (_, uri) => {
+        try {
+          const resolvedUri = new URL(uri, manifestBase).toString();
+          const proxiedUri = `${proxyOrigin}/api/proxy?url=${encodeURIComponent(resolvedUri)}`;
+          return `URI="${proxiedUri}"`;
+        } catch {
+          return _;
+        }
+      });
+    }
+
+    // Handle segment or nested m3u8 playlist URLs
+    try {
+      const resolved = new URL(trimmed, manifestBase).toString();
+      return `${proxyOrigin}/api/proxy?url=${encodeURIComponent(resolved)}`;
+    } catch {
+      return line;
+    }
+  });
+
+  return rewrittenLines.join('\n');
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const targetUrl = searchParams.get('url');
@@ -36,9 +72,8 @@ export async function GET(request: Request) {
 
   try {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
+    const timeoutId = setTimeout(() => controller.abort(), 12000); // 12s timeout
 
-    // Derive upstream origin for Referer/Origin headers
     const upstreamOrigin = `${parsedTarget.protocol}//${parsedTarget.host}`;
 
     const forwardHeaders: Record<string, string> = {
@@ -64,12 +99,32 @@ export async function GET(request: Request) {
 
     clearTimeout(timeoutId);
 
+    const contentType = response.headers.get('content-type') || '';
+    const isM3U8 =
+      parsedTarget.pathname.endsWith('.m3u8') ||
+      contentType.includes('application/vnd.apple.mpegurl') ||
+      contentType.includes('application/x-mpegurl');
+
     const responseHeaders = new Headers();
     responseHeaders.set('Access-Control-Allow-Origin', '*');
     responseHeaders.set('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     responseHeaders.set('Access-Control-Allow-Headers', '*');
 
-    const contentType = response.headers.get('content-type');
+    if (isM3U8) {
+      const text = await response.text();
+      const requestUrl = new URL(request.url);
+      const proxyOrigin = `${requestUrl.protocol}//${requestUrl.host}`;
+      const rewritten = rewriteM3U8Manifest(text, targetUrl, proxyOrigin);
+
+      responseHeaders.set('Content-Type', 'application/vnd.apple.mpegurl');
+      responseHeaders.set('Cache-Control', 'no-cache');
+      return new NextResponse(rewritten, {
+        status: response.status,
+        headers: responseHeaders,
+      });
+    }
+
+    // Pass through stream segments / binary data
     if (contentType) {
       responseHeaders.set('Content-Type', contentType);
     }
@@ -94,7 +149,7 @@ export async function GET(request: Request) {
       headers: responseHeaders,
     });
   } catch (error) {
-    console.error('Edge Proxy Error:', error);
+    console.error('Edge Stream Proxy Error:', error);
     return NextResponse.json(
       { error: 'Proxy request failed or timed out', ok: false },
       {
