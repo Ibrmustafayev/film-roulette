@@ -725,11 +725,11 @@ export function MovieCard() {
                     {shieldActive && (
                       <div
                         onClick={() => setShieldActive(false)}
-                        className="absolute inset-0 z-10 flex cursor-pointer items-start justify-end p-3 bg-transparent"
+                        className="absolute inset-0 z-20 flex cursor-pointer items-start justify-end p-3 bg-transparent select-none"
                       >
-                        <span className="flex items-center gap-1.5 border border-ink-4 bg-ink-1/90 px-2.5 py-1 text-[11px] font-medium text-ink-8 backdrop-blur-sm transition-opacity duration-200 hover:text-white">
-                          <ShieldCheck className="h-3.5 w-3.5 text-live" />
-                          <span>Ad Shield Active — Click to Interact</span>
+                        <span className="inline-flex items-center gap-1.5 border border-ink-4 bg-ink-1/95 px-3 py-1.5 text-xs font-medium text-ink-9 shadow-md backdrop-blur-sm transition-all duration-150 hover:border-live/60 hover:text-white rounded-xs">
+                          <ShieldCheck className="h-3.5 w-3.5 text-live shrink-0" />
+                          <span className="whitespace-nowrap">Ad Shield Active — Click to Interact</span>
                         </span>
                       </div>
                     )}
@@ -739,45 +739,51 @@ export function MovieCard() {
 
               {/* Player Status & Control Bar */}
               {!showTrailer && (phase.tag === "playing" || phase.tag === "hls") && (
-                <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-4 bg-ink-2 px-4 py-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-2 text-label uppercase tracking-[0.12em] text-ink-6">
-                      <span className="h-1.5 w-1.5 rounded-full bg-live" />
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-4 bg-ink-2 px-4 py-2.5 min-h-[42px]">
+                  <div className="flex flex-wrap items-center gap-2 min-w-0">
+                    <span className="inline-flex items-center gap-2 text-label uppercase tracking-[0.12em] text-ink-6 whitespace-nowrap">
+                      <span className="h-1.5 w-1.5 rounded-full bg-live shrink-0" />
                       {phase.tag === "hls" ? (
                         <span className="text-live font-semibold">Direct Native Player (Ad-Free)</span>
                       ) : (
                         <>
-                          {t("movie.activeServer")}
-                          <span className="text-ink-8" data-num>
+                          <span>{t("movie.activeServer")}</span>
+                          <span className="text-ink-8 font-medium" data-num>
                             {sources[phase.sourceIndex]?.name}
                           </span>
                         </>
                       )}
                     </span>
                     {isTv && (
-                      <span className="border-l border-ink-4 pl-2 text-label text-ink-7">
+                      <span className="border-l border-ink-4 pl-2 text-label text-ink-7 whitespace-nowrap">
                         S{selectedSeason} E{selectedEpisode}
                       </span>
                     )}
                   </div>
 
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2.5 shrink-0">
                     {phase.tag === "playing" && (
                       <button
                         type="button"
                         onClick={() => setShieldActive(!shieldActive)}
-                        className="text-label text-ink-7 hover:text-ink-9"
+                        title={shieldActive ? "Ad-click shield active (click to disable)" : "Ad-click shield inactive (click to enable)"}
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-label font-medium border transition-colors rounded-xs shrink-0 whitespace-nowrap ${
+                          shieldActive
+                            ? "border-live/40 bg-live/10 text-live hover:bg-live/20"
+                            : "border-ink-4 bg-ink-3/40 text-ink-6 hover:text-ink-8 hover:border-ink-5"
+                        }`}
                       >
-                        {shieldActive ? "Shield: ON" : "Shield: OFF"}
+                        <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                        <span>{shieldActive ? "Shield: ON" : "Shield: OFF"}</span>
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={handleNextServerManual}
-                      className="inline-flex items-center gap-1 text-label uppercase tracking-[0.12em] text-link transition-colors duration-[120ms] hover:text-link-hover"
+                      className="inline-flex items-center gap-1 px-2 py-1 text-label uppercase tracking-[0.12em] text-link transition-colors duration-[120ms] hover:text-link-hover shrink-0 whitespace-nowrap"
                     >
-                      {t("movie.nextServer")}
-                      <ChevronRight className="h-3 w-3" />
+                      <span>{t("movie.nextServer")}</span>
+                      <ChevronRight className="h-3 w-3 shrink-0" />
                     </button>
                   </div>
                 </div>
