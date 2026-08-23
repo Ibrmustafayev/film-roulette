@@ -477,6 +477,21 @@ export function MovieCard() {
                 {isTv ? <Tv className="h-3 w-3 text-live" /> : <Film className="h-3 w-3 text-link" />}
                 <span>{isTv ? t("tv.badge") : t("tv.movieBadge")}</span>
               </div>
+
+              {/* YouTube-Style Progress Bar on main poster */}
+              {lastTime && lastTime > 10 && (
+                <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-ink-4/90 z-20 overflow-hidden">
+                  <div
+                    className="h-full bg-live transition-all duration-300"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.max(0, (lastTime / (movie.runtime ? movie.runtime * 60 : 7200)) * 100)
+                      )}%`,
+                    }}
+                  />
+                </div>
+              )}
             </div>
 
             <button

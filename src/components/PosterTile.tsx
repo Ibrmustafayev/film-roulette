@@ -1,9 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { X, Tv, Film } from "lucide-react";
 import { getImageUrl, Movie } from "@/lib/tmdb";
+import { getMediaProgress, WatchHistoryItem } from "@/lib/history";
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
 
@@ -20,9 +22,24 @@ export function PosterTile({
   onRemove?: (movie: Movie) => void;
   removeLabel?: string;
 }) {
+  const [progress, setProgress] = useState<WatchHistoryItem | null>(null);
+
   const posterUrl = getImageUrl(movie.poster_path, "w185");
   const isTv = movie.media_type === "tv" || !!movie.number_of_seasons;
   const year = (isTv ? movie.first_air_date : movie.release_date)?.split("-")[0] || "—";
+
+  useEffect(() => {
+    const updateProgress = () => {
+      const p = getMediaProgress(movie.id);
+      setProgress(p);
+    };
+
+    updateProgress();
+    window.addEventListener("film_roulette_history_updated", updateProgress);
+    return () => window.removeEventListener("film_roulette_history_updated", updateProgress);
+  }, [movie.id]);
+
+  const hasProgress = !!(progress && progress.progressPercent > 0);
 
   return (
     <motion.li
@@ -36,7 +53,7 @@ export function PosterTile({
       <button
         type="button"
         onClick={() => onSelect(movie)}
-        className="poster relative w-full"
+        className="poster relative w-full overflow-hidden"
         aria-label={`${movie.title} (${year})`}
       >
         {posterUrl ? (
@@ -53,10 +70,31 @@ export function PosterTile({
           </span>
         )}
 
-        {/* Small corner media badge */}
-        <span className="absolute bottom-1 right-1 bg-ink-0/80 px-1 py-0.5 text-[9px] font-medium text-ink-8 backdrop-blur-sm">
+        {/* Progress & Episode Badge (Top Left) */}
+        {hasProgress && (
+          <span className="absolute top-1 left-1 z-20 flex items-center gap-1 bg-ink-0/90 px-1.5 py-0.5 text-[9px] font-semibold text-live backdrop-blur-xs shadow-xs">
+            <span>
+              {progress.mediaType === "tv" && progress.season
+                ? `S${progress.season} E${progress.episode}`
+                : `${Math.round(progress.progressPercent)}%`}
+            </span>
+          </span>
+        )}
+
+        {/* Small corner media badge (Bottom Right) */}
+        <span className="absolute bottom-2 right-1 z-20 bg-ink-0/85 px-1 py-0.5 text-[9px] font-medium text-ink-8 backdrop-blur-sm">
           {isTv ? <Tv className="h-2.5 w-2.5 text-live inline mr-0.5" /> : <Film className="h-2.5 w-2.5 text-link inline mr-0.5" />}
         </span>
+
+        {/* YouTube-Style Progress Bar at the bottom of the thumbnail */}
+        {hasProgress && (
+          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-ink-4/90 z-30 overflow-hidden">
+            <div
+              className="h-full bg-live transition-all duration-300"
+              style={{ width: `${Math.min(100, Math.max(0, progress.progressPercent))}%` }}
+            />
+          </div>
+        )}
       </button>
 
       {onRemove && (
@@ -65,7 +103,7 @@ export function PosterTile({
           onClick={() => onRemove(movie)}
           title={removeLabel}
           aria-label={`${removeLabel}: ${movie.title}`}
-          className="absolute right-1 top-1 bg-ink-0/85 p-1 text-ink-7 opacity-0 transition-[opacity,color] duration-[120ms] hover:text-alert focus-visible:opacity-100 group-hover:opacity-100"
+          className="absolute right-1 top-1 z-30 bg-ink-0/85 p-1 text-ink-7 opacity-0 transition-[opacity,color] duration-[120ms] hover:text-alert focus-visible:opacity-100 group-hover:opacity-100"
         >
           <X className="h-3 w-3" />
         </button>
