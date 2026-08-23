@@ -252,14 +252,14 @@ export function MovieCard() {
     };
   }, [phase.tag]);
 
-  // Auto-Fallback to direct embed URL if proxy stalls (4.5s timeout)
+  // Fast Auto-Fallback to direct embed URL if proxy stalls (enforced at 2.5s)
   useEffect(() => {
     if (phase.tag !== "playing" || useDirectEmbed) return;
 
     const timer = setTimeout(() => {
-      console.warn("[Player] Proxy 4.5s timeout reached, falling back to direct embed URL");
+      console.warn("[Player] Fast proxy 2.5s fallback triggered, switching to direct embed URL");
       setUseDirectEmbed(true);
-    }, 4500);
+    }, 2500);
 
     return () => clearTimeout(timer);
   }, [phase, useDirectEmbed]);
@@ -712,7 +712,7 @@ export function MovieCard() {
           </motion.section>
         )}
 
-        {/* Video Player Frame with 2-Tier Execution */}
+        {/* Video Player Frame with Aspect-Video Scaling */}
         <AnimatePresence>
           {(showTrailer || isPlayerOpen) && (
             <motion.section
@@ -722,16 +722,14 @@ export function MovieCard() {
               animate={{ height: "auto", opacity: 1, marginTop: 48 }}
               exit={{ height: 0, opacity: 0, marginTop: 0 }}
               transition={{ duration: 0.24, ease: EASE }}
-              className={`scroll-mt-14 overflow-hidden border border-ink-4 bg-black ${
-                isFullscreen ? "fixed inset-0 z-50 m-0 h-screen w-screen border-none" : ""
+              className={`scroll-mt-14 overflow-hidden border border-ink-4 bg-black rounded-lg ${
+                isFullscreen ? "fixed inset-0 z-50 m-0 h-screen w-screen border-none rounded-none" : ""
               }`}
             >
               <div
-                className="relative w-full"
-                style={{
-                  paddingTop: isFullscreen ? "0" : "56.25%",
-                  height: isFullscreen ? "100vh" : "auto",
-                }}
+                className={`relative w-full bg-black overflow-hidden flex items-center justify-center ${
+                  isFullscreen ? "h-screen w-screen" : "aspect-video"
+                }`}
               >
                 {showTrailer && (
                   <iframe
@@ -740,13 +738,13 @@ export function MovieCard() {
                     allow="fullscreen; autoplay; encrypted-media; picture-in-picture; accelerometer; gyroscope"
                     allowFullScreen={true}
                     {...{ webkitallowfullscreen: "true", mozallowfullscreen: "true" }}
-                    className="absolute inset-0 h-full w-full border-0"
+                    className="absolute inset-0 h-full w-full border-0 z-10"
                   />
                 )}
 
                 {/* Direct HLS Stream Player (Tier 1) */}
                 {!showTrailer && phase.tag === "hls" && (
-                  <div className="absolute inset-0 h-full w-full">
+                  <div className="absolute inset-0 h-full w-full z-10">
                     <HlsPlayer
                       src={phase.streamUrl}
                       poster={getImageUrl(movie.backdrop_path || movie.poster_path, "original")}
@@ -759,7 +757,7 @@ export function MovieCard() {
 
                 {/* Extracting Loader */}
                 {!showTrailer && phase.tag === "extracting" && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-ink-1">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-ink-1 z-10">
                     <Loader2 className="h-6 w-6 animate-spin text-live" />
                     <p className="text-small text-ink-8">
                       {t("movie.autoSearching") || "Initializing stream provider..."}
@@ -769,7 +767,7 @@ export function MovieCard() {
 
                 {/* Error State */}
                 {!showTrailer && phase.tag === "error" && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-ink-1 p-6 text-center">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-ink-1 p-6 text-center z-10">
                     <AlertCircle className="h-6 w-6 text-alert" />
                     <div>
                       <p className="text-h4 text-ink-9">{t("errors.noSource")}</p>
@@ -791,9 +789,9 @@ export function MovieCard() {
                   </div>
                 )}
 
-                {/* Fallback Embed Iframe Player with Server-Side Ad-Stripping Proxy */}
+                {/* Fallback Embed Iframe Player with Aspect-Video Sizing */}
                 {!showTrailer && phase.tag === "playing" && currentPlayUrl && (
-                  <div className="relative h-full w-full">
+                  <div className="absolute inset-0 h-full w-full">
                     {/* Transparent Click-Shield Layer for 1st click */}
                     {!firstClickDismissed && shieldActive && (
                       <div
@@ -802,7 +800,7 @@ export function MovieCard() {
                           e.stopPropagation();
                           setFirstClickDismissed(true);
                         }}
-                        className="absolute inset-0 z-20 cursor-pointer bg-transparent"
+                        className="absolute inset-0 z-30 cursor-pointer bg-transparent"
                         title="Click to play"
                       />
                     )}
@@ -819,12 +817,12 @@ export function MovieCard() {
                       allowFullScreen={true}
                       {...{ webkitallowfullscreen: "true", mozallowfullscreen: "true" }}
                       referrerPolicy="no-referrer"
-                      className="h-full w-full border-0 pointer-events-auto"
+                      className="absolute inset-0 h-full w-full border-0 object-cover pointer-events-auto z-10"
                     />
 
                     {/* Non-blocking Ad Shield visual indicator */}
                     {shieldActive && !isFullscreen && (
-                      <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3 select-none z-10">
+                      <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3 select-none z-20">
                         <span className="pointer-events-auto inline-flex items-center gap-1.5 border border-ink-4/80 bg-ink-1/90 px-2.5 py-1 text-[11px] font-medium text-ink-8 backdrop-blur-sm shadow-md transition-opacity duration-200">
                           <ShieldCheck className="h-3 w-3 text-live shrink-0" />
                           <span>Ad Shield Active</span>
@@ -834,7 +832,7 @@ export function MovieCard() {
 
                     {/* Subtle inline loader during provider initial connection */}
                     {iframeLoading && !isFullscreen && (
-                      <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 bg-ink-1/80 px-2.5 py-1 text-xs text-ink-7 backdrop-blur-sm z-10">
+                      <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 bg-ink-1/80 px-2.5 py-1 text-xs text-ink-7 backdrop-blur-sm z-20">
                         <Loader2 className="h-3.5 w-3.5 animate-spin text-live" />
                         <span>Connecting to {sources[phase.sourceIndex]?.name}...</span>
                       </div>
