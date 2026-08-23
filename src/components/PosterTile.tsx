@@ -83,16 +83,6 @@ export function PosterTile({
         <span className="absolute bottom-2 right-1 z-20 bg-ink-0/85 px-1 py-0.5 text-[9px] font-medium text-ink-8 backdrop-blur-sm">
           {isTv ? <Tv className="h-2.5 w-2.5 text-live inline mr-0.5" /> : <Film className="h-2.5 w-2.5 text-link inline mr-0.5" />}
         </span>
-
-        {/* YouTube-Style Emerald / Red Progress Bar at the bottom of the thumbnail */}
-        {hasProgress && (
-          <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-1.5 bg-slate-800/80 z-30 overflow-hidden">
-            <div
-              className="h-full bg-emerald-500 transition-all duration-300"
-              style={{ width: `${Math.min(100, Math.max(0, progress.progressPercent))}%` }}
-            />
-          </div>
-        )}
       </button>
 
       {onRemove && (

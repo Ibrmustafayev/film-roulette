@@ -162,14 +162,6 @@ export function ContinueWatching() {
                 >
                   <X className="h-3 w-3" />
                 </button>
-
-                {/* YouTube-Style Red/Accent Progress Bar at bottom of thumbnail */}
-                <div className="absolute bottom-0 inset-x-0 h-1 bg-ink-4/80">
-                  <div
-                    className="h-full bg-live transition-all duration-300"
-                    style={{ width: `${Math.min(100, Math.max(0, item.progressPercent))}%` }}
-                  />
-                </div>
               </div>
 
               {/* Card Meta */}
