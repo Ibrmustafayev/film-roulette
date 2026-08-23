@@ -777,7 +777,6 @@ export function MovieCard() {
                       src={currentPlayUrl}
                       title="Player"
                       onLoad={handleIframeLoad}
-                      sandbox="allow-scripts allow-same-origin allow-forms"
                       allow="fullscreen; autoplay; encrypted-media; picture-in-picture; accelerometer; gyroscope"
                       allowFullScreen={true}
                       {...{ webkitallowfullscreen: "true", mozallowfullscreen: "true" }}
