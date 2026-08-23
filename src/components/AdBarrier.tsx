@@ -32,6 +32,10 @@ const WHITELISTED_DOMAINS = [
   "youtube.com",
   "themoviedb.org",
   "github.com",
+  "chromewebstore.google.com",
+  "addons.mozilla.org",
+  "microsoftedge.microsoft.com",
+  "adguard.com",
 ];
 
 function isAdUrl(urlStr: string): boolean {
@@ -138,10 +142,10 @@ export function AdBarrier() {
       }, 50);
     };
 
-    // MutationObserver: Strip target="_blank" from dynamically injected elements
+    // MutationObserver: Strip target from dynamically injected ad elements
     const sanitizeNode = (node: Node) => {
       if (node instanceof HTMLAnchorElement) {
-        if (isAdUrl(node.href) || node.target === "_blank") {
+        if (isAdUrl(node.href)) {
           node.target = "_self";
           node.rel = "noopener noreferrer";
         }
@@ -167,7 +171,7 @@ export function AdBarrier() {
           if (node instanceof HTMLElement) {
             node.querySelectorAll("a").forEach((a) => {
               const anchor = a as HTMLAnchorElement;
-              if (isAdUrl(anchor.href) || anchor.target === "_blank") {
+              if (isAdUrl(anchor.href)) {
                 anchor.target = "_self";
               }
             });

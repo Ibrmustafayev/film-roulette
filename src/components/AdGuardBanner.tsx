@@ -64,7 +64,7 @@ export function AdGuardBanner() {
           {/* Right badges & dismiss */}
           <div className="flex flex-wrap items-center gap-2 pt-1 sm:pt-0 shrink-0">
             <a
-              href="https://adguard.com/adguard-browser-extension/chrome/overview.html"
+              href="https://chromewebstore.google.com/detail/adguard-adblocker/bgnkhhnnamicmpeenaelnjfhikgbkllg"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-xs border border-amber-500/30 bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium text-amber-200 hover:bg-amber-500/25 hover:border-amber-400 hover:text-white transition-all shadow-xs"
@@ -74,7 +74,7 @@ export function AdGuardBanner() {
             </a>
 
             <a
-              href="https://addons.mozilla.org/firefox/addon/adguard-adblocker/"
+              href="https://addons.mozilla.org/en-US/firefox/addon/adguard-adblocker/"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-xs border border-amber-500/30 bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium text-amber-200 hover:bg-amber-500/25 hover:border-amber-400 hover:text-white transition-all shadow-xs"
@@ -84,7 +84,7 @@ export function AdGuardBanner() {
             </a>
 
             <a
-              href="https://microsoftedge.microsoft.com/addons/detail/adguard-adblocker/pdffkfellgipmhklpdmokmckkkfcopbh"
+              href="https://microsoftedge.microsoft.com/addons/detail/adguard-adblocker/pdffkfellgipmhedpbgibhbmoblobing"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-xs border border-amber-500/30 bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium text-amber-200 hover:bg-amber-500/25 hover:border-amber-400 hover:text-white transition-all shadow-xs"

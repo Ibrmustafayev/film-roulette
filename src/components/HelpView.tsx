@@ -252,7 +252,7 @@ export function HelpView() {
                   </p>
                   <div className="flex flex-wrap gap-3 pt-1">
                     <a
-                      href="https://adguard.com/adguard-browser-extension/chrome/overview.html"
+                      href="https://chromewebstore.google.com/detail/adguard-adblocker/bgnkhhnnamicmpeenaelnjfhikgbkllg"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="ctl ctl-ghost h-8 text-label gap-1.5 px-3 border border-ink-4 hover:border-amber-500/40 hover:text-amber-400 transition-colors"
@@ -261,7 +261,7 @@ export function HelpView() {
                       {t("help.adguardChrome")}
                     </a>
                     <a
-                      href="https://addons.mozilla.org/firefox/addon/adguard-adblocker/"
+                      href="https://addons.mozilla.org/en-US/firefox/addon/adguard-adblocker/"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="ctl ctl-ghost h-8 text-label gap-1.5 px-3 border border-ink-4 hover:border-amber-500/40 hover:text-amber-400 transition-colors"
@@ -270,7 +270,7 @@ export function HelpView() {
                       {t("help.adguardFirefox")}
                     </a>
                     <a
-                      href="https://microsoftedge.microsoft.com/addons/detail/adguard-adblocker/pdffkfellgipmhklpdmokmckkkfcopbh"
+                      href="https://microsoftedge.microsoft.com/addons/detail/adguard-adblocker/pdffkfellgipmhedpbgibhbmoblobing"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="ctl ctl-ghost h-8 text-label gap-1.5 px-3 border border-ink-4 hover:border-amber-500/40 hover:text-amber-400 transition-colors"
