@@ -41,6 +41,7 @@ export function MovieCard() {
   const [copied, setCopied] = useState(false);
   const [shieldActive, setShieldActive] = useState(true);
   const [firstClickDismissed, setFirstClickDismissed] = useState(false);
+  const [useDirectEmbed, setUseDirectEmbed] = useState(false);
   const [iframeLoading, setIframeLoading] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
@@ -74,6 +75,7 @@ export function MovieCard() {
     setShowPlayer(false);
     setIframeLoading(false);
     setFirstClickDismissed(false);
+    setUseDirectEmbed(false);
   }, [setShowPlayer]);
 
   // Fullscreen change listener across vendor prefixes
@@ -250,6 +252,18 @@ export function MovieCard() {
     };
   }, [phase.tag]);
 
+  // Auto-Fallback to direct embed URL if proxy stalls (4.5s timeout)
+  useEffect(() => {
+    if (phase.tag !== "playing" || useDirectEmbed) return;
+
+    const timer = setTimeout(() => {
+      console.warn("[Player] Proxy 4.5s timeout reached, falling back to direct embed URL");
+      setUseDirectEmbed(true);
+    }, 4500);
+
+    return () => clearTimeout(timer);
+  }, [phase, useDirectEmbed]);
+
   const switchToServer = useCallback(
     (index: number) => {
       if (abortRef.current) return;
@@ -259,6 +273,7 @@ export function MovieCard() {
       }
       setIframeLoading(true);
       setFirstClickDismissed(false);
+      setUseDirectEmbed(false);
       setPhase({ tag: "playing", sourceIndex: index });
     },
     [sources.length]
@@ -359,9 +374,11 @@ export function MovieCard() {
 
   const activeSourceIndex = phase.tag === "playing" ? phase.sourceIndex : 0;
   const rawPlayUrl = sources[activeSourceIndex]?.url ?? null;
-  // Proxy the embed URL server-side to strip ad scripts and inject anti-popup protections
+  // Proxy the embed URL server-side to strip ad scripts, or fallback to direct embed URL on stall
   const currentPlayUrl = rawPlayUrl
-    ? `/api/embed-proxy?url=${encodeURIComponent(rawPlayUrl)}`
+    ? useDirectEmbed
+      ? rawPlayUrl
+      : `/api/embed-proxy?url=${encodeURIComponent(rawPlayUrl)}`
     : null;
 
   const isPlayerOpen = phase.tag !== "idle";
@@ -792,11 +809,12 @@ export function MovieCard() {
 
                     <iframe
                       ref={iframeRef}
-                      key={`play-${currentEpisodeKey}-${phase.sourceIndex}`}
+                      key={`play-${currentEpisodeKey}-${phase.sourceIndex}-${useDirectEmbed ? "direct" : "proxied"}`}
                       id="stream-iframe"
                       src={currentPlayUrl}
                       title="Player"
                       onLoad={handleIframeLoad}
+                      onError={() => setUseDirectEmbed(true)}
                       allow="fullscreen; autoplay; encrypted-media; picture-in-picture; accelerometer; gyroscope"
                       allowFullScreen={true}
                       {...{ webkitallowfullscreen: "true", mozallowfullscreen: "true" }}
