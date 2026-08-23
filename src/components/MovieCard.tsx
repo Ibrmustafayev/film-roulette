@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, User, ExternalLink, Heart, Loader2,
   AlertCircle, RefreshCw, ChevronRight, X, Link2, Download, Check,
-  Tv, Film, ListFilter, ShieldCheck, ShieldAlert,
+  Tv, Film, ListFilter, ShieldCheck, ShieldAlert, Maximize, Minimize,
 } from "lucide-react";
 import { getImageUrl, getSeasonDetails, SeasonDetails } from "@/lib/tmdb";
 import { getTranslations } from "@/lib/i18n";
@@ -41,6 +41,7 @@ export function MovieCard() {
   const [copied, setCopied] = useState(false);
   const [shieldActive, setShieldActive] = useState(true);
   const [iframeLoading, setIframeLoading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
@@ -71,6 +72,69 @@ export function MovieCard() {
     setShowPlayer(false);
     setIframeLoading(false);
   }, [setShowPlayer]);
+
+  // Fullscreen change listener across vendor prefixes
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      /* eslint-disable @typescript-eslint/no-explicit-any */
+      const doc = document as any;
+      const isFull = !!(
+        doc.fullscreenElement ||
+        doc.webkitFullscreenElement ||
+        doc.mozFullScreenElement ||
+        doc.msFullscreenElement
+      );
+      setIsFullscreen(isFull);
+    };
+
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", onFullscreenChange);
+    document.addEventListener("mozfullscreenchange", onFullscreenChange);
+    document.addEventListener("MSFullscreenChange", onFullscreenChange);
+
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", onFullscreenChange);
+      document.removeEventListener("mozfullscreenchange", onFullscreenChange);
+      document.removeEventListener("MSFullscreenChange", onFullscreenChange);
+    };
+  }, []);
+
+  const handleToggleFullscreen = useCallback(() => {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const el = playerRef.current as any;
+    const doc = document as any;
+    if (!el) return;
+
+    const isCurrentFull = !!(
+      doc.fullscreenElement ||
+      doc.webkitFullscreenElement ||
+      doc.mozFullScreenElement ||
+      doc.msFullscreenElement
+    );
+
+    if (!isCurrentFull) {
+      if (el.requestFullscreen) {
+        el.requestFullscreen().catch(() => {});
+      } else if (el.webkitRequestFullscreen) {
+        el.webkitRequestFullscreen();
+      } else if (el.mozRequestFullScreen) {
+        el.mozRequestFullScreen();
+      } else if (el.msRequestFullscreen) {
+        el.msRequestFullscreen();
+      }
+    } else {
+      if (doc.exitFullscreen) {
+        doc.exitFullscreen().catch(() => {});
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
+      } else if (doc.mozCancelFullScreen) {
+        doc.mozCancelFullScreen();
+      } else if (doc.msExitFullscreen) {
+        doc.msExitFullscreen();
+      }
+    }
+  }, []);
 
   // Fetch season breakdown when TV series or season changes
   useEffect(() => {
@@ -593,16 +657,19 @@ export function MovieCard() {
               animate={{ height: "auto", opacity: 1, marginTop: 48 }}
               exit={{ height: 0, opacity: 0, marginTop: 0 }}
               transition={{ duration: 0.24, ease: EASE }}
-              className="scroll-mt-14 overflow-hidden border border-ink-4 bg-black"
+              className={`scroll-mt-14 overflow-hidden border border-ink-4 bg-black ${
+                isFullscreen ? "fixed inset-0 z-50 m-0 h-screen w-screen border-none" : ""
+              }`}
             >
-              <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
+              <div className="relative w-full" style={{ paddingTop: isFullscreen ? "0" : "56.25%", height: isFullscreen ? "calc(100vh - 46px)" : "auto" }}>
                 {showTrailer && (
                   <iframe
                     src={`https://www.youtube.com/embed/${movie.trailer_key}?autoplay=1`}
                     title="Trailer"
-                    allow="autoplay; encrypted-media; fullscreen"
-                    allowFullScreen
-                    className="absolute inset-0 h-full w-full"
+                    allow="fullscreen; autoplay; encrypted-media; picture-in-picture; accelerometer; gyroscope"
+                    allowFullScreen={true}
+                    {...{ webkitallowfullscreen: "true", mozallowfullscreen: "true" }}
+                    className="absolute inset-0 h-full w-full border-0"
                   />
                 )}
 
@@ -653,7 +720,7 @@ export function MovieCard() {
                   </div>
                 )}
 
-                {/* Fallback Embed Iframe Player (Tier 2: Directly visible, NO sandbox, 100% interactive) */}
+                {/* Fallback Embed Iframe Player (Tier 2: Directly visible, Fullscreen Enabled, 100% interactive) */}
                 {!showTrailer && phase.tag === "playing" && currentPlayUrl && (
                   <div className="absolute inset-0 h-full w-full">
                     <iframe
@@ -662,8 +729,9 @@ export function MovieCard() {
                       src={currentPlayUrl}
                       title="Player"
                       onLoad={handleIframeLoad}
-                      allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                      allowFullScreen
+                      allow="fullscreen; autoplay; encrypted-media; picture-in-picture; accelerometer; gyroscope"
+                      allowFullScreen={true}
+                      {...{ webkitallowfullscreen: "true", mozallowfullscreen: "true" }}
                       referrerPolicy="no-referrer"
                       className="h-full w-full border-0 pointer-events-auto"
                     />
@@ -733,6 +801,7 @@ export function MovieCard() {
                         <span>{shieldActive ? "Shield: ON" : "Shield: OFF"}</span>
                       </button>
                     )}
+
                     <button
                       type="button"
                       id="next-server-btn"
@@ -741,6 +810,27 @@ export function MovieCard() {
                     >
                       <span>{t("movie.nextServer")}</span>
                       <ChevronRight className="h-3 w-3 shrink-0" />
+                    </button>
+
+                    {/* Container-level Fullscreen Fallback Button */}
+                    <button
+                      type="button"
+                      id="fullscreen-toggle-btn"
+                      onClick={handleToggleFullscreen}
+                      title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 text-label font-medium border border-ink-4 bg-ink-3/40 text-ink-7 hover:border-ink-5 hover:text-ink-9 rounded-xs transition-colors shrink-0 whitespace-nowrap"
+                    >
+                      {isFullscreen ? (
+                        <>
+                          <Minimize className="h-3.5 w-3.5 shrink-0" />
+                          <span>Exit Fullscreen</span>
+                        </>
+                      ) : (
+                        <>
+                          <Maximize className="h-3.5 w-3.5 shrink-0" />
+                          <span>Fullscreen</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
