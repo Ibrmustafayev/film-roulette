@@ -16,6 +16,7 @@ const stripLeadingEmoji = (s: string) =>
 
 export function RouletteButton() {
   const {
+    contentType,
     genre,
     yearFrom,
     yearTo,
@@ -38,13 +39,14 @@ export function RouletteButton() {
 
     try {
       const params = new URLSearchParams();
+      if (contentType && contentType !== "all") params.append("type", contentType);
       if (genre) params.append("genre", genre);
       if (yearFrom) params.append("yearFrom", yearFrom);
       if (yearTo) params.append("yearTo", yearTo);
       if (originalLanguage) params.append("originalLanguage", originalLanguage);
       if (imdbRange) params.append("imdbRange", imdbRange);
 
-      const res = await fetch(`/api/movies/random?${params.toString()}`);
+      const res = await fetch(`/api/random?${params.toString()}`);
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));

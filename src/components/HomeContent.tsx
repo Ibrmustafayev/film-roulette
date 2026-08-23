@@ -15,7 +15,7 @@ import { HelpView } from "@/components/HelpView";
 
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
-import { getImageUrl, getMovieDetails, Genre, Movie } from "@/lib/tmdb";
+import { getImageUrl, getMovieDetails, getTVDetails, Genre, Movie } from "@/lib/tmdb";
 import { PosterTile, PosterWall } from "@/components/PosterTile";
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
@@ -143,12 +143,16 @@ function Idle({
   const { setMovie, setIsLoading, locale } = useStore();
   const t = getTranslations(locale);
 
-  /* The wall is not decoration: picking a poster loads that film, the same as
+  /* The wall is not decoration: picking a poster loads that film/show, the same as
      rolling would. Details are fetched through the internal proxy. */
   const pick = async (m: Movie) => {
     setIsLoading(true);
     try {
-      const details = await getMovieDetails(m.id);
+      const isTv = m.media_type === "tv" || !!m.number_of_seasons;
+      const lang = locale === "az" ? "az-AZ" : locale === "ru" ? "ru-RU" : "en-US";
+      const details = isTv
+        ? await getTVDetails(m.id, lang)
+        : await getMovieDetails(m.id, lang);
       setMovie({ ...m, ...details });
     } catch (error) {
       console.error("Select error:", error);
@@ -185,7 +189,7 @@ function Idle({
           <h2 className="rail-heading mb-5">{t("home.popular")}</h2>
           <PosterWall>
             {popular.map((m, i) => (
-              <PosterTile key={m.id} movie={m} index={i} onSelect={pick} />
+              <PosterTile key={`${m.media_type || "item"}-${m.id}`} movie={m} index={i} onSelect={pick} />
             ))}
           </PosterWall>
         </section>

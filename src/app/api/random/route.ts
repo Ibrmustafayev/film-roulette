@@ -6,6 +6,10 @@ export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
+    const typeParam = searchParams.get("type") || "all";
+    const type: "movie" | "tv" | "all" =
+      typeParam === "movie" || typeParam === "tv" ? typeParam : "all";
+
     const genre = searchParams.get("genre") || undefined;
     const yearFrom = searchParams.get("yearFrom") || undefined;
     const yearTo = searchParams.get("yearTo") || undefined;
@@ -23,8 +27,8 @@ export async function GET(request: Request) {
       }
     }
 
-    const movie = await getRandomMedia({
-      type: "movie",
+    const media = await getRandomMedia({
+      type,
       genre,
       yearFrom,
       yearTo,
@@ -33,26 +37,27 @@ export async function GET(request: Request) {
       imdbMax,
     });
 
-    if (!movie) {
+    if (!media) {
       return NextResponse.json(
         { error: "notFound" },
         {
           status: 404,
           headers: {
             "Access-Control-Allow-Origin": "*",
+            "Cache-Control": "no-cache",
           },
         }
       );
     }
 
-    return NextResponse.json(movie, {
+    return NextResponse.json(media, {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
       },
     });
   } catch (error) {
-    console.error("Movie Random API Error:", error);
+    console.error("Random API Error:", error);
     return NextResponse.json(
       { error: "generic" },
       {

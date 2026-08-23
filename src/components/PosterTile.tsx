@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { X } from "lucide-react";
+import { X, Tv, Film } from "lucide-react";
 import { getImageUrl, Movie } from "@/lib/tmdb";
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
@@ -21,7 +21,8 @@ export function PosterTile({
   removeLabel?: string;
 }) {
   const posterUrl = getImageUrl(movie.poster_path, "w185");
-  const year = movie.release_date?.split("-")[0] || "—";
+  const isTv = movie.media_type === "tv" || !!movie.number_of_seasons;
+  const year = (isTv ? movie.first_air_date : movie.release_date)?.split("-")[0] || "—";
 
   return (
     <motion.li
@@ -35,7 +36,7 @@ export function PosterTile({
       <button
         type="button"
         onClick={() => onSelect(movie)}
-        className="poster w-full"
+        className="poster relative w-full"
         aria-label={`${movie.title} (${year})`}
       >
         {posterUrl ? (
@@ -51,6 +52,11 @@ export function PosterTile({
             {movie.title}
           </span>
         )}
+
+        {/* Small corner media badge */}
+        <span className="absolute bottom-1 right-1 bg-ink-0/80 px-1 py-0.5 text-[9px] font-medium text-ink-8 backdrop-blur-sm">
+          {isTv ? <Tv className="h-2.5 w-2.5 text-live inline mr-0.5" /> : <Film className="h-2.5 w-2.5 text-link inline mr-0.5" />}
+        </span>
       </button>
 
       {onRemove && (

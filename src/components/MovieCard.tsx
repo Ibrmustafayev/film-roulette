@@ -6,41 +6,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, User, ExternalLink, Heart, Loader2,
   AlertCircle, RefreshCw, ChevronRight, X, Link2, Download, Check,
+  Tv, Film, ListFilter,
 } from "lucide-react";
-import { getImageUrl } from "@/lib/tmdb";
+import { getImageUrl, getSeasonDetails, SeasonDetails } from "@/lib/tmdb";
 import { getTranslations } from "@/lib/i18n";
-import { useCallback, useEffect, useRef, useState } from "react";
-
-// Modern working embed providers
-const SOURCES = [
-  {
-    name: "Server 1 (VidLink)",
-    url: (_: string, tmdbId: number) =>
-      `https://vidlink.pro/movie/${tmdbId}?primaryColor=00e054&secondaryColor=0a5c25&icons=vid&autoplay=true`,
-  },
-  {
-    name: "Server 2 (VidSrc)",
-    url: (_: string, tmdbId: number) => `https://vidsrc.su/embed/movie/${tmdbId}`,
-  },
-  {
-    name: "Server 3 (2Embed)",
-    url: (_: string, tmdbId: number) => `https://www.2embed.cc/embed/${tmdbId}`,
-  },
-  {
-    name: "Server 4 (AutoEmbed)",
-    url: (_: string, tmdbId: number) =>
-      `https://player.autoembed.cc/embed/movie/${tmdbId}`,
-  },
-  {
-    name: "Server 5 (MultiEmbed)",
-    url: (imdbId: string, _: number) =>
-      `https://multiembed.mov/?video_id=${imdbId}&tmdb=1`,
-  },
-  {
-    name: "Server 6 (EmbedSu)",
-    url: (_: string, tmdbId: number) => `https://embed.su/embed/movie/${tmdbId}`,
-  },
-];
+import { resolveStreamSources } from "@/lib/providers";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type PlayerPhase =
   | { tag: "idle" }
@@ -57,6 +28,10 @@ export function MovieCard() {
     showPlayer, setShowPlayer,
     showTrailer, setShowTrailer,
     watchProgress, setWatchProgress,
+    selectedSeason, setSelectedSeason,
+    selectedEpisode, setSelectedEpisode,
+    seasonCache, setSeasonDetails,
+    isLoadingSeason, setIsLoadingSeason,
   } = useStore();
 
   const [phase, setPhase] = useState<PlayerPhase>({ tag: "idle" });
@@ -65,6 +40,24 @@ export function MovieCard() {
 
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
+
+  const isTv = movie?.media_type === "tv" || !!movie?.number_of_seasons;
+
+  const currentEpisodeKey = useMemo(() => {
+    if (!movie) return "";
+    return isTv ? `${movie.id}_s${selectedSeason}_e${selectedEpisode}` : `${movie.id}`;
+  }, [movie, isTv, selectedSeason, selectedEpisode]);
+
+  const sources = useMemo(() => {
+    if (!movie) return [];
+    return resolveStreamSources({
+      tmdbId: movie.id,
+      imdbId: movie.imdb_id,
+      mediaType: isTv ? "tv" : "movie",
+      season: selectedSeason,
+      episode: selectedEpisode,
+    });
+  }, [movie, isTv, selectedSeason, selectedEpisode]);
 
   const probeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef(false);
@@ -83,13 +76,41 @@ export function MovieCard() {
     setShowPlayer(false);
   }, [clearProbeTimer, setShowPlayer]);
 
+  // Fetch season breakdown when a TV show or season changes
+  useEffect(() => {
+    if (!movie || !isTv) return;
+
+    const cacheKey = `${movie.id}_${selectedSeason}`;
+    if (seasonCache[cacheKey]) return;
+
+    let isMounted = true;
+    setIsLoadingSeason(true);
+
+    getSeasonDetails(movie.id, selectedSeason, locale === "az" ? "az-AZ" : locale === "ru" ? "ru-RU" : "en-US")
+      .then((details: SeasonDetails) => {
+        if (isMounted) {
+          setSeasonDetails(movie.id, selectedSeason, details);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load season details:", err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingSeason(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [movie?.id, isTv, selectedSeason, locale, seasonCache, setSeasonDetails, setIsLoadingSeason]);
+
   useEffect(() => {
     stopPlayer();
-    setLastTime(movie ? watchProgress[movie.id] || null : null);
+    setLastTime(movie ? watchProgress[currentEpisodeKey] || null : null);
     setTimeout(() => {
       abortRef.current = false;
     }, 0);
-  }, [movie?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [movie?.id, currentEpisodeKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if ((showTrailer || phase.tag !== "idle") && playerRef.current) {
@@ -105,7 +126,7 @@ export function MovieCard() {
         const d = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
         if (d?.type === "MEDIA_DATA" && d?.progress && movie) {
           const time = Math.floor(d.progress.time);
-          if (time > 0) setWatchProgress(movie.id, time);
+          if (time > 0) setWatchProgress(currentEpisodeKey, time);
         }
       } catch {
         /* ignore */
@@ -113,9 +134,9 @@ export function MovieCard() {
     };
     window.addEventListener("message", handleMsg);
     return () => window.removeEventListener("message", handleMsg);
-  }, [movie, setWatchProgress]);
+  }, [movie, currentEpisodeKey, setWatchProgress]);
 
-  // Anti-ad-popup helper
+  // Anti-ad-popup focus protection
   useEffect(() => {
     if (phase.tag !== "playing" && phase.tag !== "probing") return;
     const refocus = () => {
@@ -128,7 +149,7 @@ export function MovieCard() {
   const trySource = useCallback(
     (index: number) => {
       if (abortRef.current) return;
-      if (index >= SOURCES.length) {
+      if (!sources.length || index >= sources.length) {
         setPhase({ tag: "error" });
         return;
       }
@@ -136,20 +157,20 @@ export function MovieCard() {
       setPhase({ tag: "probing", sourceIndex: index });
       clearProbeTimer();
 
-      // Give each server 5 seconds to load html or auto-switch
+      // Give server 5.5s to resolve iframe or auto-switch
       probeTimerRef.current = setTimeout(() => {
         if (!abortRef.current) trySource(index + 1);
       }, 5500);
     },
-    [clearProbeTimer]
+    [clearProbeTimer, sources.length]
   );
 
-  const handleWatchMovie = () => {
+  const handleWatchContent = () => {
     if (phase.tag !== "idle") {
       stopPlayer();
       return;
     }
-    if (!movie?.imdb_id) {
+    if (!sources.length) {
       setPhase({ tag: "error" });
       return;
     }
@@ -167,51 +188,63 @@ export function MovieCard() {
         setPhase({ tag: "playing", sourceIndex });
       }
 
-      if (movie && watchProgress[movie.id]) {
-        const time = watchProgress[movie.id];
+      const savedTime = watchProgress[currentEpisodeKey];
+      if (savedTime && savedTime > 10) {
         const iframe = e.currentTarget;
         setTimeout(() => {
-          iframe.contentWindow?.postMessage({ type: "seek", time }, "*");
-          iframe.contentWindow?.postMessage({ command: "seek", time }, "*");
+          iframe.contentWindow?.postMessage({ type: "seek", time: savedTime }, "*");
+          iframe.contentWindow?.postMessage({ command: "seek", time: savedTime }, "*");
           iframe.contentWindow?.postMessage(
-            JSON.stringify({ type: "seek", time }),
+            JSON.stringify({ type: "seek", time: savedTime }),
             "*"
           );
-        }, 2500);
+        }, 2000);
       }
     },
-    [clearProbeTimer, movie, watchProgress]
+    [clearProbeTimer, watchProgress, currentEpisodeKey]
   );
 
   const handleNextServerManual = () => {
-    if (phase.tag === "playing" || phase.tag === "probing") {
-      const nextIdx = (phase.sourceIndex + 1) % SOURCES.length;
+    if ((phase.tag === "playing" || phase.tag === "probing") && sources.length > 0) {
+      const nextIdx = (phase.sourceIndex + 1) % sources.length;
       trySource(nextIdx);
+    }
+  };
+
+  const handleSelectEpisode = (epNum: number) => {
+    setSelectedEpisode(epNum);
+    if (phase.tag !== "idle") {
+      abortRef.current = false;
+      trySource(0);
     }
   };
 
   if (isLoading || !movie) return null;
 
-  const releaseYear = movie.release_date?.split("-")[0] ?? t("movie.unknown");
+  const releaseYear =
+    (isTv ? movie.first_air_date : movie.release_date)?.split("-")[0] ??
+    t("movie.unknown");
+
   const runtimeText = movie.runtime
     ? t("movie.runtime", {
         h: Math.floor(movie.runtime / 60),
         m: movie.runtime % 60,
       })
     : null;
+
   const imdbUrl = movie.imdb_id
     ? `https://www.imdb.com/title/${movie.imdb_id}/`
     : null;
 
   const activeSourceIndex =
     phase.tag === "probing" || phase.tag === "playing" ? phase.sourceIndex : 0;
-  const currentPlayUrl = movie.imdb_id
-    ? SOURCES[activeSourceIndex].url(movie.imdb_id, movie.id)
-    : null;
+  const currentPlayUrl = sources[activeSourceIndex]?.url ?? null;
 
   const isPlayerOpen = phase.tag !== "idle";
   const isFav = isFavourite(movie.id);
   const posterUrl = getImageUrl(movie.poster_path, "w500");
+
+  const activeSeasonData = isTv ? seasonCache[`${movie.id}_${selectedSeason}`] : null;
 
   const ogUrl = `/api/og?title=${encodeURIComponent(movie.title)}&poster=${
     movie.poster_path ? encodeURIComponent(movie.poster_path) : ""
@@ -231,8 +264,6 @@ export function MovieCard() {
     }
   };
 
-  /* The one authored moment: the result arriving. Stage children stagger in
-     behind the poster; nothing else on the page has an entrance. */
   const step = (i: number) => ({
     initial: { opacity: 0, y: 12 },
     animate: { opacity: 1, y: 0 },
@@ -245,7 +276,7 @@ export function MovieCard() {
         <div className="grid gap-x-10 gap-y-8 sm:grid-cols-12">
           {/* Poster — columns 1–4 */}
           <motion.div {...step(0)} className="sm:col-span-4 lg:col-span-3">
-            <div className="poster">
+            <div className="poster relative">
               {posterUrl ? (
                 <Image
                   src={posterUrl}
@@ -260,6 +291,11 @@ export function MovieCard() {
                   {movie.title}
                 </span>
               )}
+              {/* Type Badge */}
+              <div className="absolute right-2 top-2 z-10 flex items-center gap-1 bg-ink-0/80 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-9 backdrop-blur-sm">
+                {isTv ? <Tv className="h-3 w-3 text-live" /> : <Film className="h-3 w-3 text-link" />}
+                <span>{isTv ? t("tv.badge") : t("tv.movieBadge")}</span>
+              </div>
             </div>
 
             <button
@@ -282,10 +318,10 @@ export function MovieCard() {
           {/* Detail — columns 5–12 */}
           <div className="sm:col-span-8 lg:col-span-9">
             <motion.header {...step(1)}>
-              <h1 className="max-w-[16ch] text-title leading-[1.1] tracking-[-0.02em] text-ink-9 lg:text-display lg:leading-[1.02] lg:tracking-[-0.03em]">
+              <h1 className="max-w-[18ch] text-title leading-[1.1] tracking-[-0.02em] text-ink-9 lg:text-display lg:leading-[1.02] lg:tracking-[-0.03em]">
                 {movie.title}
               </h1>
-              {movie.original_title !== movie.title && (
+              {movie.original_title && movie.original_title !== movie.title && (
                 <p className="mt-2 max-w-[40ch] font-prose text-h4 italic text-ink-6">
                   {movie.original_title}
                 </p>
@@ -296,6 +332,12 @@ export function MovieCard() {
                 </span>
                 {runtimeText && (
                   <span data-num>{runtimeText}</span>
+                )}
+                {isTv && movie.number_of_seasons && (
+                  <span data-num className="text-ink-8">
+                    {movie.number_of_seasons} {t("tv.seasons")}
+                    {movie.number_of_episodes ? ` (${movie.number_of_episodes} ${t("tv.episodes")})` : ""}
+                  </span>
                 )}
                 <span className="inline-flex items-baseline gap-1.5">
                   <span data-num className="text-h4 text-live">
@@ -323,7 +365,7 @@ export function MovieCard() {
               <motion.ul {...step(2)} className="mt-5 flex flex-wrap gap-1.5">
                 {movie.genres.map((g) => (
                   <li key={g.id} className="tag">
-                    {t(`genres.${g.id}`)}
+                    {t(`genres.${g.id}`) || g.name}
                   </li>
                 ))}
               </motion.ul>
@@ -336,23 +378,94 @@ export function MovieCard() {
               {movie.overview || t("movie.noOverview")}
             </motion.p>
 
-            <motion.div {...step(4)} className="mt-7 flex flex-wrap gap-2">
-              {movie.imdb_id && (
-                <button
-                  type="button"
-                  onClick={handleWatchMovie}
-                  className={`ctl ${isPlayerOpen ? "ctl-ghost" : "ctl-live"}`}
-                >
-                  {phase.tag === "probing" ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : isPlayerOpen ? (
-                    <X className="h-3.5 w-3.5" />
-                  ) : (
-                    <Play className="h-3.5 w-3.5 fill-current" />
+            {/* TV Show Season & Episode Navigation Bar */}
+            {isTv && movie.seasons && movie.seasons.length > 0 && (
+              <motion.div {...step(3.5)} className="mt-6 border border-ink-4 bg-ink-2/60 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-2">
+                    <ListFilter className="h-3.5 w-3.5 text-live" />
+                    <span className="rail-label">{t("tv.selectSeason")}:</span>
+                    <select
+                      value={selectedSeason}
+                      onChange={(e) => setSelectedSeason(Number(e.target.value))}
+                      className="inp h-8 w-auto min-w-[130px] font-sans text-xs"
+                    >
+                      {movie.seasons.map((s) => (
+                        <option key={s.id} value={s.season_number}>
+                          {s.name || t("tv.seasonFormat", { season: s.season_number })} ({s.episode_count} {t("tv.episodes")})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {activeSeasonData?.episodes && (
+                    <div className="flex items-center gap-2">
+                      <span className="rail-label">{t("tv.selectEpisode")}:</span>
+                      <select
+                        value={selectedEpisode}
+                        onChange={(e) => handleSelectEpisode(Number(e.target.value))}
+                        className="inp h-8 w-auto min-w-[130px] font-sans text-xs"
+                      >
+                        {activeSeasonData.episodes.map((ep) => (
+                          <option key={ep.id} value={ep.episode_number}>
+                            EP {ep.episode_number} - {ep.name || `Episode ${ep.episode_number}`}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   )}
-                  {isPlayerOpen ? t("menu.close") : t("movie.watchMovie")}
-                </button>
-              )}
+                </div>
+
+                {/* Quick horizontal episode pills */}
+                {isLoadingSeason ? (
+                  <div className="mt-3 flex items-center gap-2 text-label text-ink-6">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Loading episodes...</span>
+                  </div>
+                ) : activeSeasonData?.episodes && activeSeasonData.episodes.length > 0 ? (
+                  <div className="mt-3 flex gap-1.5 overflow-x-auto pb-1">
+                    {activeSeasonData.episodes.map((ep) => {
+                      const active = selectedEpisode === ep.episode_number;
+                      return (
+                        <button
+                          key={ep.id}
+                          type="button"
+                          onClick={() => handleSelectEpisode(ep.episode_number)}
+                          className={`flex h-7 shrink-0 items-center gap-1 px-2.5 text-xs transition-colors duration-[120ms] ${
+                            active
+                              ? "border border-live/60 bg-live/20 font-bold text-live"
+                              : "border border-ink-4 bg-ink-3/60 text-ink-7 hover:border-ink-5 hover:text-ink-9"
+                          }`}
+                        >
+                          <span>E{ep.episode_number}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : null}
+              </motion.div>
+            )}
+
+            <motion.div {...step(4)} className="mt-7 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleWatchContent}
+                className={`ctl ${isPlayerOpen ? "ctl-ghost" : "ctl-live"}`}
+              >
+                {phase.tag === "probing" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : isPlayerOpen ? (
+                  <X className="h-3.5 w-3.5" />
+                ) : (
+                  <Play className="h-3.5 w-3.5 fill-current" />
+                )}
+                {isPlayerOpen
+                  ? t("menu.close")
+                  : isTv
+                    ? t("movie.watchEpisode", { season: selectedSeason, episode: selectedEpisode })
+                    : t("movie.watchMovie")}
+              </button>
+
               {movie.trailer_key && (
                 <button
                   type="button"
@@ -363,6 +476,7 @@ export function MovieCard() {
                   {t("movie.watchTrailer")}
                 </button>
               )}
+
               <button type="button" onClick={copyLink} className="ctl ctl-bare">
                 {copied ? (
                   <Check className="h-3.5 w-3.5 text-live" />
@@ -371,6 +485,7 @@ export function MovieCard() {
                 )}
                 {copied ? t("share.copied") : t("share.copyLink")}
               </button>
+
               <a
                 href={ogUrl}
                 target="_blank"
@@ -385,14 +500,18 @@ export function MovieCard() {
           </div>
         </div>
 
-        {/* Dense readout — the density counterweight to the open stage above */}
+        {/* Readout stats */}
         <motion.div {...step(5)} className="mt-12 sm:grid sm:grid-cols-12">
           <div className="sm:col-span-9">
             <div className="stage-rule mb-4" />
             <table className="datatable">
               <tbody>
                 <tr>
-                  <th scope="row">{t("filters.year")}</th>
+                  <th scope="row">{t("filters.contentType")}</th>
+                  <td>{isTv ? t("tv.badge") : t("tv.movieBadge")}</td>
+                </tr>
+                <tr>
+                  <th scope="row">{isTv ? t("tv.firstAirDate") : t("filters.year")}</th>
                   <td data-num>{releaseYear}</td>
                 </tr>
                 <tr>
@@ -450,8 +569,7 @@ export function MovieCard() {
           </motion.section>
         )}
 
-        {/* Player — hard-cornered and ruled, so it never blends with the
-            third-party iframe it hosts. */}
+        {/* Video Player Frame with Automatic Failover */}
         <AnimatePresence>
           {(showTrailer || isPlayerOpen) && (
             <motion.section
@@ -476,7 +594,7 @@ export function MovieCard() {
                 {!showTrailer && phase.tag === "probing" && (
                   <>
                     <iframe
-                      key={`probe-${movie.id}-${phase.sourceIndex}`}
+                      key={`probe-${currentEpisodeKey}-${phase.sourceIndex}`}
                       src={currentPlayUrl!}
                       title="probe"
                       allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
@@ -494,14 +612,14 @@ export function MovieCard() {
                         </p>
                         <p className="text-label uppercase tracking-[0.12em] text-ink-6">
                           {t("movie.testingServer", {
-                            server: SOURCES[phase.sourceIndex].name,
+                            server: sources[phase.sourceIndex]?.name || `Server ${phase.sourceIndex + 1}`,
                             current: phase.sourceIndex + 1,
-                            total: SOURCES.length,
+                            total: sources.length,
                           })}
                         </p>
                       </div>
                       <ol className="flex gap-1" aria-hidden="true">
-                        {SOURCES.map((_, i) => (
+                        {sources.map((_, i) => (
                           <li
                             key={i}
                             className={`h-0.5 w-7 transition-colors duration-[240ms] ${
@@ -524,7 +642,7 @@ export function MovieCard() {
                     <div>
                       <p className="text-h4 text-ink-9">{t("errors.noSource")}</p>
                       <p className="mt-1 text-small text-ink-6">
-                        {t("movie.allServersChecked", { total: SOURCES.length })}
+                        {t("movie.allServersChecked", { total: sources.length })}
                       </p>
                     </div>
                     <button
@@ -543,9 +661,9 @@ export function MovieCard() {
 
                 {!showTrailer && phase.tag === "playing" && currentPlayUrl && (
                   <iframe
-                    key={`play-${movie.id}-${phase.sourceIndex}`}
+                    key={`play-${currentEpisodeKey}-${phase.sourceIndex}`}
                     src={currentPlayUrl}
-                    title="Movie Player"
+                    title="Player"
                     onLoad={(e) => handleIframeLoad(e, phase.sourceIndex)}
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen
@@ -557,13 +675,20 @@ export function MovieCard() {
 
               {!showTrailer && phase.tag === "playing" && (
                 <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-4 bg-ink-2 px-4 py-2">
-                  <span className="inline-flex items-center gap-2 text-label uppercase tracking-[0.12em] text-ink-6">
-                    <span className="h-1.5 w-1.5 rounded-full bg-live" />
-                    {t("movie.activeServer")}
-                    <span className="text-ink-8" data-num>
-                      {SOURCES[phase.sourceIndex].name}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-2 text-label uppercase tracking-[0.12em] text-ink-6">
+                      <span className="h-1.5 w-1.5 rounded-full bg-live" />
+                      {t("movie.activeServer")}
+                      <span className="text-ink-8" data-num>
+                        {sources[phase.sourceIndex]?.name}
+                      </span>
                     </span>
-                  </span>
+                    {isTv && (
+                      <span className="border-l border-ink-4 pl-2 text-label text-ink-7">
+                        S{selectedSeason} E{selectedEpisode}
+                      </span>
+                    )}
+                  </div>
                   <button
                     type="button"
                     onClick={handleNextServerManual}

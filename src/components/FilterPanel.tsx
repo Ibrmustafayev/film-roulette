@@ -1,17 +1,20 @@
 "use client";
 
-import { useStore } from "@/store/useStore";
+import { useStore, ContentType } from "@/store/useStore";
 import { Genre, LANGUAGE_CODES } from "@/lib/tmdb";
 import { getTranslations } from "@/lib/i18n";
+import { Film, Tv, Clapperboard } from "lucide-react";
 
 /** Vertical instrument panel. Dense rows, label above field, no boxes. */
 export function FilterPanel({ genres }: { genres: Genre[] }) {
   const {
+    contentType,
     genre,
     yearFrom,
     yearTo,
     originalLanguage,
     imdbRange,
+    setContentType,
     setGenre,
     setYearFrom,
     setYearTo,
@@ -27,8 +30,44 @@ export function FilterPanel({ genres }: { genres: Genre[] }) {
   const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
   const ratingKeys = ["", "9-10", "8-10", "7-10", "6-10", "5-10", "0-5"];
 
+  const contentTypes: Array<{ key: ContentType; label: string; icon: typeof Film }> = [
+    { key: "all", label: t("filters.typeAll"), icon: Clapperboard },
+    { key: "movie", label: t("filters.typeMovie"), icon: Film },
+    { key: "tv", label: t("filters.typeTv"), icon: Tv },
+  ];
+
   return (
     <div className="space-y-4">
+      {/* Content Type Filter */}
+      <Row label={t("filters.contentType")} htmlFor="f-type">
+        <div className="grid grid-cols-3 gap-1">
+          {contentTypes.map(({ key, label, icon: Icon }) => {
+            const active = contentType === key;
+            return (
+              <button
+                key={key}
+                type="button"
+                id={key === "all" ? "f-type" : undefined}
+                onClick={() => setContentType(key)}
+                disabled={isLoading}
+                title={label}
+                aria-pressed={active}
+                className={`flex h-8 items-center justify-center gap-1.5 px-2 text-label transition-colors duration-[120ms] ${
+                  active
+                    ? "border border-live/40 bg-live/15 text-live font-semibold"
+                    : "border border-ink-4 bg-ink-3/40 text-ink-7 hover:border-ink-5 hover:text-ink-9"
+                }`}
+              >
+                <Icon className="h-3 w-3 shrink-0" />
+                <span className="truncate text-[10px] uppercase tracking-wider">
+                  {key === "all" ? "All" : key === "movie" ? "Movie" : "Series"}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </Row>
+
       <Row label={t("filters.genre")} htmlFor="f-genre">
         <select
           id="f-genre"
@@ -40,7 +79,7 @@ export function FilterPanel({ genres }: { genres: Genre[] }) {
           <option value="">{t("filters.genreAll")}</option>
           {genres.map((g) => (
             <option key={g.id} value={g.id.toString()}>
-              {t(`genres.${g.id}`)}
+              {t(`genres.${g.id}`) || g.name}
             </option>
           ))}
         </select>

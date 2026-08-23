@@ -1,4 +1,4 @@
-import { getGenres, getPopularMovies, Genre, Movie } from "@/lib/tmdb";
+import { getGenres, getPopularMedia, Genre, Movie } from "@/lib/tmdb";
 import { HomeContent } from "@/components/HomeContent";
 
 export const dynamic = 'force-dynamic';
@@ -7,7 +7,7 @@ export default async function Home() {
   // Both calls are independent, and either failing must not take the page down.
   const [genresResult, popularResult] = await Promise.allSettled([
     getGenres("en-US"),
-    getPopularMovies("en-US", 18),
+    getPopularMedia("all", "en-US", 18),
   ]);
 
   const genres: Genre[] =
@@ -19,7 +19,7 @@ export default async function Home() {
     console.error("Failed to load genres", genresResult.reason);
   }
   if (popularResult.status === "rejected") {
-    console.error("Failed to load popular movies", popularResult.reason);
+    console.error("Failed to load popular media", popularResult.reason);
   }
 
   return <HomeContent genres={genres} popular={popular} />;

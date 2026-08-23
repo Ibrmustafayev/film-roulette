@@ -1,56 +1,48 @@
 import { NextResponse } from 'next/server';
-
-const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
-const TMDB_API_KEY = process.env.TMDB_API_KEY;
+import { getMovieDetails, fetchFromTMDB } from '@/lib/tmdb';
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: movieId } = await params;
+  const { id: movieIdStr } = await params;
+  const movieId = parseInt(movieIdStr, 10);
   const { searchParams } = new URL(request.url);
   const language = searchParams.get('language') || 'en-US';
 
+  if (isNaN(movieId)) {
+    return NextResponse.json({ error: 'Invalid movie ID' }, { status: 400 });
+  }
+
   try {
-    const fetchOptions = {
-      method: 'GET',
-      headers: {
-        accept: 'application/json',
-      },
-    };
-
-    // Fetch movie details, credits, and videos in parallel
-    const [movieRes, creditsRes, videosRes] = await Promise.all([
-      fetch(`${TMDB_BASE_URL}/movie/${movieId}?api_key=${TMDB_API_KEY}&language=${language}`, fetchOptions),
-      fetch(`${TMDB_BASE_URL}/movie/${movieId}/credits?api_key=${TMDB_API_KEY}&language=${language}`, fetchOptions),
-      fetch(`${TMDB_BASE_URL}/movie/${movieId}/videos?api_key=${TMDB_API_KEY}&language=${language}`, fetchOptions)
-    ]);
-
-    const movieData = await movieRes.json();
-    const creditsData = await creditsRes.json();
-    const videosData = await videosRes.json();
-
-    const cast = (creditsData.cast || []).slice(0, 6).map((c: { id: number; name: string; character: string; profile_path: string | null }) => ({
-      id: c.id,
-      name: c.name,
-      character: c.character,
-      profile_path: c.profile_path,
-    }));
-
-    const trailer = (videosData.results || []).find(
-      (v: { type: string; site: string; key: string }) => v.type === 'Trailer' && v.site === 'YouTube'
-    );
+    const rawMovie = await fetchFromTMDB(`/movie/${movieId}`, { language }, 600);
+    const details = await getMovieDetails(movieId, language);
 
     return NextResponse.json({
-      ...movieData,
-      genres: movieData.genres,
-      runtime: movieData.runtime,
-      imdb_id: movieData.imdb_id || null,
-      cast,
-      trailer_key: trailer?.key || null,
+      id: rawMovie.id,
+      media_type: 'movie',
+      title: rawMovie.title,
+      original_title: rawMovie.original_title,
+      overview: rawMovie.overview,
+      poster_path: rawMovie.poster_path,
+      backdrop_path: rawMovie.backdrop_path,
+      release_date: rawMovie.release_date,
+      vote_average: rawMovie.vote_average,
+      vote_count: rawMovie.vote_count,
+      genre_ids: (rawMovie.genres || []).map((g: { id: number }) => g.id),
+      original_language: rawMovie.original_language,
+      ...details,
+    }, {
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+      },
     });
   } catch (error) {
     console.error('Movie Details API error:', error);
-    return NextResponse.json({ error: 'Failed to fetch movie details' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch movie details' }, {
+      status: 500,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+    });
   }
 }

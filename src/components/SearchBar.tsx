@@ -2,10 +2,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
-import { Search as SearchIcon, X, Loader2 } from "lucide-react";
+import { Search as SearchIcon, X, Loader2, Tv, Film } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
-import { searchMovies, getMovieDetails, getImageUrl, Movie } from "@/lib/tmdb";
+import { searchMedia, getMovieDetails, getTVDetails, getImageUrl, Movie } from "@/lib/tmdb";
 import { motion, AnimatePresence } from "framer-motion";
 
 const EASE = [0.2, 0.8, 0.2, 1] as const;
@@ -37,11 +37,12 @@ export function SearchBar() {
         setIsSearching(true);
         setIsOpen(true);
         try {
-          const movies = await searchMovies(
+          const items = await searchMedia(
             query,
+            "all",
             locale === "az" ? "az-AZ" : locale === "ru" ? "ru-RU" : "en-US"
           );
-          setResults(movies.slice(0, 6));
+          setResults(items.slice(0, 8));
         } catch (error) {
           console.error("Search error:", error);
         } finally {
@@ -51,24 +52,31 @@ export function SearchBar() {
         setResults([]);
         setIsOpen(false);
       }
-    }, 500);
+    }, 400);
 
     return () => clearTimeout(timer);
   }, [query, locale]);
 
-  const handleSelect = async (movie: Movie) => {
+  const handleSelect = async (item: Movie) => {
     setQuery("");
     setResults([]);
     setIsOpen(false);
     setIsLoading(true);
     setActiveView("random");
     setMenuOpen(false);
+
     try {
-      const details = await getMovieDetails(movie.id);
-      setMovie({ ...movie, ...details });
+      const isTv = item.media_type === "tv" || !!item.number_of_seasons;
+      const lang = locale === "az" ? "az-AZ" : locale === "ru" ? "ru-RU" : "en-US";
+      const details = isTv
+        ? await getTVDetails(item.id, lang)
+        : await getMovieDetails(item.id, lang);
+
+      setMovie({ ...item, ...details });
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       console.error("Select error:", error);
+      setMovie(item);
     } finally {
       setIsLoading(false);
     }
@@ -116,36 +124,53 @@ export function SearchBar() {
                 </span>
               </div>
             ) : results.length > 0 ? (
-              <ul className="max-h-[320px] overflow-y-auto">
-                {results.map((movie) => (
-                  <li key={movie.id} className="border-b border-ink-4 last:border-0">
-                    <button
-                      type="button"
-                      onClick={() => handleSelect(movie)}
-                      className="group/item flex w-full items-center gap-2.5 p-2 text-left transition-colors duration-[120ms] hover:bg-ink-3"
-                    >
-                      <span className="relative block h-12 w-8 shrink-0 overflow-hidden rounded-poster bg-ink-3">
-                        {movie.poster_path && (
-                          <Image
-                            src={getImageUrl(movie.poster_path, "w185")!}
-                            alt=""
-                            fill
-                            className="object-cover"
-                            sizes="32px"
-                          />
-                        )}
-                      </span>
-                      <span className="flex min-w-0 flex-col">
-                        <span className="truncate text-small text-ink-8 transition-colors group-hover/item:text-ink-9">
-                          {movie.title}
+              <ul className="max-h-[360px] overflow-y-auto">
+                {results.map((item) => {
+                  const isTv = item.media_type === "tv";
+                  const year = (isTv ? item.first_air_date : item.release_date)?.split("-")[0];
+                  return (
+                    <li key={`${item.media_type || "item"}-${item.id}`} className="border-b border-ink-4 last:border-0">
+                      <button
+                        type="button"
+                        onClick={() => handleSelect(item)}
+                        className="group/item flex w-full items-center gap-2.5 p-2 text-left transition-colors duration-[120ms] hover:bg-ink-3"
+                      >
+                        <span className="relative block h-12 w-8 shrink-0 overflow-hidden rounded-poster bg-ink-3">
+                          {item.poster_path && (
+                            <Image
+                              src={getImageUrl(item.poster_path, "w185")!}
+                              alt=""
+                              fill
+                              className="object-cover"
+                              sizes="32px"
+                            />
+                          )}
                         </span>
-                        <span className="text-label text-ink-6" data-num>
-                          {movie.release_date?.split("-")[0]}
+                        <span className="flex min-w-0 flex-1 flex-col">
+                          <span className="truncate text-small text-ink-8 transition-colors group-hover/item:text-ink-9">
+                            {item.title}
+                          </span>
+                          <span className="flex items-center gap-2 text-label text-ink-6" data-num>
+                            <span>{year || "—"}</span>
+                            <span className="inline-flex items-center gap-0.5 text-[9px] uppercase tracking-wider text-ink-6">
+                              {isTv ? (
+                                <>
+                                  <Tv className="h-2.5 w-2.5 text-live" />
+                                  <span>{t("tv.badge")}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Film className="h-2.5 w-2.5 text-link" />
+                                  <span>{t("tv.movieBadge")}</span>
+                                </>
+                              )}
+                            </span>
+                          </span>
                         </span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             ) : query.length > 2 ? (
               <p className="px-3 py-4 text-label uppercase tracking-[0.12em] text-ink-6">
