@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Shield, X, ExternalLink, Smartphone, Copy, Check } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
+import { getMobileStoreUrls } from "@/lib/device";
 import { motion, AnimatePresence } from "framer-motion";
 
 const STORAGE_KEY = "film_roulette_adguard_dismissed";
@@ -16,6 +17,7 @@ export function AdGuardBanner() {
   const [showMobileModal, setShowMobileModal] = useState(false);
   const [copiedDns, setCopiedDns] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [storeUrls, setStoreUrls] = useState(getMobileStoreUrls());
 
   useEffect(() => {
     try {
@@ -32,6 +34,7 @@ export function AdGuardBanner() {
         typeof window !== "undefined" &&
         (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768);
       setIsMobile(mobile);
+      setStoreUrls(getMobileStoreUrls());
     };
 
     checkMobile();
@@ -133,7 +136,7 @@ export function AdGuardBanner() {
               </button>
 
               <a
-                href="https://brave.com/download/"
+                href={storeUrls.braveUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 rounded-xs border border-amber-500/30 bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium text-amber-200 hover:bg-amber-500/25 transition-all"
@@ -143,7 +146,7 @@ export function AdGuardBanner() {
               </a>
 
               <a
-                href="https://play.google.com/store/apps/details?id=org.mozilla.firefox"
+                href={storeUrls.firefoxUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 rounded-xs border border-amber-500/30 bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium text-amber-200 hover:bg-amber-500/25 transition-all"
@@ -219,12 +222,12 @@ export function AdGuardBanner() {
                   {t("help.adguardMobileDnsIos")}
                 </p>
                 <a
-                  href="https://adguard-dns.io/en/public-dns.html"
+                  href={storeUrls.adguardUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs text-link hover:underline pt-0.5"
                 >
-                  <span>AdGuard iOS DNS Profile</span>
+                  <span>{storeUrls.isIOS ? "AdGuard iOS App Store" : "AdGuard DNS Profile"}</span>
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
@@ -238,7 +241,7 @@ export function AdGuardBanner() {
                   {t("help.adguardMobileBrave")}
                 </p>
                 <a
-                  href="https://brave.com/download/"
+                  href={storeUrls.braveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs text-link hover:underline"
@@ -257,7 +260,7 @@ export function AdGuardBanner() {
                   {t("help.adguardMobileFirefox")}
                 </p>
                 <a
-                  href="https://play.google.com/store/apps/details?id=org.mozilla.firefox"
+                  href={storeUrls.firefoxUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs text-link hover:underline"

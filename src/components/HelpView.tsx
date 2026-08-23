@@ -2,7 +2,7 @@
 
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   BookOpen,
@@ -32,6 +32,8 @@ interface CategoryInfo {
   icon: React.ElementType;
 }
 
+import { getMobileStoreUrls } from "@/lib/device";
+
 const DNS_HOST = "dns.adguard-dns.com";
 
 const CATEGORIES: CategoryInfo[] = [
@@ -49,6 +51,11 @@ export function HelpView() {
   const [activeCategory, setActiveCategory] = useState<Category>("gettingStarted");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
   const [copiedDns, setCopiedDns] = useState(false);
+  const [storeUrls, setStoreUrls] = useState(getMobileStoreUrls());
+
+  useEffect(() => {
+    setStoreUrls(getMobileStoreUrls());
+  }, []);
 
   const copyDns = async () => {
     try {
@@ -330,12 +337,12 @@ export function HelpView() {
                   {t("help.adguardMobileDnsIos")}
                 </p>
                 <a
-                  href="https://adguard-dns.io/en/public-dns.html"
+                  href={storeUrls.adguardUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs text-link hover:underline pt-0.5"
                 >
-                  <span>AdGuard iOS DNS Profile</span>
+                  <span>{storeUrls.isIOS ? "AdGuard iOS App Store" : "AdGuard DNS Profile"}</span>
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
@@ -349,7 +356,7 @@ export function HelpView() {
                   {t("help.adguardMobileBrave")}
                 </p>
                 <a
-                  href="https://brave.com/download/"
+                  href={storeUrls.braveUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs text-link hover:underline"
@@ -368,7 +375,7 @@ export function HelpView() {
                   {t("help.adguardMobileFirefox")}
                 </p>
                 <a
-                  href="https://play.google.com/store/apps/details?id=org.mozilla.firefox"
+                  href={storeUrls.firefoxUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs text-link hover:underline"

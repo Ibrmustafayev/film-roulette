@@ -40,6 +40,8 @@ const WHITELISTED_DOMAINS = [
   "brave.com",
   "mozilla.org",
   "play.google.com",
+  "apps.apple.com",
+  "apple.com",
 ];
 
 function isAdUrl(urlStr: string): boolean {
