@@ -12,6 +12,7 @@ import { HistoryView } from "@/components/HistoryView";
 import { FavouritesView } from "@/components/FavouritesView";
 import { MobileAppView } from "@/components/MobileAppView";
 import { HelpView } from "@/components/HelpView";
+import { RouletteButton } from "@/components/RouletteButton";
 
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
@@ -57,7 +58,7 @@ export function HomeContent({
         >
           <Menu className="h-4 w-4" />
         </button>
-        <Logo markSize={18} />
+        <Logo id="mobile-site-logo-btn" markSize={18} />
       </div>
 
       <main className="relative flex-1">
@@ -184,8 +185,13 @@ function Idle({
         </p>
       </div>
 
+      {/* Quick Roll button on Mobile idle view (between site badge and Popular Now) */}
+      <div className="mt-6 max-w-xs xl:hidden">
+        <RouletteButton id="mobile-roll-dice-btn" />
+      </div>
+
       {popular.length > 0 && (
-        <section className="mt-14">
+        <section className="mt-12 sm:mt-14">
           <h2 className="rail-heading mb-5">{t("home.popular")}</h2>
           <PosterWall>
             {popular.map((m, i) => (

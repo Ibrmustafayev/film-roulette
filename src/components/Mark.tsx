@@ -1,4 +1,7 @@
+"use client";
+
 import { useId } from "react";
+import { useStore } from "@/store/useStore";
 
 /**
  * The mark: a six-sided aperture ring with three pips knocked out of the
@@ -59,20 +62,47 @@ export function Mark({
   );
 }
 
-/** Mark plus wordmark, for the rail head and the loading screen. */
+/** Mark plus wordmark, for the rail head and mobile header, with home navigation */
 export function Logo({
+  id = "site-logo-btn",
   className,
   markSize = 22,
+  onClick,
 }: {
+  id?: string;
   className?: string;
   markSize?: number;
+  onClick?: () => void;
 }) {
+  const { setMovie, setActiveView, setShowPlayer, setShowTrailer, setMenuOpen } = useStore();
+
+  const handleGoHome = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setMovie(null);
+    setActiveView("random");
+    setShowPlayer(false);
+    setShowTrailer(false);
+    setMenuOpen(false);
+    if (onClick) onClick();
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
   return (
-    <span className={`inline-flex items-center gap-2.5 ${className ?? ""}`}>
-      <Mark size={markSize} className="text-live" />
+    <button
+      type="button"
+      id={id}
+      onClick={handleGoHome}
+      aria-label="Film Roulette Home"
+      className={`group inline-flex items-center gap-2.5 cursor-pointer text-left bg-transparent border-0 p-0 focus:outline-none focus-visible:ring-1 focus-visible:ring-live transition-opacity hover:opacity-90 ${
+        className ?? ""
+      }`}
+    >
+      <Mark size={markSize} className="text-live transition-transform duration-200 group-hover:scale-105" />
       <span className="text-[0.9375rem] font-semibold uppercase leading-none tracking-[0.16em] text-ink-9">
         Film<span className="text-ink-6">/</span>Roulette
       </span>
-    </span>
+    </button>
   );
 }

@@ -38,7 +38,7 @@ export function RailContent({ genres }: { genres: Genre[] }) {
   return (
     <div className="flex h-full flex-col">
       <div className="border-b border-ink-4 px-5 py-5">
-        <Logo />
+        <Logo id="desktop-site-logo-btn" />
       </div>
 
       <div className="border-b border-ink-4 px-5 py-4">
@@ -85,7 +85,7 @@ export function RailContent({ genres }: { genres: Genre[] }) {
         <h2 className="rail-heading mb-3">{t("filters.title")}</h2>
         <FilterPanel genres={genres} />
         <div className="mt-5">
-          <RouletteButton />
+          <RouletteButton id="rail-roll-dice-btn" />
         </div>
       </div>
 

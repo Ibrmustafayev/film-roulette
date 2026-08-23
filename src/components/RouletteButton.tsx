@@ -14,7 +14,13 @@ const EASE = [0.2, 0.8, 0.2, 1] as const;
 const stripLeadingEmoji = (s: string) =>
   s.replace(/^[\p{Extended_Pictographic}️\s]+/u, "").trim();
 
-export function RouletteButton() {
+export function RouletteButton({
+  id = "roll-dice-btn",
+  className,
+}: {
+  id?: string;
+  className?: string;
+} = {}) {
   const {
     contentType,
     genre,
@@ -74,10 +80,10 @@ export function RouletteButton() {
   };
 
   return (
-    <div>
+    <div className={className}>
       <button
         type="button"
-        id="roll-dice-btn"
+        id={id}
         onClick={rollDice}
         disabled={isLoading}
         className="ctl ctl-live w-full"
