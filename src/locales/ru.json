@@ -194,7 +194,16 @@
     "adguardInstall": "Установить расширение",
     "adguardChrome": "Для Chrome",
     "adguardFirefox": "Для Firefox",
-    "adguardEdge": "Для Edge"
+    "adguardEdge": "Для Edge",
+    "adguardMobileGuide": "📱 Мобильный Гид (iOS / Android)",
+    "adguardMobileTitle": "Блокировка Рекламы на Телефонах и Планшетах",
+    "adguardMobileDnsTitle": "1. Простой Способ: Частный DNS (Без Приложений)",
+    "adguardMobileDnsAndroid": "Android: Настройки ➔ Сеть и Интернет ➔ Частный DNS ➔ Имя хоста:",
+    "adguardMobileDnsIos": "iOS (iPhone/iPad): Установите бесплатный профиль AdGuard DNS для фильтрации.",
+    "adguardMobileBrowsersTitle": "2. Мобильные Браузеры со Встроенной Блокировкой",
+    "adguardMobileBrave": "Brave Browser (Встроенный щит Shields для просмотра без рекламы)",
+    "adguardMobileExtensionsTitle": "3. Поддержка Расширений на Android",
+    "adguardMobileFirefox": "Firefox Mobile (Установите Firefox на Android и добавьте uBlock Origin или AdGuard)"
   },
   "history": {
     "title": "История",

@@ -194,7 +194,16 @@
     "adguardInstall": "Install Extension",
     "adguardChrome": "For Chrome",
     "adguardFirefox": "For Firefox",
-    "adguardEdge": "For Edge"
+    "adguardEdge": "For Edge",
+    "adguardMobileGuide": "📱 Mobile Guide (iOS / Android)",
+    "adguardMobileTitle": "Mobile Ad-Blocking & Ad-Free Streaming Guide",
+    "adguardMobileDnsTitle": "1. Easiest Fix: Private DNS (No App Required)",
+    "adguardMobileDnsAndroid": "Android: Settings ➔ Network & Internet ➔ Private DNS ➔ Hostname:",
+    "adguardMobileDnsIos": "iOS (iPhone/iPad): Install free AdGuard iOS DNS profile for system-wide filtering.",
+    "adguardMobileBrowsersTitle": "2. Best Mobile Browsers with Built-In AdBlock",
+    "adguardMobileBrave": "Brave Browser (Clean streaming with built-in Shields)",
+    "adguardMobileExtensionsTitle": "3. Android Extension Support",
+    "adguardMobileFirefox": "Firefox Mobile (Install Firefox on Android & add uBlock Origin or AdGuard)"
   },
   "history": {
     "title": "History",
