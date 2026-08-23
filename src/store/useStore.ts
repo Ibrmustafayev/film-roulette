@@ -62,6 +62,8 @@ interface AppState {
   setActiveView: (v: ActiveView) => void;
   setMenuOpen: (open: boolean) => void;
   addToHistory: (movie: Movie) => void;
+  removeFromHistory: (movieId: number) => void;
+  clearHistory: () => void;
   toggleFavourite: (movie: Movie) => void;
   isFavourite: (movieId: number) => boolean;
   setShowPlayer: (s: boolean) => void;
@@ -141,6 +143,13 @@ export const useStore = create<AppState>()(
           const updated = [movie, ...filtered].slice(0, MAX_HISTORY);
           return { history: updated };
         }),
+
+      removeFromHistory: (movieId) =>
+        set((state) => ({
+          history: state.history.filter((m) => m.id !== movieId),
+        })),
+
+      clearHistory: () => set({ history: [] }),
 
       toggleFavourite: (movie) =>
         set((state) => {

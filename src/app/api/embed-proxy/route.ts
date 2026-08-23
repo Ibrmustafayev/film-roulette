@@ -87,6 +87,17 @@ const buildAntiPopupAndSubResourceScript = (targetOrigin: string) => `
 </script>
 `;
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+      "Access-Control-Allow-Headers": "*",
+    },
+  });
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -106,8 +117,8 @@ export async function GET(request: NextRequest) {
     const upstreamHeaders: HeadersInit = {
       "User-Agent":
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      "Accept-Language": "en-US,en;q=0.9",
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,text/vtt,*/*;q=0.8",
+      "Accept-Language": "tr,tr-TR,en-US,en;q=0.9",
       Referer: `${targetOrigin}/`,
       Origin: targetOrigin,
     };
@@ -119,13 +130,15 @@ export async function GET(request: NextRequest) {
 
     const contentType = upstreamRes.headers.get("content-type") || "";
 
+    // If the upstream is a subtitle track (.vtt / .srt), media chunk or direct stream
     if (!contentType.includes("text/html")) {
-      // If the upstream is a direct redirect or stream, forward it cleanly
       return new NextResponse(upstreamRes.body, {
         status: upstreamRes.status,
         headers: {
-          "Content-Type": contentType || "text/html",
+          "Content-Type": contentType || "text/plain",
           "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
+          "Access-Control-Allow-Headers": "*",
         },
       });
     }

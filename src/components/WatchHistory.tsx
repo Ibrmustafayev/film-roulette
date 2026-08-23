@@ -25,6 +25,7 @@ export function ContinueWatching() {
     setSelectedEpisode,
     setShowPlayer,
     setActiveView,
+    clearHistory: clearStoreHistory,
   } = useStore();
   const t = getTranslations(locale);
 
@@ -92,7 +93,11 @@ export function ContinueWatching() {
 
         <button
           type="button"
-          onClick={() => clearHistory()}
+          id="clear-continue-watching-btn"
+          onClick={() => {
+            clearHistory();
+            clearStoreHistory();
+          }}
           title="Clear Watch History"
           className="inline-flex items-center gap-1 text-label uppercase tracking-wider text-ink-6 hover:text-alert transition-colors"
         >
