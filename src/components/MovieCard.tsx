@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Play, User, ExternalLink, Heart, Loader2,
   AlertCircle, RefreshCw, ChevronRight, X, Link2, Download, Check,
-  Tv, Film, ListFilter, ShieldCheck,
+  Tv, Film, ListFilter, ShieldCheck, ShieldAlert,
 } from "lucide-react";
 import { getImageUrl, getSeasonDetails, SeasonDetails } from "@/lib/tmdb";
 import { getTranslations } from "@/lib/i18n";
@@ -18,7 +18,6 @@ type PlayerPhase =
   | { tag: "idle" }
   | { tag: "extracting" }
   | { tag: "hls"; streamUrl: string }
-  | { tag: "probing"; sourceIndex: number }
   | { tag: "playing"; sourceIndex: number }
   | { tag: "error" };
 
@@ -41,6 +40,7 @@ export function MovieCard() {
   const [lastTime, setLastTime] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
   const [shieldActive, setShieldActive] = useState(true);
+  const [iframeLoading, setIframeLoading] = useState(false);
 
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
@@ -63,23 +63,14 @@ export function MovieCard() {
     });
   }, [movie, isTv, selectedSeason, selectedEpisode]);
 
-  const probeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const abortRef = useRef(false);
-
-  const clearProbeTimer = useCallback(() => {
-    if (probeTimerRef.current) {
-      clearTimeout(probeTimerRef.current);
-      probeTimerRef.current = null;
-    }
-  }, []);
 
   const stopPlayer = useCallback(() => {
     abortRef.current = true;
-    clearProbeTimer();
     setPhase({ tag: "idle" });
     setShowPlayer(false);
-    setShieldActive(true);
-  }, [clearProbeTimer, setShowPlayer]);
+    setIframeLoading(false);
+  }, [setShowPlayer]);
 
   // Fetch season breakdown when TV series or season changes
   useEffect(() => {
@@ -144,37 +135,31 @@ export function MovieCard() {
 
   // Anti-ad-popup focus protection for fallback iframes
   useEffect(() => {
-    if (phase.tag !== "playing" && phase.tag !== "probing") return;
+    if (phase.tag !== "playing" || !shieldActive) return;
     const refocus = () => {
-      setTimeout(() => window.focus(), 100);
+      setTimeout(() => window.focus(), 150);
     };
     window.addEventListener("blur", refocus);
     return () => window.removeEventListener("blur", refocus);
-  }, [phase.tag]);
+  }, [phase.tag, shieldActive]);
 
-  const trySource = useCallback(
+  const switchToServer = useCallback(
     (index: number) => {
       if (abortRef.current) return;
       if (!sources.length || index >= sources.length) {
         setPhase({ tag: "error" });
         return;
       }
-
-      setPhase({ tag: "probing", sourceIndex: index });
-      clearProbeTimer();
-
-      // Probe timeout: 5.5s to resolve iframe or auto-switch
-      probeTimerRef.current = setTimeout(() => {
-        if (!abortRef.current) trySource(index + 1);
-      }, 5500);
+      setIframeLoading(true);
+      setPhase({ tag: "playing", sourceIndex: index });
     },
-    [clearProbeTimer, sources.length]
+    [sources.length]
   );
 
   /**
    * 2-Tier Strategy Execution:
-   * Tier 1: Direct HLS Extraction
-   * Tier 2: Graceful Iframe Embed Fallback
+   * Tier 1: Direct HLS Extraction (with fast timeout)
+   * Tier 2: Instant Iframe Embed Fallback
    */
   const handleWatchContent = async () => {
     if (phase.tag !== "idle") {
@@ -189,9 +174,14 @@ export function MovieCard() {
     setPhase({ tag: "extracting" });
 
     try {
-      // Tier 1: Attempt direct extraction
+      // Tier 1: Attempt fast direct extraction (1.8s timeout)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1800);
+
       const extractUrl = `/api/extract?tmdbId=${movie.id}&imdbId=${movie.imdb_id || ""}&mediaType=${isTv ? "tv" : "movie"}&season=${selectedSeason}&episode=${selectedEpisode}`;
-      const res = await fetch(extractUrl);
+      const res = await fetch(extractUrl, { signal: controller.signal });
+      clearTimeout(timeoutId);
+
       const data = await res.json().catch(() => ({}));
 
       if (!abortRef.current && data.success && data.streamUrl) {
@@ -199,22 +189,18 @@ export function MovieCard() {
         return;
       }
     } catch {
-      // Direct extraction failed -> gracefully fall through to Tier 2
+      // Direct extraction timed out or failed -> immediately load Tier 2
     }
 
-    // Tier 2: Fallback to high-uptime embed providers
+    // Tier 2: Directly load Server 1 embed without blocking delays
     if (!abortRef.current) {
-      trySource(0);
+      switchToServer(0);
     }
   };
 
   const handleIframeLoad = useCallback(
-    (e: React.SyntheticEvent<HTMLIFrameElement>, sourceIndex: number) => {
-      clearProbeTimer();
-      if (!abortRef.current) {
-        setPhase({ tag: "playing", sourceIndex });
-      }
-
+    (e: React.SyntheticEvent<HTMLIFrameElement>) => {
+      setIframeLoading(false);
       const savedTime = watchProgress[currentEpisodeKey];
       if (savedTime && savedTime > 10) {
         const iframe = e.currentTarget;
@@ -225,16 +211,16 @@ export function MovieCard() {
             JSON.stringify({ type: "seek", time: savedTime }),
             "*"
           );
-        }, 2000);
+        }, 1500);
       }
     },
-    [clearProbeTimer, watchProgress, currentEpisodeKey]
+    [watchProgress, currentEpisodeKey]
   );
 
   const handleNextServerManual = () => {
-    if ((phase.tag === "playing" || phase.tag === "probing") && sources.length > 0) {
+    if (phase.tag === "playing" && sources.length > 0) {
       const nextIdx = (phase.sourceIndex + 1) % sources.length;
-      trySource(nextIdx);
+      switchToServer(nextIdx);
     }
   };
 
@@ -263,8 +249,7 @@ export function MovieCard() {
     ? `https://www.imdb.com/title/${movie.imdb_id}/`
     : null;
 
-  const activeSourceIndex =
-    phase.tag === "probing" || phase.tag === "playing" ? phase.sourceIndex : 0;
+  const activeSourceIndex = phase.tag === "playing" ? phase.sourceIndex : 0;
   const currentPlayUrl = sources[activeSourceIndex]?.url ?? null;
 
   const isPlayerOpen = phase.tag !== "idle";
@@ -476,10 +461,11 @@ export function MovieCard() {
             <motion.div {...step(4)} className="mt-7 flex flex-wrap gap-2">
               <button
                 type="button"
+                id="watch-content-btn"
                 onClick={handleWatchContent}
                 className={`ctl ${isPlayerOpen ? "ctl-ghost" : "ctl-live"}`}
               >
-                {phase.tag === "extracting" || phase.tag === "probing" ? (
+                {phase.tag === "extracting" ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : isPlayerOpen ? (
                   <X className="h-3.5 w-3.5" />
@@ -496,6 +482,7 @@ export function MovieCard() {
               {movie.trailer_key && (
                 <button
                   type="button"
+                  id="watch-trailer-btn"
                   onClick={() => setShowTrailer(!showTrailer)}
                   className="ctl ctl-ghost"
                 >
@@ -601,6 +588,7 @@ export function MovieCard() {
           {(showTrailer || isPlayerOpen) && (
             <motion.section
               ref={playerRef}
+              id="video-player-container"
               initial={{ height: 0, opacity: 0, marginTop: 0 }}
               animate={{ height: "auto", opacity: 1, marginTop: 48 }}
               exit={{ height: 0, opacity: 0, marginTop: 0 }}
@@ -626,61 +614,19 @@ export function MovieCard() {
                       poster={getImageUrl(movie.backdrop_path || movie.poster_path, "original")}
                       initialTime={lastTime}
                       onTimeUpdate={(time) => setWatchProgress(currentEpisodeKey, time)}
-                      onError={() => trySource(0)}
+                      onError={() => switchToServer(0)}
                     />
                   </div>
                 )}
 
-                {/* Extracting / Probing Loader */}
-                {!showTrailer && (phase.tag === "extracting" || phase.tag === "probing") && (
-                  <>
-                    {phase.tag === "probing" && currentPlayUrl && (
-                      <iframe
-                        key={`probe-${currentEpisodeKey}-${phase.sourceIndex}`}
-                        src={currentPlayUrl}
-                        title="probe"
-                        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-                        allowFullScreen
-                        referrerPolicy="no-referrer"
-                        onLoad={(e) => handleIframeLoad(e, phase.sourceIndex)}
-                        className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
-                        aria-hidden
-                      />
-                    )}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-ink-1">
-                      <Loader2 className="h-5 w-5 animate-spin text-live" />
-                      <div className="space-y-1.5 text-center">
-                        <p className="text-small text-ink-8">
-                          {phase.tag === "extracting" ? "Extracting direct ad-free stream..." : t("movie.autoSearching")}
-                        </p>
-                        {phase.tag === "probing" && (
-                          <p className="text-label uppercase tracking-[0.12em] text-ink-6">
-                            {t("movie.testingServer", {
-                              server: sources[phase.sourceIndex]?.name || `Server ${phase.sourceIndex + 1}`,
-                              current: phase.sourceIndex + 1,
-                              total: sources.length,
-                            })}
-                          </p>
-                        )}
-                      </div>
-                      {phase.tag === "probing" && (
-                        <ol className="flex gap-1" aria-hidden="true">
-                          {sources.map((_, i) => (
-                            <li
-                              key={i}
-                              className={`h-0.5 w-7 transition-colors duration-[240ms] ${
-                                i < phase.sourceIndex
-                                  ? "bg-ink-5"
-                                  : i === phase.sourceIndex
-                                    ? "bg-live"
-                                    : "bg-ink-3"
-                              }`}
-                            />
-                          ))}
-                        </ol>
-                      )}
-                    </div>
-                  </>
+                {/* Extracting Loader */}
+                {!showTrailer && phase.tag === "extracting" && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 bg-ink-1">
+                    <Loader2 className="h-6 w-6 animate-spin text-live" />
+                    <p className="text-small text-ink-8">
+                      {t("movie.autoSearching") || "Initializing stream provider..."}
+                    </p>
+                  </div>
                 )}
 
                 {/* Error State */}
@@ -707,30 +653,36 @@ export function MovieCard() {
                   </div>
                 )}
 
-                {/* Fallback Embed Iframe Player (Tier 2: Sandbox Removed for 100% Compatibility) */}
+                {/* Fallback Embed Iframe Player (Tier 2: Directly visible, NO sandbox, 100% interactive) */}
                 {!showTrailer && phase.tag === "playing" && currentPlayUrl && (
-                  <div className="relative h-full w-full">
+                  <div className="absolute inset-0 h-full w-full">
                     <iframe
                       key={`play-${currentEpisodeKey}-${phase.sourceIndex}`}
+                      id="stream-iframe"
                       src={currentPlayUrl}
                       title="Player"
-                      onLoad={(e) => handleIframeLoad(e, phase.sourceIndex)}
+                      onLoad={handleIframeLoad}
                       allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                       allowFullScreen
                       referrerPolicy="no-referrer"
-                      className="absolute inset-0 h-full w-full"
+                      className="h-full w-full border-0 pointer-events-auto"
                     />
 
-                    {/* Transparent Click Shield & Ad Blocker Overlay */}
+                    {/* Non-blocking Ad Shield visual indicator (pointer-events-none on container) */}
                     {shieldActive && (
-                      <div
-                        onClick={() => setShieldActive(false)}
-                        className="absolute inset-0 z-20 flex cursor-pointer items-start justify-end p-3 bg-transparent select-none"
-                      >
-                        <span className="inline-flex items-center gap-1.5 border border-ink-4 bg-ink-1/95 px-3 py-1.5 text-xs font-medium text-ink-9 shadow-md backdrop-blur-sm transition-all duration-150 hover:border-live/60 hover:text-white rounded-xs">
-                          <ShieldCheck className="h-3.5 w-3.5 text-live shrink-0" />
-                          <span className="whitespace-nowrap">Ad Shield Active — Click to Interact</span>
+                      <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-3 select-none">
+                        <span className="pointer-events-auto inline-flex items-center gap-1.5 border border-ink-4/80 bg-ink-1/90 px-2.5 py-1 text-[11px] font-medium text-ink-8 backdrop-blur-sm shadow-md transition-opacity duration-200">
+                          <ShieldCheck className="h-3 w-3 text-live shrink-0" />
+                          <span>Ad Shield Active</span>
                         </span>
+                      </div>
+                    )}
+
+                    {/* Subtle inline loader during provider initial connection */}
+                    {iframeLoading && (
+                      <div className="pointer-events-none absolute bottom-3 left-3 flex items-center gap-2 bg-ink-1/80 px-2.5 py-1 text-xs text-ink-7 backdrop-blur-sm">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-live" />
+                        <span>Connecting to {sources[phase.sourceIndex]?.name}...</span>
                       </div>
                     )}
                   </div>
@@ -739,7 +691,7 @@ export function MovieCard() {
 
               {/* Player Status & Control Bar */}
               {!showTrailer && (phase.tag === "playing" || phase.tag === "hls") && (
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-4 bg-ink-2 px-4 py-2.5 min-h-[42px]">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-ink-4 bg-ink-2 px-4 py-2 min-h-[42px]">
                   <div className="flex flex-wrap items-center gap-2 min-w-0">
                     <span className="inline-flex items-center gap-2 text-label uppercase tracking-[0.12em] text-ink-6 whitespace-nowrap">
                       <span className="h-1.5 w-1.5 rounded-full bg-live shrink-0" />
@@ -765,20 +717,25 @@ export function MovieCard() {
                     {phase.tag === "playing" && (
                       <button
                         type="button"
+                        id="shield-toggle-btn"
                         onClick={() => setShieldActive(!shieldActive)}
-                        title={shieldActive ? "Ad-click shield active (click to disable)" : "Ad-click shield inactive (click to enable)"}
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-label font-medium border transition-colors rounded-xs shrink-0 whitespace-nowrap ${
                           shieldActive
                             ? "border-live/40 bg-live/10 text-live hover:bg-live/20"
                             : "border-ink-4 bg-ink-3/40 text-ink-6 hover:text-ink-8 hover:border-ink-5"
                         }`}
                       >
-                        <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
+                        {shieldActive ? (
+                          <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-live" />
+                        ) : (
+                          <ShieldAlert className="h-3.5 w-3.5 shrink-0 text-ink-6" />
+                        )}
                         <span>{shieldActive ? "Shield: ON" : "Shield: OFF"}</span>
                       </button>
                     )}
                     <button
                       type="button"
+                      id="next-server-btn"
                       onClick={handleNextServerManual}
                       className="inline-flex items-center gap-1 px-2 py-1 text-label uppercase tracking-[0.12em] text-link transition-colors duration-[120ms] hover:text-link-hover shrink-0 whitespace-nowrap"
                     >
