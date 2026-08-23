@@ -237,6 +237,52 @@ export function HelpView() {
               </h3>
             </div>
 
+            {/* AdGuard Recommendation Banner */}
+            <div className="p-6 bg-amber-500/5 border border-amber-500/20 space-y-4">
+              <div className="flex items-start gap-4">
+                <div className="p-3 bg-amber-500/10 text-amber-500 shrink-0">
+                  <Info className="w-6 h-6" />
+                </div>
+                <div className="space-y-3">
+                  <h4 className="text-h4 font-semibold text-amber-400">
+                    {t("help.adguardTitle")}
+                  </h4>
+                  <p className="text-base text-ink-6/90 leading-relaxed">
+                    {t("help.adguardDesc")}
+                  </p>
+                  <div className="flex flex-wrap gap-3 pt-1">
+                    <a
+                      href="https://adguard.com/adguard-browser-extension/chrome/overview.html"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ctl ctl-ghost h-8 text-label gap-1.5 px-3 border border-ink-4 hover:border-amber-500/40 hover:text-amber-400 transition-colors"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                      {t("help.adguardChrome")}
+                    </a>
+                    <a
+                      href="https://addons.mozilla.org/firefox/addon/adguard-adblocker/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ctl ctl-ghost h-8 text-label gap-1.5 px-3 border border-ink-4 hover:border-amber-500/40 hover:text-amber-400 transition-colors"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                      {t("help.adguardFirefox")}
+                    </a>
+                    <a
+                      href="https://microsoftedge.microsoft.com/addons/detail/adguard-adblocker/pdffkfellgipmhklpdmokmckkkfcopbh"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ctl ctl-ghost h-8 text-label gap-1.5 px-3 border border-ink-4 hover:border-amber-500/40 hover:text-amber-400 transition-colors"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                      {t("help.adguardEdge")}
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-8">
               <div className="p-8  bg-ink-2/30 border border-ink-4/50 hover:bg-ink-2/45 hover:border-live-border/20 hover:shadow-lg transition-all flex gap-6 duration-300">
                 <div className="p-4  bg-live/10 text-live h-fit shrink-0">

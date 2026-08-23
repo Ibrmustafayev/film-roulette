@@ -620,38 +620,8 @@ export const getMovieDetails = async (movieId: number, language = 'en-US'): Prom
     }
   }
 
-  try {
-    const data = await fetchFromTMDB(`/movie/${movieId}`, {
-      language,
-      append_to_response: 'credits,videos,external_ids',
-    }, 600);
-
-    const cast: CastMember[] = (data.credits?.cast || []).slice(0, 10).map((c: Record<string, unknown>) => ({
-      id: Number(c.id),
-      name: String(c.name),
-      character: String(c.character || ''),
-      profile_path: (c.profile_path as string) || null,
-    }));
-
-    const trailer = (data.videos?.results || []).find(
-      (v: { site: string; type: string }) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
-    );
-
-    return {
-      runtime: data.runtime ? Number(data.runtime) : undefined,
-      genres: (data.genres as Genre[]) || [],
-      cast,
-      trailer_key: trailer?.key || null,
-      imdb_id: data.external_ids?.imdb_id || data.imdb_id || null,
-    };
-  } catch {
-    const fallback = FALLBACK_MOVIES.find((m) => m.id === movieId);
-    if (fallback) return fallback;
-    return {
-      cast: [],
-      genres: [],
-    };
-  }
+  const full = await getFullMovie(movieId, language);
+  return full || { cast: [], genres: [] };
 };
 
 export const getTVDetails = async (tvId: number, language = 'en-US'): Promise<Partial<Movie>> => {
@@ -666,55 +636,8 @@ export const getTVDetails = async (tvId: number, language = 'en-US'): Promise<Pa
     }
   }
 
-  try {
-    const data = await fetchFromTMDB(`/tv/${tvId}`, {
-      language,
-      append_to_response: 'credits,videos,external_ids',
-    }, 600);
-
-    const cast: CastMember[] = (data.credits?.cast || []).slice(0, 10).map((c: Record<string, unknown>) => ({
-      id: Number(c.id),
-      name: String(c.name),
-      character: String(c.character || ''),
-      profile_path: (c.profile_path as string) || null,
-    }));
-
-    const trailer = (data.videos?.results || []).find(
-      (v: { site: string; type: string }) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
-    );
-
-    const seasonsRaw = Array.isArray(data.seasons) ? (data.seasons as Record<string, unknown>[]) : [];
-    const seasons: SeasonSummary[] = seasonsRaw
-      .filter((s) => Number(s.season_number) > 0)
-      .map((s) => ({
-        id: Number(s.id || 0),
-        season_number: Number(s.season_number || 0),
-        name: String(s.name || `Season ${s.season_number}`),
-        overview: s.overview ? String(s.overview) : undefined,
-        episode_count: Number(s.episode_count || 0),
-        poster_path: (s.poster_path as string) || null,
-        air_date: (s.air_date as string) || null,
-      }));
-
-    return {
-      genres: (data.genres as Genre[]) || [],
-      cast,
-      trailer_key: trailer?.key || null,
-      imdb_id: data.external_ids?.imdb_id || null,
-      number_of_seasons: data.number_of_seasons ? Number(data.number_of_seasons) : seasons.length || 1,
-      number_of_episodes: data.number_of_episodes ? Number(data.number_of_episodes) : undefined,
-      seasons,
-    };
-  } catch {
-    const fallback = FALLBACK_TVS.find((t) => t.id === tvId);
-    if (fallback) return fallback;
-    return {
-      cast: [],
-      genres: [],
-      number_of_seasons: 1,
-      seasons: [{ id: 1, season_number: 1, name: 'Season 1', episode_count: 10, poster_path: null }],
-    };
-  }
+  const full = await getFullTV(tvId, language);
+  return full || { cast: [], genres: [], seasons: [] };
 };
 
 export const getFullMovie = async (movieId: number | string, language = 'en-US'): Promise<Movie | null> => {
@@ -729,7 +652,7 @@ export const getFullMovie = async (movieId: number | string, language = 'en-US')
 
     const base = normalizeMovie(data);
     const credits = data.credits as Record<string, unknown> | undefined;
-    const cast: CastMember[] = ((credits?.cast || []) as Record<string, unknown>[]).slice(0, 12).map((c) => ({
+    let cast: CastMember[] = ((credits?.cast || []) as Record<string, unknown>[]).slice(0, 12).map((c) => ({
       id: Number(c.id || 0),
       name: String(c.name || ''),
       character: String(c.character || ''),
@@ -738,9 +661,37 @@ export const getFullMovie = async (movieId: number | string, language = 'en-US')
 
     const videos = data.videos as Record<string, unknown> | undefined;
     const videoList = (videos?.results || []) as { site?: string; type?: string; key?: string }[];
-    const trailer = videoList.find(
+    let trailer = videoList.find(
       (v) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
     );
+
+    // Fallback: If non-English query returned no trailer, fetch English videos
+    if (!trailer && language !== 'en-US') {
+      try {
+        const enVideos = await fetchFromTMDB(`/movie/${idNum}/videos`, { language: 'en-US' }, 600);
+        const enList = (enVideos?.results || []) as { site?: string; type?: string; key?: string }[];
+        trailer = enList.find(
+          (v) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
+        );
+      } catch {
+        /* ignore */
+      }
+    }
+
+    // Fallback: If cast is empty, fetch English credits
+    if (cast.length === 0 && language !== 'en-US') {
+      try {
+        const enCredits = await fetchFromTMDB(`/movie/${idNum}/credits`, { language: 'en-US' }, 600);
+        cast = ((enCredits?.cast || []) as Record<string, unknown>[]).slice(0, 12).map((c) => ({
+          id: Number(c.id || 0),
+          name: String(c.name || ''),
+          character: String(c.character || ''),
+          profile_path: (c.profile_path as string) || null,
+        }));
+      } catch {
+        /* ignore */
+      }
+    }
 
     const externalIds = data.external_ids as Record<string, unknown> | undefined;
     const imdb_id = (externalIds?.imdb_id as string) || (data.imdb_id as string) || null;
@@ -771,7 +722,7 @@ export const getFullTV = async (tvId: number | string, language = 'en-US'): Prom
 
     const base = normalizeTVShow(data);
     const credits = data.credits as Record<string, unknown> | undefined;
-    const cast: CastMember[] = ((credits?.cast || []) as Record<string, unknown>[]).slice(0, 12).map((c) => ({
+    let cast: CastMember[] = ((credits?.cast || []) as Record<string, unknown>[]).slice(0, 12).map((c) => ({
       id: Number(c.id || 0),
       name: String(c.name || ''),
       character: String(c.character || ''),
@@ -780,9 +731,37 @@ export const getFullTV = async (tvId: number | string, language = 'en-US'): Prom
 
     const videos = data.videos as Record<string, unknown> | undefined;
     const videoList = (videos?.results || []) as { site?: string; type?: string; key?: string }[];
-    const trailer = videoList.find(
+    let trailer = videoList.find(
       (v) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
     );
+
+    // Fallback: If non-English query returned no trailer, fetch English videos
+    if (!trailer && language !== 'en-US') {
+      try {
+        const enVideos = await fetchFromTMDB(`/tv/${idNum}/videos`, { language: 'en-US' }, 600);
+        const enList = (enVideos?.results || []) as { site?: string; type?: string; key?: string }[];
+        trailer = enList.find(
+          (v) => v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
+        );
+      } catch {
+        /* ignore */
+      }
+    }
+
+    // Fallback: If cast is empty, fetch English credits
+    if (cast.length === 0 && language !== 'en-US') {
+      try {
+        const enCredits = await fetchFromTMDB(`/tv/${idNum}/credits`, { language: 'en-US' }, 600);
+        cast = ((enCredits?.cast || []) as Record<string, unknown>[]).slice(0, 12).map((c) => ({
+          id: Number(c.id || 0),
+          name: String(c.name || ''),
+          character: String(c.character || ''),
+          profile_path: (c.profile_path as string) || null,
+        }));
+      } catch {
+        /* ignore */
+      }
+    }
 
     const externalIds = data.external_ids as Record<string, unknown> | undefined;
     const imdb_id = (externalIds?.imdb_id as string) || (data.imdb_id as string) || null;

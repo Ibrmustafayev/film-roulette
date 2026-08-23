@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dice5, Clock, Heart, Smartphone, HelpCircle, X } from "lucide-react";
+import { Dice5, Clock, Heart, Smartphone, HelpCircle, X, MessageCircle } from "lucide-react";
 
 import { useStore } from "@/store/useStore";
 import { getTranslations, LOCALE_LABELS, Locale } from "@/lib/i18n";
@@ -11,6 +11,7 @@ import { Logo } from "./Mark";
 import { SearchBar } from "./SearchBar";
 import { FilterPanel } from "./FilterPanel";
 import { RouletteButton } from "./RouletteButton";
+import { FeedbackModal } from "./FeedbackModal";
 
 const NAV = [
   { key: "random" as const, icon: Dice5 },
@@ -34,6 +35,7 @@ export function RailContent({ genres }: { genres: Genre[] }) {
     history: history.length,
     favourites: favourites.length,
   };
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   return (
     <div className="flex h-full flex-col">
@@ -78,7 +80,19 @@ export function RailContent({ genres }: { genres: Genre[] }) {
             );
           })}
         </ul>
+
+        {/* Feedback button */}
+        <button
+          type="button"
+          onClick={() => setFeedbackOpen(true)}
+          className="group flex h-7 w-full items-center gap-2.5 px-2 text-small transition-colors duration-[120ms] text-ink-7 hover:text-ink-9 mt-1"
+        >
+          <MessageCircle className="h-3.5 w-3.5 shrink-0 text-ink-6 group-hover:text-ink-7" />
+          <span className="flex-1 text-left">{t("feedback.navLabel")}</span>
+        </button>
       </nav>
+
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
 
       {/* The instrument panel proper */}
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">

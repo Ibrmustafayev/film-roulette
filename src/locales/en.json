@@ -188,7 +188,13 @@
     "faq4Q": "Where does metadata come from?",
     "faq4A": "Metadata is powered by The Movie Database (TMDB). Video streams are resolved through high-uptime embed providers.",
     "faq5Q": "How do I report a bug?",
-    "faq5A": "Contact the developer via the app's download page or social media."
+    "faq5A": "Use the \"Feedback\" button in the menu to report broken streams, missing movies, or any bugs.",
+    "adguardTitle": "Ad-Free Viewing Recommendation",
+    "adguardDesc": "Notice: Embedded third-party stream providers may contain external ads. For a 100% ad-free viewing experience, we strongly recommend installing the AdGuard or uBlock Origin browser extension.",
+    "adguardInstall": "Install Extension",
+    "adguardChrome": "For Chrome",
+    "adguardFirefox": "For Firefox",
+    "adguardEdge": "For Edge"
   },
   "history": {
     "title": "History",
@@ -267,5 +273,26 @@
   },
   "home": {
     "popular": "Popular now"
+  },
+  "feedback": {
+    "title": "Feedback",
+    "navLabel": "Feedback",
+    "subtitle": "Report a problem or send a suggestion",
+    "name": "Your Name / Email (optional)",
+    "namePlaceholder": "Name or email address",
+    "issueType": "Issue Type",
+    "issueBroken": "Broken / Dead Stream",
+    "issueMissing": "Missing Movie / TV Show",
+    "issueAudio": "Audio / Subtitle Issue",
+    "issueOther": "Other Bug",
+    "mediaTitle": "Movie / TV Show Title (or TMDB ID)",
+    "mediaTitlePlaceholder": "e.g. The Matrix or 603",
+    "message": "Your Message",
+    "messagePlaceholder": "Describe the issue or your suggestion...",
+    "submit": "Submit",
+    "sending": "Sending...",
+    "success": "Your message was sent! Thank you.",
+    "error": "Could not send. Please try again.",
+    "close": "Close"
   }
 }

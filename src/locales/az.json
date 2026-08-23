@@ -188,7 +188,13 @@
     "faq4Q": "Məlumatlar haradan gəlir?",
     "faq4A": "Metaməlumatlar TMDB tərəfindən, video axınları isə yüksək etibarlı serverlərdən təmin edilir.",
     "faq5Q": "Xəta necə bildirirəm?",
-    "faq5A": "Tətbiqin yükləmə səhifəsi və ya sosial media vasitəsilə tərtibatçı ilə əlaqə saxlayın."
+    "faq5A": "Menyudakı \"Geri Bildirim\" düyməsinə basaraq xəta, çalışmayan yayım və ya çatışmayan film haqqında bildiriş göndərin.",
+    "adguardTitle": "Reklamsız İzləmə Tövsiyəsi",
+    "adguardDesc": "Qeyd: Üçüncü tərəf pleyer serverləri daxili reklamlar ehtiva edə bilər. Tam reklamsız izləmə təcrübəsi üçün brauzerinizə AdGuard və ya uBlock Origin genişlənməsini (extension) quraşdırmağınız tövsiyə olunur.",
+    "adguardInstall": "Genişlənməni Yükləyin",
+    "adguardChrome": "Chrome üçün",
+    "adguardFirefox": "Firefox üçün",
+    "adguardEdge": "Edge üçün"
   },
   "history": {
     "title": "Tarixçə",
@@ -267,5 +273,26 @@
   },
   "home": {
     "popular": "Populyar"
+  },
+  "feedback": {
+    "title": "Geri Bildirim",
+    "navLabel": "Geri Bildirim",
+    "subtitle": "Problem bildirin və ya təklif göndərin",
+    "name": "Adınız / E-poçt (isteğe bağlı)",
+    "namePlaceholder": "Ad və ya e-poçt ünvanınız",
+    "issueType": "Problem Növü",
+    "issueBroken": "Çalışmayan / Ölü Yayım",
+    "issueMissing": "Çatışmayan Film / Serial",
+    "issueAudio": "Səs / Altyazı Problemi",
+    "issueOther": "Digər Xəta",
+    "mediaTitle": "Film / Serial Adı (və ya TMDB ID)",
+    "mediaTitlePlaceholder": "Məs: The Matrix və ya 603",
+    "message": "Mesajınız",
+    "messagePlaceholder": "Problemi təsvir edin və ya təklifinizi yazın...",
+    "submit": "Göndər",
+    "sending": "Göndərilir...",
+    "success": "Mesajınız göndərildi! Təşəkkür edirik.",
+    "error": "Göndərilə bilmədi. Yenidən cəhd edin.",
+    "close": "Bağla"
   }
 }

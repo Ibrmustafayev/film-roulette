@@ -7,7 +7,7 @@ import {
   Play, User, ExternalLink, Heart, Loader2,
   AlertCircle, RefreshCw, ChevronRight, X, Link2, Download, Check,
   Tv, Film, ListFilter, ShieldCheck, ShieldAlert, Maximize, Minimize,
-  Clock, RotateCcw,
+  Clock, RotateCcw, MessageCircle,
 } from "lucide-react";
 import { getImageUrl, getSeasonDetails, SeasonDetails, Movie } from "@/lib/tmdb";
 import { getTranslations } from "@/lib/i18n";
@@ -20,6 +20,7 @@ import {
   getDefaultDuration,
 } from "@/lib/history";
 import { HlsPlayer } from "./HlsPlayer";
+import { FeedbackModal } from "./FeedbackModal";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type PlayerPhase =
@@ -57,6 +58,7 @@ export function MovieCard({ initialMovie }: { initialMovie?: Movie } = {}) {
   const [iframeLoading, setIframeLoading] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   const t = getTranslations(locale);
   const playerRef = useRef<HTMLDivElement>(null);
@@ -841,6 +843,18 @@ export function MovieCard({ initialMovie }: { initialMovie?: Movie } = {}) {
                 )}
                 <span className="sr-only">{t("share.download")}</span>
               </button>
+
+              <button
+                type="button"
+                id="report-issue-btn"
+                onClick={() => setFeedbackOpen(true)}
+                className="ctl ctl-bare"
+                title={t("feedback.title") || "Report"}
+                aria-label={t("feedback.title") || "Report"}
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                <span>{t("feedback.title")}</span>
+              </button>
             </motion.div>
           </div>
         </div>
@@ -1148,6 +1162,12 @@ export function MovieCard({ initialMovie }: { initialMovie?: Movie } = {}) {
             </motion.section>
           )}
         </AnimatePresence>
+
+        <FeedbackModal
+          open={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          prefillMedia={{ title: movie.title, id: movie.id }}
+        />
       </article>
     </AnimatePresence>
   );
