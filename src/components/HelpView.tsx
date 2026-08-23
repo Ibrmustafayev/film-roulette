@@ -329,6 +329,15 @@ export function HelpView() {
                 <p className="text-xs text-ink-7 leading-relaxed pt-1">
                   {t("help.adguardMobileDnsIos")}
                 </p>
+                <a
+                  href="https://adguard-dns.io/en/public-dns.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-link hover:underline pt-0.5"
+                >
+                  <span>AdGuard iOS DNS Profile</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </div>
 
               {/* 2. Built-in AdBlock Browsers */}
@@ -359,7 +368,7 @@ export function HelpView() {
                   {t("help.adguardMobileFirefox")}
                 </p>
                 <a
-                  href="https://www.mozilla.org/firefox/browsers/mobile/"
+                  href="https://play.google.com/store/apps/details?id=org.mozilla.firefox"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs text-link hover:underline"

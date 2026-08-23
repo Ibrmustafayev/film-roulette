@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Shield, X, ExternalLink, Smartphone, Copy, Check, Info } from "lucide-react";
+import { Shield, X, ExternalLink, Smartphone, Copy, Check } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
 import { motion, AnimatePresence } from "framer-motion";
@@ -129,26 +129,26 @@ export function AdGuardBanner() {
                 className="inline-flex items-center gap-1.5 rounded-xs border border-amber-400/50 bg-amber-500/25 px-2.5 py-1 text-[11px] font-semibold text-amber-200 hover:bg-amber-500/35 hover:text-white transition-all shadow-xs"
               >
                 <Smartphone className="h-3 w-3 text-amber-300" />
-                <span>{t("help.adguardMobileGuide") || "📱 Mobile Guide"}</span>
+                <span>{t("help.adguardMobileGuide") || "Mobile Guide"}</span>
               </button>
 
               <a
                 href="https://brave.com/download/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-xs border border-amber-500/30 bg-amber-500/15 px-2 py-1 text-[11px] font-medium text-amber-200 hover:bg-amber-500/25 transition-all"
+                className="inline-flex items-center gap-1 rounded-xs border border-amber-500/30 bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium text-amber-200 hover:bg-amber-500/25 transition-all"
               >
-                <span>🦁 Brave</span>
+                <span>Brave Browser</span>
                 <ExternalLink className="h-2.5 w-2.5 opacity-70" />
               </a>
 
               <a
-                href="https://www.mozilla.org/firefox/browsers/mobile/"
+                href="https://play.google.com/store/apps/details?id=org.mozilla.firefox"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 rounded-xs border border-amber-500/30 bg-amber-500/15 px-2 py-1 text-[11px] font-medium text-amber-200 hover:bg-amber-500/25 transition-all"
+                className="inline-flex items-center gap-1 rounded-xs border border-amber-500/30 bg-amber-500/15 px-2.5 py-1 text-[11px] font-medium text-amber-200 hover:bg-amber-500/25 transition-all"
               >
-                <span>🦊 Firefox</span>
+                <span>Firefox Mobile</span>
                 <ExternalLink className="h-2.5 w-2.5 opacity-70" />
               </a>
             </div>
@@ -218,6 +218,15 @@ export function AdGuardBanner() {
                 <p className="text-xs text-ink-7 leading-relaxed pt-1">
                   {t("help.adguardMobileDnsIos")}
                 </p>
+                <a
+                  href="https://adguard-dns.io/en/public-dns.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-link hover:underline pt-0.5"
+                >
+                  <span>AdGuard iOS DNS Profile</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </div>
 
               {/* 2. Built-in AdBlock Browsers */}
@@ -248,7 +257,7 @@ export function AdGuardBanner() {
                   {t("help.adguardMobileFirefox")}
                 </p>
                 <a
-                  href="https://www.mozilla.org/firefox/browsers/mobile/"
+                  href="https://play.google.com/store/apps/details?id=org.mozilla.firefox"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-xs text-link hover:underline"

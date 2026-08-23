@@ -36,6 +36,10 @@ const WHITELISTED_DOMAINS = [
   "addons.mozilla.org",
   "microsoftedge.microsoft.com",
   "adguard.com",
+  "adguard-dns.io",
+  "brave.com",
+  "mozilla.org",
+  "play.google.com",
 ];
 
 function isAdUrl(urlStr: string): boolean {
