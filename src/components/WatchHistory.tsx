@@ -25,6 +25,7 @@ export function ContinueWatching() {
     setSelectedEpisode,
     setShowPlayer,
     setActiveView,
+    removeFromHistory,
     clearHistory: clearStoreHistory,
   } = useStore();
   const t = getTranslations(locale);
@@ -153,14 +154,17 @@ export function ContinueWatching() {
                 {/* Remove button */}
                 <button
                   type="button"
+                  id={`remove-continue-${item.id}`}
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     removeHistoryItem(item.id, item.season, item.episode);
+                    removeFromHistory(item.id);
                   }}
-                  className="absolute top-2 right-2 flex h-6 w-6 items-center justify-center bg-ink-0/80 text-ink-7 hover:text-alert backdrop-blur-xs transition-colors"
+                  className="absolute top-2 right-2 z-30 flex h-6 w-6 items-center justify-center bg-ink-0/90 text-ink-7 hover:text-alert backdrop-blur-xs transition-colors"
                   title="Remove from history"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5" />
                 </button>
               </div>
 

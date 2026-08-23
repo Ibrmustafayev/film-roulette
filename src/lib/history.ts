@@ -37,42 +37,49 @@ export function getWatchHistory(): WatchHistoryItem[] {
   if (!isBrowser()) return [];
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    let items: WatchHistoryItem[] = raw ? JSON.parse(raw) : [];
+    let items: WatchHistoryItem[] = [];
 
-    // Fallback: If empty, check zustand persisted store to migrate
-    if (!Array.isArray(items) || items.length === 0) {
+    if (raw !== null) {
+      try {
+        items = JSON.parse(raw);
+      } catch {
+        items = [];
+      }
+    } else {
+      // Fallback: ONLY on the very first visit when STORAGE_KEY never existed
       const zRaw = localStorage.getItem(ZUSTAND_KEY);
       if (zRaw) {
-        const zData = JSON.parse(zRaw);
-        const zHist = zData?.state?.history || [];
-        const zProg = zData?.state?.watchProgress || {};
+        try {
+          const zData = JSON.parse(zRaw);
+          const zHist = zData?.state?.history || [];
+          const zProg = zData?.state?.watchProgress || {};
 
-        if (Array.isArray(zHist) && zHist.length > 0) {
-          items = zHist
-            .filter((m) => !!m && !!m.id)
-            .map((m, idx) => {
-              const isTv = m.media_type === "tv" || !!m.number_of_seasons;
-              const time = zProg[String(m.id)] || zProg[`${m.id}_s1_e1`] || (m.runtime ? Math.min(300, m.runtime * 60) : 0);
-              const duration = getDefaultDuration(isTv ? "tv" : "movie", m.runtime || m.episode_run_time?.[0]);
-              return {
-                id: m.id,
-                mediaType: isTv ? "tv" : "movie",
-                title: m.title || m.original_title || "Unknown",
-                posterPath: m.poster_path || null,
-                backdropPath: m.backdrop_path || null,
-                currentTime: time,
-                duration,
-                progressPercent: Math.min(100, Math.max(0, Math.round((time / duration) * 100))),
-                season: isTv ? 1 : undefined,
-                episode: isTv ? 1 : undefined,
-                lastWatchedAt: Date.now() - idx * 60000,
-              };
-            });
+          if (Array.isArray(zHist) && zHist.length > 0) {
+            items = zHist
+              .filter((m) => !!m && !!m.id)
+              .map((m, idx) => {
+                const isTv = m.media_type === "tv" || !!m.number_of_seasons;
+                const time = zProg[String(m.id)] || zProg[`${m.id}_s1_e1`] || (m.runtime ? Math.min(300, m.runtime * 60) : 0);
+                const duration = getDefaultDuration(isTv ? "tv" : "movie", m.runtime || m.episode_run_time?.[0]);
+                return {
+                  id: m.id,
+                  mediaType: isTv ? "tv" : "movie",
+                  title: m.title || m.original_title || "Unknown",
+                  posterPath: m.poster_path || null,
+                  backdropPath: m.backdrop_path || null,
+                  currentTime: time,
+                  duration,
+                  progressPercent: Math.min(100, Math.max(0, Math.round((time / duration) * 100))),
+                  season: isTv ? 1 : undefined,
+                  episode: isTv ? 1 : undefined,
+                  lastWatchedAt: Date.now() - idx * 60000,
+                };
+              });
 
-          // Save migrated items
-          if (items.length > 0) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
           }
+        } catch {
+          /* ignore */
         }
       }
     }
@@ -81,7 +88,7 @@ export function getWatchHistory(): WatchHistoryItem[] {
     if (Array.isArray(items)) {
       items = items.map((item) => {
         if (item.mediaType === "tv" && (!item.duration || item.duration >= 7200)) {
-          const duration = 45 * 60; // 45 minutes for standard TV episode
+          const duration = 45 * 60;
           const progressPercent = Math.min(100, Math.max(0, Math.round((item.currentTime / duration) * 100)));
           return { ...item, duration, progressPercent };
         }
@@ -230,6 +237,27 @@ export function removeHistoryItem(id: number, season?: number, episode?: number)
       return false;
     });
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+    // Also clean up zustand persisted key
+    const zRaw = localStorage.getItem(ZUSTAND_KEY);
+    if (zRaw) {
+      try {
+        const zData = JSON.parse(zRaw);
+        if (zData?.state?.history) {
+          zData.state.history = zData.state.history.filter((m: any) => m.id !== id);
+        }
+        if (zData?.state?.watchProgress) {
+          delete zData.state.watchProgress[String(id)];
+          if (season && episode) {
+            delete zData.state.watchProgress[`${id}_s${season}_e${episode}`];
+          }
+        }
+        localStorage.setItem(ZUSTAND_KEY, JSON.stringify(zData));
+      } catch {
+        /* ignore */
+      }
+    }
+
     window.dispatchEvent(new CustomEvent("film_roulette_history_updated"));
   } catch (err) {
     console.error("Failed to remove history item:", err);
@@ -242,7 +270,22 @@ export function removeHistoryItem(id: number, season?: number, episode?: number)
 export function clearHistory(): void {
   if (!isBrowser()) return;
   try {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
+
+    const zRaw = localStorage.getItem(ZUSTAND_KEY);
+    if (zRaw) {
+      try {
+        const zData = JSON.parse(zRaw);
+        if (zData?.state) {
+          zData.state.history = [];
+          zData.state.watchProgress = {};
+        }
+        localStorage.setItem(ZUSTAND_KEY, JSON.stringify(zData));
+      } catch {
+        /* ignore */
+      }
+    }
+
     window.dispatchEvent(new CustomEvent("film_roulette_history_updated"));
   } catch (err) {
     console.error("Failed to clear watch history:", err);
