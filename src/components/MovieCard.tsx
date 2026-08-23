@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { getImageUrl, getSeasonDetails, SeasonDetails } from "@/lib/tmdb";
 import { getTranslations } from "@/lib/i18n";
-import { resolveStreamSources, AudioMode } from "@/lib/providers";
+import { resolveStreamSources } from "@/lib/providers";
 import {
   saveWatchProgress,
   getMediaProgress,
@@ -46,7 +46,6 @@ export function MovieCard() {
   } = useStore();
 
   const [phase, setPhase] = useState<PlayerPhase>({ tag: "idle" });
-  const [audioMode, setAudioMode] = useState<AudioMode>("orig");
   const [lastTime, setLastTime] = useState<number | null>(null);
   const [resumePrompt, setResumePrompt] = useState<{ visible: boolean; time: number; formatted: string } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -75,31 +74,8 @@ export function MovieCard() {
       mediaType: isTv ? "tv" : "movie",
       season: selectedSeason,
       episode: selectedEpisode,
-      audioMode,
     });
-  }, [movie, isTv, selectedSeason, selectedEpisode, audioMode]);
-
-  const handleAudioModeChange = (mode: AudioMode) => {
-    setAudioMode(mode);
-    if (phase.tag === "playing") {
-      setIframeLoading(true);
-      setFirstClickDismissed(false);
-      setUseDirectEmbed(false);
-      if (movie) {
-        const newSources = resolveStreamSources({
-          tmdbId: movie.id,
-          imdbId: movie.imdb_id,
-          mediaType: isTv ? "tv" : "movie",
-          season: selectedSeason,
-          episode: selectedEpisode,
-          audioMode: mode,
-        });
-        if (newSources.length > 0) {
-          setPhase({ tag: "playing", sourceIndex: 0 });
-        }
-      }
-    }
-  };
+  }, [movie, isTv, selectedSeason, selectedEpisode]);
 
   const abortRef = useRef(false);
 
@@ -765,54 +741,7 @@ export function MovieCard() {
               </motion.div>
             )}
 
-            {/* Audio & Subtitle Language Toggle Bar */}
-            <motion.div {...step(3.5)} className="mt-5">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-label text-ink-6 uppercase tracking-wider font-semibold mr-1">
-                  {locale === "az" ? "Səs & Altyazı:" : locale === "ru" ? "Озвучка & Субтитры:" : "Audio & Subs:"}
-                </span>
-                <div className="inline-flex rounded-sm border border-ink-4 bg-ink-2/90 p-0.5 shadow-xs">
-                  <button
-                    type="button"
-                    id="audio-orig-btn"
-                    onClick={() => handleAudioModeChange("orig")}
-                    className={`px-2.5 py-1 text-xs transition-colors rounded-xs font-medium ${
-                      audioMode === "orig"
-                        ? "bg-ink-5 text-ink-9 font-bold shadow-xs"
-                        : "text-ink-6 hover:text-ink-8"
-                    }`}
-                  >
-                    🇬🇧 Original
-                  </button>
-                  <button
-                    type="button"
-                    id="audio-tr-dub-btn"
-                    onClick={() => handleAudioModeChange("tr_dub")}
-                    className={`px-2.5 py-1 text-xs transition-colors rounded-xs font-medium ${
-                      audioMode === "tr_dub"
-                        ? "bg-live text-black font-bold shadow-xs"
-                        : "text-ink-6 hover:text-live"
-                    }`}
-                  >
-                    🇹🇷 Türkçe Dublaj
-                  </button>
-                  <button
-                    type="button"
-                    id="audio-tr-sub-btn"
-                    onClick={() => handleAudioModeChange("tr_sub")}
-                    className={`px-2.5 py-1 text-xs transition-colors rounded-xs font-medium ${
-                      audioMode === "tr_sub"
-                        ? "bg-link text-white font-bold shadow-xs"
-                        : "text-ink-6 hover:text-link"
-                    }`}
-                  >
-                    🇹🇷 Türkçe Altyazılı
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-
-            <motion.div {...step(4)} className="mt-6 flex flex-wrap gap-2">
+            <motion.div {...step(4)} className="mt-7 flex flex-wrap gap-2">
               <button
                 type="button"
                 id="watch-content-btn"
@@ -1104,43 +1033,6 @@ export function MovieCard() {
                   </div>
 
                   <div className="flex items-center gap-2.5 shrink-0">
-                    {/* In-Player Audio/Sub Language Selector */}
-                    <div className="inline-flex rounded-xs border border-ink-4 bg-ink-3/40 p-0.5 shadow-xs">
-                      <button
-                        type="button"
-                        id="player-lang-orig-btn"
-                        onClick={() => handleAudioModeChange("orig")}
-                        className={`px-1.5 py-0.5 text-[10px] uppercase font-bold rounded-xs transition-colors ${
-                          audioMode === "orig" ? "bg-ink-5 text-ink-9" : "text-ink-6 hover:text-ink-8"
-                        }`}
-                        title="Original Audio"
-                      >
-                        🇬🇧 ORG
-                      </button>
-                      <button
-                        type="button"
-                        id="player-lang-tr-dub-btn"
-                        onClick={() => handleAudioModeChange("tr_dub")}
-                        className={`px-1.5 py-0.5 text-[10px] uppercase font-bold rounded-xs transition-colors ${
-                          audioMode === "tr_dub" ? "bg-live text-black" : "text-ink-6 hover:text-live"
-                        }`}
-                        title="Türkçe Dublaj"
-                      >
-                        🇹🇷 DUB
-                      </button>
-                      <button
-                        type="button"
-                        id="player-lang-tr-sub-btn"
-                        onClick={() => handleAudioModeChange("tr_sub")}
-                        className={`px-1.5 py-0.5 text-[10px] uppercase font-bold rounded-xs transition-colors ${
-                          audioMode === "tr_sub" ? "bg-link text-white" : "text-ink-6 hover:text-link"
-                        }`}
-                        title="Türkçe Altyazılı"
-                      >
-                        🇹🇷 SUB
-                      </button>
-                    </div>
-
                     {phase.tag === "playing" && (
                       <button
                         type="button"
