@@ -15,6 +15,7 @@ export function AdGuardBanner() {
   const [dismissed, setDismissed] = useState(true);
   const [showMobileModal, setShowMobileModal] = useState(false);
   const [copiedDns, setCopiedDns] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     try {
@@ -25,6 +26,17 @@ export function AdGuardBanner() {
     } catch {
       setDismissed(false);
     }
+
+    const checkMobile = () => {
+      const mobile =
+        typeof window !== "undefined" &&
+        (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768);
+      setIsMobile(mobile);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const handleDismiss = () => {
