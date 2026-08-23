@@ -13,6 +13,10 @@ import {
   HelpCircle,
   ChevronDown,
   Info,
+  Smartphone,
+  Copy,
+  Check,
+  ExternalLink,
 } from "lucide-react";
 
 type Category =
@@ -28,6 +32,8 @@ interface CategoryInfo {
   icon: React.ElementType;
 }
 
+const DNS_HOST = "dns.adguard-dns.com";
+
 const CATEGORIES: CategoryInfo[] = [
   { id: "gettingStarted", icon: BookOpen },
   { id: "features", icon: Zap },
@@ -42,6 +48,17 @@ export function HelpView() {
   const t = getTranslations(locale);
   const [activeCategory, setActiveCategory] = useState<Category>("gettingStarted");
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
+  const [copiedDns, setCopiedDns] = useState(false);
+
+  const copyDns = async () => {
+    try {
+      await navigator.clipboard.writeText(DNS_HOST);
+      setCopiedDns(true);
+      setTimeout(() => setCopiedDns(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
 
   // Helper to render Category content
   const renderCategoryContent = () => {
@@ -237,8 +254,8 @@ export function HelpView() {
               </h3>
             </div>
 
-            {/* AdGuard Recommendation Banner */}
-            <div className="p-6 bg-amber-500/5 border border-amber-500/20 space-y-4">
+            {/* Desktop-Only AdGuard Recommendation Banner */}
+            <div className="hidden md:block p-6 bg-amber-500/5 border border-amber-500/20 space-y-4" id="help-desktop-adguard">
               <div className="flex items-start gap-4">
                 <div className="p-3 bg-amber-500/10 text-amber-500 shrink-0">
                   <Info className="w-6 h-6" />
@@ -280,6 +297,76 @@ export function HelpView() {
                     </a>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Mobile-Only Step-by-Step Ad-Blocking Guide */}
+            <div className="block md:hidden p-5 bg-amber-500/5 border border-amber-500/25 space-y-4 rounded-xs" id="help-mobile-adguard">
+              <div className="flex items-center gap-2.5 text-amber-400">
+                <Smartphone className="w-5 h-5 shrink-0" />
+                <h4 className="text-body font-semibold">{t("help.adguardMobileTitle")}</h4>
+              </div>
+
+              {/* 1. Private DNS */}
+              <div className="space-y-2 rounded-xs border border-amber-500/20 bg-amber-500/10 p-3.5">
+                <h5 className="text-small font-semibold text-amber-300">
+                  {t("help.adguardMobileDnsTitle")}
+                </h5>
+                <p className="text-xs text-ink-7 leading-relaxed">
+                  {t("help.adguardMobileDnsAndroid")}
+                </p>
+                <div className="flex items-center justify-between gap-2 rounded-xs bg-ink-1 px-2.5 py-1.5 border border-ink-4">
+                  <code className="text-xs font-mono text-live select-all">{DNS_HOST}</code>
+                  <button
+                    type="button"
+                    onClick={copyDns}
+                    className="inline-flex items-center gap-1 text-[11px] text-amber-300 hover:text-amber-100 transition-colors"
+                  >
+                    {copiedDns ? <Check className="h-3 w-3 text-live" /> : <Copy className="h-3 w-3" />}
+                    <span>{copiedDns ? "Copied!" : "Copy"}</span>
+                  </button>
+                </div>
+                <p className="text-xs text-ink-7 leading-relaxed pt-1">
+                  {t("help.adguardMobileDnsIos")}
+                </p>
+              </div>
+
+              {/* 2. Built-in AdBlock Browsers */}
+              <div className="space-y-2 rounded-xs border border-ink-4 bg-ink-1/50 p-3.5">
+                <h5 className="text-small font-semibold text-ink-9">
+                  {t("help.adguardMobileBrowsersTitle")}
+                </h5>
+                <p className="text-xs text-ink-7">
+                  {t("help.adguardMobileBrave")}
+                </p>
+                <a
+                  href="https://brave.com/download/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-link hover:underline"
+                >
+                  <span>Brave Browser</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </div>
+
+              {/* 3. Android Extensions */}
+              <div className="space-y-2 rounded-xs border border-ink-4 bg-ink-1/50 p-3.5">
+                <h5 className="text-small font-semibold text-ink-9">
+                  {t("help.adguardMobileExtensionsTitle")}
+                </h5>
+                <p className="text-xs text-ink-7">
+                  {t("help.adguardMobileFirefox")}
+                </p>
+                <a
+                  href="https://www.mozilla.org/firefox/browsers/mobile/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs text-link hover:underline"
+                >
+                  <span>Firefox Mobile</span>
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </div>
             </div>
 
@@ -456,9 +543,33 @@ export function HelpView() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-12 items-start pt-6">
-        {/* Left Sub-Navigation Sidebar */}
-        <div className="md:col-span-4 space-y-3.5 bg-ink-2 border border-ink-4/60 p-6  sticky top-24 shadow-sm">
+      {/* Mobile-Only Horizontal Scrollable Pill-Tab Bar */}
+      <div className="flex md:hidden overflow-x-auto no-scrollbar gap-2 pb-2 border-b border-ink-4/50 pt-2" id="help-mobile-nav">
+        {CATEGORIES.map(({ id, icon: Icon }) => {
+          const isActive = activeCategory === id;
+          return (
+            <button
+              key={id}
+              onClick={() => {
+                setActiveCategory(id);
+                setExpandedFaq(null);
+              }}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xs text-xs font-medium whitespace-nowrap transition-colors shrink-0 ${
+                isActive
+                  ? "bg-live/15 text-live border border-live/30 font-semibold shadow-xs"
+                  : "bg-ink-2/60 text-ink-7 border border-ink-4/60 hover:text-ink-9"
+              }`}
+            >
+              <Icon className="w-3.5 h-3.5" />
+              <span>{t(`help.${id}`)}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-12 gap-8 md:gap-12 items-start pt-2 md:pt-6">
+        {/* Desktop-Only Left Sub-Navigation Sidebar */}
+        <div className="hidden md:block md:col-span-4 space-y-3.5 bg-ink-2 border border-ink-4/60 p-6 sticky top-24 shadow-sm" id="help-desktop-nav">
           {CATEGORIES.map(({ id, icon: Icon }) => {
             const isActive = activeCategory === id;
             return (
@@ -468,7 +579,7 @@ export function HelpView() {
                   setActiveCategory(id);
                   setExpandedFaq(null);
                 }}
-                className={`w-full flex items-center gap-4 px-6 py-4  transition-all text-left group relative ${
+                className={`w-full flex items-center gap-4 px-6 py-4 transition-all text-left group relative ${
                   isActive
                     ? "text-live font-semibold bg-live/10 shadow-sm"
                     : "hover:bg-ink-2 text-ink-9/80 hover:text-ink-9"
@@ -499,7 +610,7 @@ export function HelpView() {
         </div>
 
         {/* Right Content Pane */}
-        <div className="md:col-span-8 bg-ink-2 border border-ink-4/60 p-8 md:p-12  min-h-[500px] shadow-sm flex flex-col justify-between">
+        <div className="md:col-span-8 bg-ink-2 border border-ink-4/60 p-5 sm:p-8 md:p-12 min-h-[400px] shadow-sm flex flex-col justify-between">
           <div className="flex-1">
             <AnimatePresence mode="wait">
               {renderCategoryContent()}
