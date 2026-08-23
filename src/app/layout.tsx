@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Archivo, IBM_Plex_Mono, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
+import { AdBarrier } from "@/components/AdBarrier";
 
 /* Three faces, three jobs — see DESIGN.md.
    Archivo: UI and headings. Plex Mono: numerals and measurement only.
@@ -40,6 +41,7 @@ export default function RootLayout({
       <body
         className={`${archivo.variable} ${plexMono.variable} ${sourceSerif.variable} min-h-screen bg-ink-0 text-ink-8`}
       >
+        <AdBarrier />
         {children}
       </body>
     </html>
