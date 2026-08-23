@@ -716,10 +716,10 @@ export function MovieCard() {
                   <Clock className="h-4 w-4 text-live shrink-0" />
                   <span>
                     {locale === "az"
-                      ? `${resumePrompt.formatted} dəqiqəsindən davam edilsin?`
+                      ? "İzləməyə davam edilsin?"
                       : locale === "ru"
-                        ? `Продолжить с ${resumePrompt.formatted}?`
-                        : `Resume playback from ${resumePrompt.formatted}?`}
+                        ? "Продолжить просмотр?"
+                        : "Resume playback?"}
                   </span>
                 </div>
 
@@ -1108,12 +1108,8 @@ export function MovieCard() {
                 lastTime &&
                 lastTime > 10 && (
                   <div className="flex items-center justify-between border-t border-ink-4 bg-ink-2 px-4 py-1.5 text-label uppercase tracking-[0.12em] text-ink-6 [:fullscreen_&]:hidden [:-webkit-full-screen_&]:hidden [:-moz-full-screen_&]:hidden [:-ms-fullscreen_&]:hidden">
-                    <span data-num>
-                      {t("movie.lastWatched", {
-                        time: formatTime(lastTime),
-                      })}
-                    </span>
-                    <span className="text-live">{t("movie.resuming")}</span>
+                    <span className="text-ink-6 font-medium">Continue Watching</span>
+                    <span className="text-live font-semibold">{t("movie.resuming")}</span>
                   </div>
                 )}
             </motion.section>

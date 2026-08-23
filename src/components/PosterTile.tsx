@@ -70,13 +70,11 @@ export function PosterTile({
           </span>
         )}
 
-        {/* Progress & Episode Badge (Top Left) */}
-        {hasProgress && (
+        {/* Episode Badge for TV shows (Top Left) */}
+        {hasProgress && progress.mediaType === "tv" && progress.season && (
           <div className="pointer-events-none absolute top-1 left-1 z-30 flex items-center gap-1 bg-black/85 border border-emerald-500/40 px-1.5 py-0.5 text-[9px] font-bold text-emerald-400 backdrop-blur-xs shadow-xs">
             <span>
-              {progress.mediaType === "tv" && progress.season
-                ? `S${progress.season} E${progress.episode}`
-                : `${Math.round(progress.progressPercent)}%`}
+              S{progress.season} E{progress.episode}
             </span>
           </div>
         )}
@@ -111,22 +109,14 @@ export function PosterTile({
 
       <p className="mt-2 truncate text-small text-ink-8">{movie.title}</p>
       
-      {/* Progress Timestamp Text */}
-      {hasProgress ? (
-        <p className="flex items-center justify-between text-[11px] text-emerald-400 font-medium">
-          <span>{formatTime(progress.currentTime)} / {formatTime(progress.duration)}</span>
-          <span className="text-ink-6 text-label">{year}</span>
-        </p>
-      ) : (
-        <p className="flex items-center gap-2 text-label text-ink-6">
-          <span data-num>{year}</span>
-          {typeof movie.vote_average === "number" && movie.vote_average > 0 && (
-            <span data-num className="text-live">
-              {movie.vote_average.toFixed(1)}
-            </span>
-          )}
-        </p>
-      )}
+      <p className="flex items-center gap-2 text-label text-ink-6">
+        <span data-num>{year}</span>
+        {typeof movie.vote_average === "number" && movie.vote_average > 0 && (
+          <span data-num className="text-live">
+            {movie.vote_average.toFixed(1)}
+          </span>
+        )}
+      </p>
     </motion.li>
   );
 }

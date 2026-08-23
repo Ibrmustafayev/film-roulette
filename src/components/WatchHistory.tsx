@@ -168,7 +168,7 @@ export function ContinueWatching() {
               </div>
 
               {/* Card Meta */}
-              <div className="p-3">
+              <div className="p-3 flex items-center justify-between gap-2">
                 <h3
                   onClick={() => handleResume(item)}
                   className="truncate text-xs font-medium text-ink-9 cursor-pointer hover:text-live transition-colors"
@@ -176,13 +176,9 @@ export function ContinueWatching() {
                 >
                   {item.title}
                 </h3>
-
-                <div className="mt-1.5 flex items-center justify-between text-[11px] text-ink-6">
-                  <span data-num>
-                    {formatTime(item.currentTime)} / {formatTime(item.duration)}
-                  </span>
-                  {remainingText && <span className="text-ink-7">{remainingText}</span>}
-                </div>
+                <span className="text-[10px] uppercase tracking-wider text-live shrink-0 font-semibold">
+                  {locale === "az" ? "Davam et" : locale === "ru" ? "Продолжить" : "Resume"}
+                </span>
               </div>
             </div>
           );

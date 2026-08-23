@@ -13,6 +13,7 @@ import { FavouritesView } from "@/components/FavouritesView";
 import { MobileAppView } from "@/components/MobileAppView";
 import { HelpView } from "@/components/HelpView";
 import { RouletteButton } from "@/components/RouletteButton";
+import { SearchBar } from "@/components/SearchBar";
 import { ContinueWatching } from "@/components/WatchHistory";
 
 import { useStore } from "@/store/useStore";
@@ -186,8 +187,9 @@ function Idle({
         </p>
       </div>
 
-      {/* Quick Roll button on Mobile idle view (between site badge and Popular Now) */}
-      <div className="mt-6 max-w-xs xl:hidden">
+      {/* Quick Search & Roll button on Mobile idle view (between site badge and Popular Now) */}
+      <div className="mt-6 max-w-xs space-y-3 xl:hidden">
+        <SearchBar />
         <RouletteButton id="mobile-roll-dice-btn" />
       </div>
 
