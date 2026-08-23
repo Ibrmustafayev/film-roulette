@@ -5,6 +5,7 @@ import { getTranslations } from "@/lib/i18n";
 import { Movie, getMovieDetails, getTVDetails } from "@/lib/tmdb";
 import { PosterTile, PosterWall, EmptyState } from "./PosterTile";
 import { StageHeading } from "./StageHeading";
+import { ContinueWatching } from "./WatchHistory";
 
 export function HistoryView() {
   const { history, locale, setMovie, setActiveView, setIsLoading } = useStore();
@@ -35,20 +36,29 @@ export function HistoryView() {
         count={history.length}
       />
 
-      {history.length === 0 ? (
-        <EmptyState message={t("history.empty")} />
-      ) : (
-        <PosterWall>
-          {history.map((movie, i) => (
-            <PosterTile
-              key={`${movie.media_type || "item"}-${movie.id}`}
-              movie={movie}
-              index={i}
-              onSelect={handleSelect}
-            />
-          ))}
-        </PosterWall>
-      )}
+      {/* Continue Watching Section */}
+      <ContinueWatching />
+
+      <div className="mt-12">
+        <h2 className="rail-heading mb-5">
+          {locale === "az" ? "Bütün Baxış Tarixçəsi" : locale === "ru" ? "Вся история просмотров" : "All Watch History"}
+        </h2>
+
+        {history.length === 0 ? (
+          <EmptyState message={t("history.empty")} />
+        ) : (
+          <PosterWall>
+            {history.map((movie, i) => (
+              <PosterTile
+                key={`${movie.media_type || "item"}-${movie.id}`}
+                movie={movie}
+                index={i}
+                onSelect={handleSelect}
+              />
+            ))}
+          </PosterWall>
+        )}
+      </div>
     </section>
   );
 }

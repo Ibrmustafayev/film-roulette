@@ -13,6 +13,7 @@ import { FavouritesView } from "@/components/FavouritesView";
 import { MobileAppView } from "@/components/MobileAppView";
 import { HelpView } from "@/components/HelpView";
 import { RouletteButton } from "@/components/RouletteButton";
+import { ContinueWatching } from "@/components/WatchHistory";
 
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
@@ -189,6 +190,9 @@ function Idle({
       <div className="mt-6 max-w-xs xl:hidden">
         <RouletteButton id="mobile-roll-dice-btn" />
       </div>
+
+      {/* Continue Watching Section (YouTube/Netflix Style) */}
+      <ContinueWatching />
 
       {popular.length > 0 && (
         <section className="mt-12 sm:mt-14">

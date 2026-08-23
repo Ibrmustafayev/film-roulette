@@ -8,7 +8,7 @@ interface HlsPlayerProps {
   src: string;
   poster?: string | null;
   initialTime?: number | null;
-  onTimeUpdate?: (currentTime: number) => void;
+  onTimeUpdate?: (currentTime: number, duration: number) => void;
   onError?: (error: Error) => void;
   className?: string;
 }
@@ -122,7 +122,9 @@ export function HlsPlayer({
 
   const handleTimeUpdate = () => {
     if (videoRef.current && onTimeUpdate) {
-      onTimeUpdate(Math.floor(videoRef.current.currentTime));
+      const cur = Math.floor(videoRef.current.currentTime);
+      const dur = Math.floor(videoRef.current.duration) || 0;
+      onTimeUpdate(cur, dur);
     }
   };
 

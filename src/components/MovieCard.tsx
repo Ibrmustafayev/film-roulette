@@ -7,10 +7,17 @@ import {
   Play, User, ExternalLink, Heart, Loader2,
   AlertCircle, RefreshCw, ChevronRight, X, Link2, Download, Check,
   Tv, Film, ListFilter, ShieldCheck, ShieldAlert, Maximize, Minimize,
+  Clock, RotateCcw,
 } from "lucide-react";
 import { getImageUrl, getSeasonDetails, SeasonDetails } from "@/lib/tmdb";
 import { getTranslations } from "@/lib/i18n";
 import { resolveStreamSources } from "@/lib/providers";
+import {
+  saveWatchProgress,
+  getMediaProgress,
+  formatTime,
+  removeHistoryItem,
+} from "@/lib/history";
 import { HlsPlayer } from "./HlsPlayer";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -38,6 +45,7 @@ export function MovieCard() {
 
   const [phase, setPhase] = useState<PlayerPhase>({ tag: "idle" });
   const [lastTime, setLastTime] = useState<number | null>(null);
+  const [resumePrompt, setResumePrompt] = useState<{ visible: boolean; time: number; formatted: string } | null>(null);
   const [copied, setCopied] = useState(false);
   const [shieldActive, setShieldActive] = useState(true);
   const [firstClickDismissed, setFirstClickDismissed] = useState(false);
@@ -77,6 +85,28 @@ export function MovieCard() {
     setFirstClickDismissed(false);
     setUseDirectEmbed(false);
   }, [setShowPlayer]);
+
+  // Check saved watch progress on load
+  useEffect(() => {
+    if (!movie) {
+      setResumePrompt(null);
+      return;
+    }
+
+    const saved = getMediaProgress(movie.id, isTv ? selectedSeason : undefined, isTv ? selectedEpisode : undefined);
+    if (saved && saved.currentTime > 10 && saved.progressPercent < 95) {
+      setResumePrompt({
+        visible: true,
+        time: saved.currentTime,
+        formatted: formatTime(saved.currentTime),
+      });
+      setLastTime(saved.currentTime);
+    } else {
+      setResumePrompt(null);
+      const storeTime = watchProgress[currentEpisodeKey];
+      setLastTime(storeTime || null);
+    }
+  }, [movie?.id, isTv, selectedSeason, selectedEpisode, currentEpisodeKey, watchProgress]);
 
   // Fullscreen change listener across vendor prefixes
   useEffect(() => {
@@ -119,7 +149,6 @@ export function MovieCard() {
     );
 
     if (!isCurrentFull) {
-      // Prioritize direct native iframe fullscreen, fallback to container
       const targetEl = iframeEl || containerEl;
       if (targetEl) {
         if (targetEl.requestFullscreen) {
@@ -179,7 +208,6 @@ export function MovieCard() {
 
   useEffect(() => {
     stopPlayer();
-    setLastTime(movie ? watchProgress[currentEpisodeKey] || null : null);
     setTimeout(() => {
       abortRef.current = false;
     }, 0);
@@ -200,7 +228,21 @@ export function MovieCard() {
         const d = typeof e.data === "string" ? JSON.parse(e.data) : e.data;
         if (d?.type === "MEDIA_DATA" && d?.progress && movie) {
           const time = Math.floor(d.progress.time);
-          if (time > 0) setWatchProgress(currentEpisodeKey, time);
+          const duration = Math.floor(d.progress.duration) || (movie.runtime ? movie.runtime * 60 : 7200);
+          if (time > 0) {
+            setWatchProgress(currentEpisodeKey, time);
+            saveWatchProgress({
+              id: movie.id,
+              mediaType: isTv ? "tv" : "movie",
+              title: movie.title,
+              posterPath: movie.poster_path,
+              backdropPath: movie.backdrop_path,
+              currentTime: time,
+              duration,
+              season: isTv ? selectedSeason : undefined,
+              episode: isTv ? selectedEpisode : undefined,
+            });
+          }
         }
       } catch {
         /* ignore */
@@ -208,7 +250,7 @@ export function MovieCard() {
     };
     window.addEventListener("message", handleMsg);
     return () => window.removeEventListener("message", handleMsg);
-  }, [movie, currentEpisodeKey, setWatchProgress]);
+  }, [movie, currentEpisodeKey, isTv, selectedSeason, selectedEpisode, setWatchProgress]);
 
   // Anti-ad-popup focus protection for fallback iframes
   useEffect(() => {
@@ -252,7 +294,7 @@ export function MovieCard() {
     };
   }, [phase.tag]);
 
-  // Fast Auto-Fallback to direct embed URL if proxy stalls (enforced at 2.5s)
+  // Fast Auto-Fallback to direct embed URL if proxy stalls (2.5s)
   useEffect(() => {
     if (phase.tag !== "playing" || useDirectEmbed) return;
 
@@ -297,7 +339,6 @@ export function MovieCard() {
     setPhase({ tag: "extracting" });
 
     try {
-      // Tier 1: Attempt fast direct extraction (1.8s timeout)
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1800);
 
@@ -315,7 +356,6 @@ export function MovieCard() {
       // Direct extraction timed out or failed -> immediately load Tier 2
     }
 
-    // Tier 2: Directly load Server 1 embed without blocking delays
     if (!abortRef.current) {
       switchToServer(0);
     }
@@ -324,7 +364,7 @@ export function MovieCard() {
   const handleIframeLoad = useCallback(
     (e: React.SyntheticEvent<HTMLIFrameElement>) => {
       setIframeLoading(false);
-      const savedTime = watchProgress[currentEpisodeKey];
+      const savedTime = lastTime || watchProgress[currentEpisodeKey];
       if (savedTime && savedTime > 10) {
         const iframe = e.currentTarget;
         setTimeout(() => {
@@ -337,7 +377,7 @@ export function MovieCard() {
         }, 1500);
       }
     },
-    [watchProgress, currentEpisodeKey]
+    [lastTime, watchProgress, currentEpisodeKey]
   );
 
   const handleNextServerManual = () => {
@@ -587,6 +627,57 @@ export function MovieCard() {
               </motion.div>
             )}
 
+            {/* Auto-Resume Prompt Banner */}
+            {resumePrompt?.visible && !isPlayerOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-5 flex flex-wrap items-center justify-between gap-3 border border-live/40 bg-live/10 p-3 text-xs rounded-sm"
+              >
+                <div className="flex items-center gap-2 text-ink-9">
+                  <Clock className="h-4 w-4 text-live shrink-0" />
+                  <span>
+                    {locale === "az"
+                      ? `${resumePrompt.formatted} dəqiqəsindən davam edilsin?`
+                      : locale === "ru"
+                        ? `Продолжить с ${resumePrompt.formatted}?`
+                        : `Resume playback from ${resumePrompt.formatted}?`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    id="resume-playback-btn"
+                    onClick={() => {
+                      setResumePrompt(null);
+                      setLastTime(resumePrompt.time);
+                      handleWatchContent();
+                    }}
+                    className="ctl ctl-live h-7 px-3 text-xs"
+                  >
+                    <Play className="h-3 w-3 fill-current" />
+                    <span>{locale === "az" ? "Davam et" : locale === "ru" ? "Продолжить" : "Resume"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    id="start-over-btn"
+                    onClick={() => {
+                      setResumePrompt(null);
+                      setLastTime(null);
+                      removeHistoryItem(movie.id, isTv ? selectedSeason : undefined, isTv ? selectedEpisode : undefined);
+                      handleWatchContent();
+                    }}
+                    className="ctl ctl-ghost h-7 px-2.5 text-xs text-ink-6 hover:text-ink-8"
+                  >
+                    <RotateCcw className="h-3 w-3" />
+                    <span>{locale === "az" ? "Yenidən başla" : locale === "ru" ? "С начала" : "Start Over"}</span>
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
             <motion.div {...step(4)} className="mt-7 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -749,7 +840,20 @@ export function MovieCard() {
                       src={phase.streamUrl}
                       poster={getImageUrl(movie.backdrop_path || movie.poster_path, "original")}
                       initialTime={lastTime}
-                      onTimeUpdate={(time) => setWatchProgress(currentEpisodeKey, time)}
+                      onTimeUpdate={(time, duration) => {
+                        setWatchProgress(currentEpisodeKey, time);
+                        saveWatchProgress({
+                          id: movie.id,
+                          mediaType: isTv ? "tv" : "movie",
+                          title: movie.title,
+                          posterPath: movie.poster_path,
+                          backdropPath: movie.backdrop_path,
+                          currentTime: time,
+                          duration: duration || (movie.runtime ? movie.runtime * 60 : 7200),
+                          season: isTv ? selectedSeason : undefined,
+                          episode: isTv ? selectedEpisode : undefined,
+                        });
+                      }}
                       onError={() => switchToServer(0)}
                     />
                   </div>
@@ -928,9 +1032,7 @@ export function MovieCard() {
                   <div className="flex items-center justify-between border-t border-ink-4 bg-ink-2 px-4 py-1.5 text-label uppercase tracking-[0.12em] text-ink-6 [:fullscreen_&]:hidden [:-webkit-full-screen_&]:hidden [:-moz-full-screen_&]:hidden [:-ms-fullscreen_&]:hidden">
                     <span data-num>
                       {t("movie.lastWatched", {
-                        time: `${Math.floor(lastTime / 60)}:${(lastTime % 60)
-                          .toString()
-                          .padStart(2, "0")}`,
+                        time: formatTime(lastTime),
                       })}
                     </span>
                     <span className="text-live">{t("movie.resuming")}</span>
