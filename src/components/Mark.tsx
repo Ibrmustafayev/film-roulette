@@ -1,6 +1,7 @@
 "use client";
 
 import { useId } from "react";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/store/useStore";
 
 /**
@@ -74,6 +75,7 @@ export function Logo({
   markSize?: number;
   onClick?: () => void;
 }) {
+  const router = useRouter();
   const { setMovie, setActiveView, setShowPlayer, setShowTrailer, setMenuOpen } = useStore();
 
   const handleGoHome = (e: React.MouseEvent) => {
@@ -87,6 +89,7 @@ export function Logo({
     if (typeof window !== "undefined") {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
+    router.push("/");
   };
 
   return (

@@ -66,38 +66,38 @@ export function HomeContent({
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const currentMedia = movie || initialMovie;
-
-    if (activeView === "random" && currentMedia) {
-      const isTv = currentMedia.media_type === "tv" || !!currentMedia.number_of_seasons;
-      let targetPath = "";
-      if (isTv) {
-        if (selectedSeason && selectedEpisode && (selectedSeason > 1 || selectedEpisode > 1)) {
-          targetPath = `/tv/${currentMedia.id}?season=${selectedSeason}&episode=${selectedEpisode}`;
+    if (activeView === "random") {
+      if (movie) {
+        const isTv = movie.media_type === "tv" || !!movie.number_of_seasons;
+        let targetPath = "";
+        if (isTv) {
+          if (selectedSeason && selectedEpisode && (selectedSeason > 1 || selectedEpisode > 1)) {
+            targetPath = `/tv/${movie.id}?season=${selectedSeason}&episode=${selectedEpisode}`;
+          } else {
+            targetPath = `/tv/${movie.id}`;
+          }
         } else {
-          targetPath = `/tv/${currentMedia.id}`;
+          targetPath = `/movie/${movie.id}`;
+        }
+
+        if (window.location.pathname + window.location.search !== targetPath) {
+          window.history.replaceState(
+            { ...window.history.state, as: targetPath, url: targetPath },
+            "",
+            targetPath
+          );
         }
       } else {
-        targetPath = `/movie/${currentMedia.id}`;
-      }
-
-      if (window.location.pathname + window.location.search !== targetPath) {
-        window.history.replaceState(
-          { ...window.history.state, as: targetPath, url: targetPath },
-          "",
-          targetPath
-        );
-      }
-    } else if (!initialMovie && (activeView === "history" || activeView === "favourites" || !movie)) {
-      if (window.location.pathname !== "/" && !window.location.pathname.startsWith("/api")) {
-        window.history.replaceState(
-          { ...window.history.state, as: "/", url: "/" },
-          "",
-          "/"
-        );
+        if (window.location.pathname !== "/" && !window.location.pathname.startsWith("/api")) {
+          window.history.replaceState(
+            { ...window.history.state, as: "/", url: "/" },
+            "",
+            "/"
+          );
+        }
       }
     }
-  }, [movie, initialMovie, activeView, selectedSeason, selectedEpisode]);
+  }, [movie, activeView, selectedSeason, selectedEpisode]);
 
   useEffect(() => {
     if (movie && stageRef.current && activeView === "random") {
@@ -163,7 +163,7 @@ export function HomeContent({
 
             <div ref={stageRef} className="relative scroll-mt-14">
               {isLoading && <StageSkeleton />}
-              {!isLoading && !movie && !initialMovie && (
+              {!isLoading && !movie && (
                 <Idle
                   headline={t("site.tagline")}
                   body={t("site.description")}
@@ -171,7 +171,7 @@ export function HomeContent({
                   popular={popular}
                 />
               )}
-              <MovieCard initialMovie={initialMovie} />
+              {movie && <MovieCard />}
             </div>
           </>
         )}
