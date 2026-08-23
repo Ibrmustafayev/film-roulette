@@ -135,6 +135,46 @@ export const IMDB_RANGES = [
   { value: '0-5', min: 0, max: 5 },
 ];
 
+/**
+ * Maps genre IDs between Movie and TV genres so selecting a genre under "ALL" or "SERIES"
+ * automatically resolves to the appropriate TMDB Genre ID.
+ */
+export function mapGenreForMediaType(genreId: number | string, mediaType: 'movie' | 'tv'): string {
+  const id = Number(genreId);
+  if (!id || isNaN(id)) return '';
+
+  if (mediaType === 'tv') {
+    switch (id) {
+      case 28: // Action
+      case 12: // Adventure
+        return '10759'; // Action & Adventure
+      case 878: // Sci-Fi
+      case 14: // Fantasy
+        return '10765'; // Sci-Fi & Fantasy
+      case 10752: // War
+      case 36: // History
+        return '10768'; // War & Politics
+      default:
+        return String(id);
+    }
+  }
+
+  if (mediaType === 'movie') {
+    switch (id) {
+      case 10759: // Action & Adventure
+        return '28,12';
+      case 10765: // Sci-Fi & Fantasy
+        return '878,14';
+      case 10768: // War & Politics
+        return '10752,36';
+      default:
+        return String(id);
+    }
+  }
+
+  return String(id);
+}
+
 const FALLBACK_MOVIE_GENRES: Genre[] = [
   { id: 28, name: 'Action' },
   { id: 12, name: 'Adventure' },
@@ -217,10 +257,6 @@ const FALLBACK_MOVIES: Movie[] = [
     original_language: 'en',
     imdb_id: 'tt1375666',
     trailer_key: 'YoHD9XEInc0',
-    cast: [
-      { id: 6193, name: 'Leonardo DiCaprio', character: 'Dom Cobb', profile_path: '/wo2hJpn04vbtmh0B9utCFdsQhxM.jpg' },
-      { id: 24045, name: 'Joseph Gordon-Levitt', character: 'Arthur', profile_path: '/dhv93w0P7QfV8n3kFv70A887iL5.jpg' },
-    ],
   },
   {
     id: 157336,
@@ -239,6 +275,59 @@ const FALLBACK_MOVIES: Movie[] = [
     original_language: 'en',
     imdb_id: 'tt0816692',
     trailer_key: 'zSWdZVtXT7E',
+  },
+  {
+    id: 155,
+    title: 'The Dark Knight',
+    original_title: 'The Dark Knight',
+    media_type: 'movie',
+    overview: 'Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets.',
+    poster_path: '/qJ2tW6WMUDux911r6m7haRef0WH.jpg',
+    backdrop_path: '/nMKdUUepR0i5zn0y1T4CsSB5chy.jpg',
+    release_date: '2008-07-16',
+    vote_average: 8.5,
+    vote_count: 32000,
+    genre_ids: [18, 28, 80, 53],
+    genres: [{ id: 18, name: 'Drama' }, { id: 28, name: 'Action' }],
+    runtime: 152,
+    original_language: 'en',
+    imdb_id: 'tt0468569',
+    trailer_key: 'EXeTwQWrcwY',
+  },
+  {
+    id: 680,
+    title: 'Pulp Fiction',
+    original_title: 'Pulp Fiction',
+    media_type: 'movie',
+    overview: 'A burger-loving hit man, his philosophical partner, a drug-addled gangster\'s moll and a washed-up boxer converge in this sprawling, comedic crime caper.',
+    poster_path: '/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg',
+    backdrop_path: '/suaEOtk1N1sgg2MTM7oZd2cfVp3.jpg',
+    release_date: '1994-09-10',
+    vote_average: 8.5,
+    vote_count: 27000,
+    genre_ids: [53, 80],
+    genres: [{ id: 53, name: 'Thriller' }, { id: 80, name: 'Crime' }],
+    runtime: 154,
+    original_language: 'en',
+    imdb_id: 'tt0110912',
+    trailer_key: 's7EdQ4FqbhY',
+  },
+  {
+    id: 603,
+    title: 'The Matrix',
+    original_title: 'The Matrix',
+    media_type: 'movie',
+    overview: 'Set in the 22nd century, The Matrix tells the story of a computer hacker who joins a group of underground insurgents fighting the vast and powerful computers who now rule the earth.',
+    poster_path: '/f89U3ADr1oiB1s9GkdPOEpXUk5H.jpg',
+    backdrop_path: '/7u3DUTNuLq97m395QStc2B5Z045.jpg',
+    release_date: '1999-03-30',
+    vote_average: 8.2,
+    vote_count: 24000,
+    genre_ids: [28, 878],
+    genres: [{ id: 28, name: 'Action' }, { id: 878, name: 'Science Fiction' }],
+    runtime: 136,
+    original_language: 'en',
+    imdb_id: 'tt0133093',
   },
 ];
 
@@ -264,7 +353,7 @@ const FALLBACK_TVS: Movie[] = [
     number_of_episodes: 73,
     seasons: [
       { id: 3624, season_number: 1, name: 'Season 1', episode_count: 10, poster_path: '/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg' },
-      { id: 3625, season_number: 2, name: 'Season 2', episode_count: 10, poster_path: '/2 OMB0ynKlyIenMJWI2Dy9IWT4c.jpg' },
+      { id: 3625, season_number: 2, name: 'Season 2', episode_count: 10, poster_path: '/2OMB0ynKlyIenMJWI2Dy9IWT4c.jpg' },
       { id: 3626, season_number: 3, name: 'Season 3', episode_count: 10, poster_path: '/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg' },
     ],
   },
@@ -289,6 +378,72 @@ const FALLBACK_TVS: Movie[] = [
     seasons: [
       { id: 3572, season_number: 1, name: 'Season 1', episode_count: 7, poster_path: '/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg' },
       { id: 3573, season_number: 2, name: 'Season 2', episode_count: 13, poster_path: '/ztkUQFLlC19CCMYHW9o1zWhJRNq.jpg' },
+    ],
+  },
+  {
+    id: 100088,
+    title: 'The Last of Us',
+    original_title: 'The Last of Us',
+    media_type: 'tv',
+    overview: 'Twenty years after modern civilization has been destroyed, Joel, a hardened survivor, is hired to smuggle Ellie, a 14-year-old girl, out of an oppressive quarantine zone.',
+    poster_path: '/uKvVjHNqB5VmOrdxqAt2V7JMrne.jpg',
+    backdrop_path: '/uDgy6hyPd82kOHh6I95FLtLnj6p.jpg',
+    release_date: '2023-01-15',
+    first_air_date: '2023-01-15',
+    vote_average: 8.6,
+    vote_count: 5200,
+    genre_ids: [18, 10759, 10765],
+    genres: [{ id: 18, name: 'Drama' }, { id: 10759, name: 'Action & Adventure' }],
+    original_language: 'en',
+    imdb_id: 'tt3581920',
+    number_of_seasons: 1,
+    number_of_episodes: 9,
+    seasons: [
+      { id: 144598, season_number: 1, name: 'Season 1', episode_count: 9, poster_path: '/uKvVjHNqB5VmOrdxqAt2V7JMrne.jpg' },
+    ],
+  },
+  {
+    id: 66732,
+    title: 'Stranger Things',
+    original_title: 'Stranger Things',
+    media_type: 'tv',
+    overview: 'When a young boy vanishes, a small town uncovers a mystery involving secret experiments, terrifying supernatural forces and one strange little girl.',
+    poster_path: '/49WJfeN0moxb9IPfGn8AIqMGskD.jpg',
+    backdrop_path: '/56v2KjBlU4XaOv9rVYEQypROD7P.jpg',
+    release_date: '2016-07-15',
+    first_air_date: '2016-07-15',
+    vote_average: 8.6,
+    vote_count: 17000,
+    genre_ids: [18, 10765, 9648],
+    genres: [{ id: 18, name: 'Drama' }, { id: 10765, name: 'Sci-Fi & Fantasy' }],
+    original_language: 'en',
+    imdb_id: 'tt4574334',
+    number_of_seasons: 4,
+    number_of_episodes: 34,
+    seasons: [
+      { id: 77680, season_number: 1, name: 'Season 1', episode_count: 8, poster_path: '/49WJfeN0moxb9IPfGn8AIqMGskD.jpg' },
+    ],
+  },
+  {
+    id: 87108,
+    title: 'Chernobyl',
+    original_title: 'Chernobyl',
+    media_type: 'tv',
+    overview: 'The true story of one of the worst man-made catastrophes in history: the catastrophic nuclear accident at Chernobyl.',
+    poster_path: '/hlLXt2tOPT6RRnjiUmoxyG1LTFi.jpg',
+    backdrop_path: '/900tHlUYUkp7Ol04XFSoAaEVSYq.jpg',
+    release_date: '2019-05-06',
+    first_air_date: '2019-05-06',
+    vote_average: 8.7,
+    vote_count: 6100,
+    genre_ids: [18, 36],
+    genres: [{ id: 18, name: 'Drama' }],
+    original_language: 'en',
+    imdb_id: 'tt7366338',
+    number_of_seasons: 1,
+    number_of_episodes: 5,
+    seasons: [
+      { id: 119859, season_number: 1, name: 'Miniseries', episode_count: 5, poster_path: '/hlLXt2tOPT6RRnjiUmoxyG1LTFi.jpg' },
     ],
   },
 ];
@@ -539,6 +694,9 @@ export const getSeasonDetails = async (
   }
 };
 
+/**
+ * True Dynamic Roulette Randomization with Multi-Page Discovery & Anti-Repeat Buffer
+ */
 export const getRandomMedia = async (params: {
   type?: 'movie' | 'tv' | 'all';
   genre?: string;
@@ -547,6 +705,7 @@ export const getRandomMedia = async (params: {
   originalLanguage?: string;
   imdbMin?: number;
   imdbMax?: number;
+  excludeIds?: number[];
 }): Promise<Movie | null> => {
   const {
     type = 'all',
@@ -556,8 +715,10 @@ export const getRandomMedia = async (params: {
     originalLanguage,
     imdbMin,
     imdbMax,
+    excludeIds = [],
   } = params;
 
+  // 1. 50/50 Balanced Rotation on EACH roll when type === 'all'
   const chosenType: 'movie' | 'tv' =
     type === 'all' ? (Math.random() > 0.5 ? 'movie' : 'tv') : type;
 
@@ -567,10 +728,14 @@ export const getRandomMedia = async (params: {
     const initialParams: Record<string, string | number> = {
       include_adult: 'false',
       sort_by: 'popularity.desc',
-      'vote_count.gte': chosenType === 'tv' ? 80 : 150,
+      'vote_count.gte': chosenType === 'tv' ? 40 : 80,
     };
 
-    if (genre) initialParams['with_genres'] = genre;
+    if (genre) {
+      const mappedGenre = mapGenreForMediaType(genre, chosenType);
+      if (mappedGenre) initialParams['with_genres'] = mappedGenre;
+    }
+
     if (originalLanguage) initialParams['with_original_language'] = originalLanguage;
 
     if (chosenType === 'movie') {
@@ -588,9 +753,13 @@ export const getRandomMedia = async (params: {
       initialParams['vote_average.lte'] = imdbMax;
     }
 
-    const initialData = await fetchFromTMDB(endpoint, initialParams, 120);
+    // Step 1: Initial Discovery query to get total available pages
+    const initialData = await fetchFromTMDB(endpoint, initialParams, 60);
 
-    if (!initialData.results || initialData.results.length === 0) {
+    const totalPages = Math.min(Number(initialData.total_pages) || 1, 500);
+    const totalResults = Number(initialData.total_results) || 0;
+
+    if (totalResults === 0 || !initialData.results || initialData.results.length === 0) {
       if (type === 'all') {
         return getRandomMedia({
           type: chosenType === 'movie' ? 'tv' : 'movie',
@@ -600,22 +769,37 @@ export const getRandomMedia = async (params: {
           originalLanguage,
           imdbMin,
           imdbMax,
+          excludeIds,
         });
       }
       throw new Error('No results');
     }
 
-    const totalPages = Math.min(initialData.total_pages, 500);
-    const randomPage = Math.floor(Math.random() * totalPages) + 1;
+    // Step 2: Random Page Selection across total available pages
+    const maxSamplePage = Math.min(totalPages, 50);
+    const randomPage = Math.floor(Math.random() * maxSamplePage) + 1;
 
-    const randomPageParams = { ...initialParams, page: randomPage };
-    const randomPageData = await fetchFromTMDB(endpoint, randomPageParams, 120);
+    let targetResults: Record<string, unknown>[] = [];
 
-    const rawResults = randomPageData.results as Record<string, unknown>[];
-    if (!rawResults || rawResults.length === 0) throw new Error('No results');
+    if (randomPage === 1 && initialData.results && initialData.results.length > 0) {
+      targetResults = initialData.results as Record<string, unknown>[];
+    } else {
+      const randomPageParams = { ...initialParams, page: randomPage };
+      const pageData = await fetchFromTMDB(endpoint, randomPageParams, 60);
+      targetResults = (pageData.results || []) as Record<string, unknown>[];
+      if (targetResults.length === 0) {
+        targetResults = initialData.results as Record<string, unknown>[];
+      }
+    }
 
-    const randomIndex = Math.floor(Math.random() * rawResults.length);
-    const rawItem = rawResults[randomIndex];
+    // Step 3: Anti-Repeat Buffer (exclude recently served items)
+    let eligible = targetResults.filter((r) => !excludeIds.includes(Number(r.id)));
+    if (eligible.length === 0) {
+      eligible = targetResults;
+    }
+
+    const randomIndex = Math.floor(Math.random() * eligible.length);
+    const rawItem = eligible[randomIndex];
 
     if (chosenType === 'tv') {
       const tvNormalized = normalizeTVShow(rawItem);
@@ -633,10 +817,18 @@ export const getRandomMedia = async (params: {
       };
     }
   } catch {
-    // Robust offline catalog fallback
+    // Offline catalog fallback with randomization and filter matching
     const list = chosenType === 'tv' ? FALLBACK_TVS : FALLBACK_MOVIES;
-    const selected = list[Math.floor(Math.random() * list.length)];
-    return selected;
+    let filtered = list.filter((item) => !excludeIds.includes(item.id));
+    if (filtered.length === 0) filtered = list;
+
+    if (imdbMin !== undefined && imdbMin > 0) {
+      const r = filtered.filter((item) => item.vote_average >= imdbMin);
+      if (r.length > 0) filtered = r;
+    }
+
+    const randomIndex = Math.floor(Math.random() * filtered.length);
+    return filtered[randomIndex] || list[0];
   }
 };
 
@@ -647,6 +839,7 @@ export const getRandomMovie = async (params: {
   originalLanguage?: string;
   imdbMin?: number;
   imdbMax?: number;
+  excludeIds?: number[];
 }) => {
   return getRandomMedia({ ...params, type: 'movie' });
 };

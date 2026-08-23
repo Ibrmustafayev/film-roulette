@@ -22,6 +22,7 @@ export function RouletteButton() {
     yearTo,
     originalLanguage,
     imdbRange,
+    history,
     setMovie,
     isLoading,
     setIsLoading,
@@ -46,6 +47,15 @@ export function RouletteButton() {
       if (originalLanguage) params.append("originalLanguage", originalLanguage);
       if (imdbRange) params.append("imdbRange", imdbRange);
 
+      // Pass the last 20 served items to anti-repeat buffer
+      if (history && history.length > 0) {
+        const excludeIds = history.slice(0, 20).map((m) => m.id);
+        params.append("exclude", excludeIds.join(","));
+      }
+
+      // Add cache buster timestamp
+      params.append("_t", Date.now().toString());
+
       const res = await fetch(`/api/random?${params.toString()}`);
 
       if (!res.ok) {
@@ -67,6 +77,7 @@ export function RouletteButton() {
     <div>
       <button
         type="button"
+        id="roll-dice-btn"
         onClick={rollDice}
         disabled={isLoading}
         className="ctl ctl-live w-full"

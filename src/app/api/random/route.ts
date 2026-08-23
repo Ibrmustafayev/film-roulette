@@ -15,6 +15,14 @@ export async function GET(request: Request) {
     const yearTo = searchParams.get("yearTo") || undefined;
     const originalLanguage = searchParams.get("originalLanguage") || undefined;
     const imdbRange = searchParams.get("imdbRange") || "";
+    const excludeParam = searchParams.get("exclude") || "";
+
+    const excludeIds: number[] = excludeParam
+      ? excludeParam
+          .split(",")
+          .map((s) => Number(s.trim()))
+          .filter((n) => !isNaN(n) && n > 0)
+      : [];
 
     let imdbMin: number | undefined;
     let imdbMax: number | undefined;
@@ -35,6 +43,7 @@ export async function GET(request: Request) {
       originalLanguage,
       imdbMin,
       imdbMax,
+      excludeIds,
     });
 
     if (!media) {
@@ -44,7 +53,7 @@ export async function GET(request: Request) {
           status: 404,
           headers: {
             "Access-Control-Allow-Origin": "*",
-            "Cache-Control": "no-cache",
+            "Cache-Control": "no-cache, no-store",
           },
         }
       );
@@ -53,7 +62,7 @@ export async function GET(request: Request) {
     return NextResponse.json(media, {
       headers: {
         "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
       },
     });
   } catch (error) {
