@@ -600,6 +600,7 @@ export function MovieCard() {
                       allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                       allowFullScreen
                       referrerPolicy="no-referrer"
+                      sandbox="allow-scripts allow-same-origin allow-fullscreen allow-forms allow-presentation"
                       onLoad={(e) => handleIframeLoad(e, phase.sourceIndex)}
                       className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
                       aria-hidden
@@ -668,6 +669,7 @@ export function MovieCard() {
                     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
                     allowFullScreen
                     referrerPolicy="no-referrer"
+                    sandbox="allow-scripts allow-same-origin allow-fullscreen allow-forms allow-presentation"
                     className="absolute inset-0 h-full w-full"
                   />
                 )}
