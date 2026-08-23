@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 const AD_KEYWORDS = [
+  "whitebit.com", "whitebit", "cryptoexchange", "coingape",
+  "buycrypto", "freebitco", "cryptocoin", "tokensale",
   "popads", "adcash", "adsterra", "propellerads", "exoclick",
   "trafficjunky", "monetag", "clickadu", "hilltopads", "adbuffs",
   "richpush", "trafficstars", "trafficforce", "juicyads",
@@ -13,7 +15,6 @@ const AD_KEYWORDS = [
   "doubleclick", "googlesyndication", "googleadservices",
   "bet365", "1xbet", "melbet", "mostbet", "pin-up", "vulkan",
   "betway", "parimatch", "aviator", "stake.com", "roobet",
-  "cryptoexchange", "coingape", "buycrypto", "freebitco",
 ];
 
 const buildAntiPopupAndSubResourceScript = (targetOrigin: string) => `

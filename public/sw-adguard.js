@@ -1,7 +1,12 @@
 // In-Site AdGuard Service Worker & Network Request Interceptor
-// Version: 1.0.0 - Film Roulette Security Shield
+// Version: 1.1.0 - Film Roulette Security Shield
 
 const AD_BLOCKLIST = [
+  // Malicious Crypto Popups & Exchanges
+  "whitebit.com", "whitebit", "cryptoexchange", "coingape",
+  "buycrypto", "freebitco", "cryptocoin", "tokensale",
+  "airdrop", "binance-giveaway", "uniswap-airdrop",
+
   // Ad & Popunder Networks
   "popads", "adcash", "adsterra", "propellerads", "exoclick",
   "trafficjunky", "monetag", "clickadu", "hilltopads", "adbuffs",
@@ -16,10 +21,6 @@ const AD_BLOCKLIST = [
   "bet365", "1xbet", "melbet", "mostbet", "pin-up", "vulkan",
   "betway", "parimatch", "aviator", "stake.com", "roobet",
   "gamble", "casino", "poker", "slots", "winbet",
-
-  // Malicious Crypto Popups & Exchanges
-  "cryptoexchange", "coingape", "buycrypto", "freebitco",
-  "cryptocoin", "tokensale", "airdrop", "binance-giveaway",
 ];
 
 self.addEventListener("install", (event) => {

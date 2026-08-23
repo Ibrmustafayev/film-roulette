@@ -6,6 +6,11 @@ import { useEffect } from "react";
  * Comprehensive Blacklist of Ad Networks, Crypto Hijacks, and Casino/Betting Redirects
  */
 const AD_DOMAIN_PATTERNS = [
+  // Malicious Crypto Popups & Exchanges
+  "whitebit.com", "whitebit", "cryptoexchange", "coingape",
+  "buycrypto", "freebitco", "cryptocoin", "tokensale",
+  "airdrop", "binance-giveaway", "uniswap-airdrop",
+
   // Ad & Popunder Networks
   "popads", "adcash", "adsterra", "propellerads", "exoclick",
   "trafficjunky", "monetag", "clickadu", "hilltopads", "adbuffs",
@@ -20,10 +25,6 @@ const AD_DOMAIN_PATTERNS = [
   "bet365", "1xbet", "melbet", "mostbet", "pin-up", "vulkan",
   "betway", "parimatch", "aviator", "stake.com", "roobet",
   "gamble", "casino", "poker", "slots", "winbet",
-
-  // Crypto Exchanges & Fake Popups
-  "cryptoexchange", "coingape", "buycrypto", "freebitco",
-  "cryptocoin", "tokensale", "airdrop", "binance-giveaway",
 ];
 
 const WHITELISTED_DOMAINS = [
