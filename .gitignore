@@ -47,3 +47,5 @@ scratch/
 scripts/
 
 .vercel
+
+!.env.production

@@ -1,6 +1,7 @@
 import { getGenres, getPopularMedia, getFullTV, Genre, Movie, getImageUrl } from "@/lib/tmdb";
 import { HomeContent } from "@/components/HomeContent";
 import type { Metadata } from "next";
+import { MediaJsonLd } from "@/components/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -81,12 +82,15 @@ export default async function TVPage({ params, searchParams }: PageProps) {
   const initialEpisode = episode ? parseInt(episode, 10) : undefined;
 
   return (
-    <HomeContent
-      genres={genres}
-      popular={popular}
-      initialMovie={tv || undefined}
-      initialSeason={initialSeason}
-      initialEpisode={initialEpisode}
-    />
+    <>
+      {tv && <MediaJsonLd media={tv} type="tv" />}
+      <HomeContent
+        genres={genres}
+        popular={popular}
+        initialMovie={tv || undefined}
+        initialSeason={initialSeason}
+        initialEpisode={initialEpisode}
+      />
+    </>
   );
 }

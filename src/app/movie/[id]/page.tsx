@@ -1,6 +1,7 @@
 import { getGenres, getPopularMedia, getFullMovie, Genre, Movie, getImageUrl } from "@/lib/tmdb";
 import { HomeContent } from "@/components/HomeContent";
 import type { Metadata } from "next";
+import { MediaJsonLd } from "@/components/JsonLd";
 
 export const dynamic = "force-dynamic";
 
@@ -69,5 +70,10 @@ export default async function MoviePage({ params }: PageProps) {
   const popular: Movie[] = popularResult.status === "fulfilled" ? popularResult.value : [];
   const movie: Movie | null = movieResult.status === "fulfilled" ? movieResult.value : null;
 
-  return <HomeContent genres={genres} popular={popular} initialMovie={movie || undefined} />;
+  return (
+    <>
+      {movie && <MediaJsonLd media={movie} type="movie" />}
+      <HomeContent genres={genres} popular={popular} initialMovie={movie || undefined} />
+    </>
+  );
 }
