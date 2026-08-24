@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase, WatchRoom, RoomMessage, UserProfile } from "@/lib/supabaseClient";
 
@@ -55,11 +55,21 @@ export function useRoomSync({
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isHost = currentUser?.id === room.host_id;
 
-  const currentUserId = currentUser?.id || "guest-" + Math.random().toString(36).substring(2, 7);
+  // Stable User ID for session to prevent re-tracking
+  const currentUserId = useMemo(() => {
+    return currentUser?.id || "guest-" + Math.random().toString(36).substring(2, 8);
+  }, [currentUser?.id]);
+
   const currentUsername =
     currentProfile?.username || currentUser?.email?.split("@")[0] || "Guest-" + currentUserId.slice(-4);
   const currentAvatar =
     currentProfile?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUserId}`;
+
+  // Keep latest callbacks in ref to avoid re-triggering subscription effect
+  const callbacksRef = useRef({ getCurrentTime, seekTo, playMedia, pauseMedia });
+  useEffect(() => {
+    callbacksRef.current = { getCurrentTime, seekTo, playMedia, pauseMedia };
+  });
 
   // Broadcast helper
   const broadcast = useCallback(
@@ -88,18 +98,20 @@ export function useRoomSync({
   const sendPlay = useCallback(
     (time?: number) => {
       if (room.host_only_control && !isHost) return;
-      broadcast("PLAY", { currentTime: time ?? getCurrentTime() });
+      const t = time ?? callbacksRef.current.getCurrentTime();
+      broadcast("PLAY", { currentTime: t });
     },
-    [broadcast, room.host_only_control, isHost, getCurrentTime]
+    [broadcast, room.host_only_control, isHost]
   );
 
   // Send pause event
   const sendPause = useCallback(
     (time?: number) => {
       if (room.host_only_control && !isHost) return;
-      broadcast("PAUSE", { currentTime: time ?? getCurrentTime() });
+      const t = time ?? callbacksRef.current.getCurrentTime();
+      broadcast("PAUSE", { currentTime: t });
     },
-    [broadcast, room.host_only_control, isHost, getCurrentTime]
+    [broadcast, room.host_only_control, isHost]
   );
 
   // Send chat message
@@ -147,7 +159,7 @@ export function useRoomSync({
         id: "emoji-" + Date.now() + "-" + Math.random().toString(36).substring(2, 5),
         emoji,
         senderName: currentUsername,
-        x: Math.floor(Math.random() * 70) + 15, // between 15% and 85%
+        x: Math.floor(Math.random() * 70) + 15,
       };
 
       setFloatingEmojis((prev) => [...prev, newFloating]);
@@ -161,8 +173,10 @@ export function useRoomSync({
     [broadcast, currentUsername]
   );
 
-  // Connect to Supabase Realtime channel
+  // Connect to Supabase Realtime channel (STABLE SUBSCRIPTION)
   useEffect(() => {
+    if (!room.code) return;
+
     const channelName = `watch_room:${room.code}`;
     const channel = supabase.channel(channelName, {
       config: {
@@ -175,29 +189,29 @@ export function useRoomSync({
       // 1. Playback sync events
       .on("broadcast", { event: "SEEK" }, ({ payload }) => {
         if (typeof payload?.currentTime === "number") {
-          const current = getCurrentTime();
+          const current = callbacksRef.current.getCurrentTime();
           if (Math.abs(current - payload.currentTime) > 1.5) {
-            seekTo(payload.currentTime);
+            callbacksRef.current.seekTo(payload.currentTime);
           }
         }
       })
       .on("broadcast", { event: "PLAY" }, ({ payload }) => {
         if (typeof payload?.currentTime === "number") {
-          const current = getCurrentTime();
+          const current = callbacksRef.current.getCurrentTime();
           if (Math.abs(current - payload.currentTime) > 1.5) {
-            seekTo(payload.currentTime);
+            callbacksRef.current.seekTo(payload.currentTime);
           }
         }
-        playMedia();
+        callbacksRef.current.playMedia();
       })
       .on("broadcast", { event: "PAUSE" }, ({ payload }) => {
         if (typeof payload?.currentTime === "number") {
-          const current = getCurrentTime();
+          const current = callbacksRef.current.getCurrentTime();
           if (Math.abs(current - payload.currentTime) > 1.5) {
-            seekTo(payload.currentTime);
+            callbacksRef.current.seekTo(payload.currentTime);
           }
         }
-        pauseMedia();
+        callbacksRef.current.pauseMedia();
       })
       .on("broadcast", { event: "SYNC_REQUEST" }, () => {
         if (isHost) {
@@ -205,7 +219,7 @@ export function useRoomSync({
             type: "broadcast",
             event: "SYNC_RESPONSE",
             payload: {
-              currentTime: getCurrentTime(),
+              currentTime: callbacksRef.current.getCurrentTime(),
               timestamp: Date.now(),
               senderId: currentUserId,
             },
@@ -214,7 +228,7 @@ export function useRoomSync({
       })
       .on("broadcast", { event: "SYNC_RESPONSE" }, ({ payload }) => {
         if (typeof payload?.currentTime === "number") {
-          seekTo(payload.currentTime);
+          callbacksRef.current.seekTo(payload.currentTime);
         }
       })
 
@@ -242,7 +256,7 @@ export function useRoomSync({
         }
       })
 
-      // 3. Presence tracking
+      // 3. Stable Presence tracking
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
         const userList: Participant[] = [];
@@ -254,9 +268,20 @@ export function useRoomSync({
           }
         });
 
+        // Ensure current user is at least in the list if connected
+        if (userList.length === 0) {
+          userList.push({
+            id: currentUserId,
+            username: currentUsername,
+            avatar_url: currentAvatar,
+            isHost,
+            joinedAt: new Date().toISOString(),
+          });
+        }
+
         setParticipants(userList);
 
-        // Check if room is full (max 4 participants)
+        // Check if room is full (max participants)
         if (userList.length > room.max_participants) {
           const isUserInList = userList.slice(0, room.max_participants).some((u) => u.id === currentUserId);
           if (!isUserInList && !isHost) {
@@ -267,7 +292,7 @@ export function useRoomSync({
         }
       })
 
-      // Subscribe and track presence
+      // Subscribe and track presence ONCE upon join
       .subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
           setIsConnected(true);
@@ -287,7 +312,7 @@ export function useRoomSync({
               payload: { requesterId: currentUserId },
             });
           }
-        } else {
+        } else if (status === "CLOSED" || status === "TIMED_OUT") {
           setIsConnected(false);
         }
       });
@@ -298,33 +323,21 @@ export function useRoomSync({
       channel.unsubscribe();
       channelRef.current = null;
     };
-  }, [
-    room.code,
-    room.id,
-    room.max_participants,
-    currentUserId,
-    currentUsername,
-    currentAvatar,
-    isHost,
-    getCurrentTime,
-    seekTo,
-    playMedia,
-    pauseMedia,
-  ]);
+  }, [room.code, room.id, room.max_participants, currentUserId, isHost]);
 
   // Periodic heartbeat sync from Host to prevent drift
   useEffect(() => {
     if (!isHost || !isConnected) return;
 
     const interval = setInterval(() => {
-      const time = getCurrentTime();
+      const time = callbacksRef.current.getCurrentTime();
       if (typeof time === "number") {
         broadcast("SEEK", { currentTime: time });
       }
     }, 8000);
 
     return () => clearInterval(interval);
-  }, [isHost, isConnected, getCurrentTime, broadcast]);
+  }, [isHost, isConnected, broadcast]);
 
   return {
     participants,

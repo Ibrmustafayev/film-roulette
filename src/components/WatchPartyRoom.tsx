@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -22,16 +22,19 @@ import {
   Tv,
   MessageSquare,
   Sparkles,
+  RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
 import { WatchRoom } from "@/lib/supabaseClient";
 import { useRoomSync, FloatingEmoji } from "@/lib/useRoomSync";
+import { extractYoutubeId } from "@/components/YoutubePlayer";
 
 function YoutubeIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+      <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
     </svg>
   );
 }
@@ -45,78 +48,121 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
   const [copiedLink, setCopiedLink] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [activeTab, setActiveTab] = useState<"chat" | "users">("chat");
-  const [isMuted, setIsMuted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(true);
   const [currentTime, setCurrentTime] = useState(0);
+  const [proxyError, setProxyError] = useState(false);
 
   const ytPlayerRef = useRef<any>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // YouTube player initialization
+  // Check if media is YouTube
+  const youtubeVideoId =
+    initialRoom.media_type === "youtube"
+      ? extractYoutubeId(initialRoom.media_id) || initialRoom.media_id
+      : extractYoutubeId(initialRoom.media_id);
+
+  const isYouTube = Boolean(youtubeVideoId);
+
+  // Raw provider stream URL
+  const rawProviderUrl =
+    initialRoom.media_type === "tv"
+      ? `https://vidsrc.cc/v2/embed/tv/${initialRoom.media_id}/${initialRoom.season || 1}/${initialRoom.episode || 1}`
+      : `https://vidsrc.cc/v2/embed/movie/${initialRoom.media_id}`;
+
+  // Safe Embed Proxy URL to prevent "vidsrc.cc Refused to Connect"
+  const embedStreamUrl = proxyError
+    ? rawProviderUrl
+    : `/api/embed-proxy?url=${encodeURIComponent(rawProviderUrl)}`;
+
+  // YouTube player initialization via Iframe API
   useEffect(() => {
-    if (initialRoom.media_type !== "youtube") return;
+    if (!isYouTube || !youtubeVideoId) return;
 
-    const tag = document.createElement("script");
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName("script")[0];
-    firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+    let isMounted = true;
 
-    (window as any).onYouTubeIframeAPIReady = () => {
-      ytPlayerRef.current = new (window as any).YT.Player("yt-room-player", {
-        videoId: initialRoom.media_id,
-        playerVars: {
-          autoplay: 1,
-          controls: 1,
-          modestbranding: 1,
-          rel: 0,
-        },
-        events: {
-          onStateChange: (event: any) => {
-            if (event.data === 1) setIsPlaying(true);
-            if (event.data === 2) setIsPlaying(false);
+    const initYt = () => {
+      if (!isMounted || !(window as any).YT || !(window as any).YT.Player) return;
+
+      try {
+        if (ytPlayerRef.current && ytPlayerRef.current.destroy) {
+          ytPlayerRef.current.destroy();
+        }
+
+        ytPlayerRef.current = new (window as any).YT.Player(`yt-room-player-${youtubeVideoId}`, {
+          videoId: youtubeVideoId,
+          playerVars: {
+            autoplay: 1,
+            controls: 1,
+            modestbranding: 1,
+            rel: 0,
+            enablejsapi: 1,
           },
-        },
-      });
+          events: {
+            onStateChange: (event: any) => {
+              if (event.data === 1) setIsPlaying(true);
+              if (event.data === 2) setIsPlaying(false);
+            },
+          },
+        });
+      } catch (err) {
+        console.warn("YouTube player init error:", err);
+      }
     };
 
+    if (!(window as any).YT) {
+      const tag = document.createElement("script");
+      tag.src = "https://www.youtube.com/iframe_api";
+      const firstScriptTag = document.getElementsByTagName("script")[0];
+      firstScriptTag?.parentNode?.insertBefore(tag, firstScriptTag);
+
+      const prevCallback = (window as any).onYouTubeIframeAPIReady;
+      (window as any).onYouTubeIframeAPIReady = () => {
+        if (prevCallback) prevCallback();
+        initYt();
+      };
+    } else {
+      initYt();
+    }
+
     return () => {
+      isMounted = false;
       if (ytPlayerRef.current && ytPlayerRef.current.destroy) {
         try {
           ytPlayerRef.current.destroy();
         } catch {}
       }
     };
-  }, [initialRoom.media_type, initialRoom.media_id]);
+  }, [isYouTube, youtubeVideoId]);
 
-  // Hook sync bindings
-  const getCurrentTime = () => {
+  // Stable Hook sync bindings
+  const getCurrentTime = useCallback(() => {
     if (ytPlayerRef.current && typeof ytPlayerRef.current.getCurrentTime === "function") {
       return ytPlayerRef.current.getCurrentTime() || 0;
     }
     return currentTime;
-  };
+  }, [currentTime]);
 
-  const seekTo = (time: number) => {
+  const seekTo = useCallback((time: number) => {
     setCurrentTime(time);
     if (ytPlayerRef.current && typeof ytPlayerRef.current.seekTo === "function") {
       ytPlayerRef.current.seekTo(time, true);
     }
-  };
+  }, []);
 
-  const playMedia = () => {
+  const playMedia = useCallback(() => {
     setIsPlaying(true);
     if (ytPlayerRef.current && typeof ytPlayerRef.current.playVideo === "function") {
       ytPlayerRef.current.playVideo();
     }
-  };
+  }, []);
 
-  const pauseMedia = () => {
+  const pauseMedia = useCallback(() => {
     setIsPlaying(false);
     if (ytPlayerRef.current && typeof ytPlayerRef.current.pauseVideo === "function") {
       ytPlayerRef.current.pauseVideo();
     }
-  };
+  }, []);
 
   const {
     participants,
@@ -183,11 +229,6 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
     );
   }
 
-  const embedUrl =
-    initialRoom.media_type === "tv"
-      ? `https://vidsrc.cc/v2/embed/tv/${initialRoom.media_id}/${initialRoom.season || 1}/${initialRoom.episode || 1}`
-      : `https://vidsrc.cc/v2/embed/movie/${initialRoom.media_id}`;
-
   return (
     <div className="flex min-h-screen flex-col bg-ink-1 text-ink-9">
       {/* Top Navigation Bar */}
@@ -219,10 +260,10 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
 
         {/* Room Tools & Copy Link */}
         <div className="flex items-center gap-2.5">
-          <div className="hidden sm:flex items-center gap-1.5 rounded-xs bg-ink-1 px-2.5 py-1 border border-ink-4 text-xs">
+          <div className="flex items-center gap-1.5 rounded-xs bg-ink-1 px-2.5 py-1 border border-ink-4 text-xs">
             <Users className="h-3.5 w-3.5 text-live" />
-            <span className="font-semibold text-ink-9">
-              {participants.length}/{initialRoom.max_participants}
+            <span className="font-semibold text-ink-9" id="room-participant-count">
+              {Math.max(1, participants.length)}/{initialRoom.max_participants}
             </span>
           </div>
 
@@ -242,7 +283,7 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
       <div className="grid flex-1 grid-cols-1 lg:grid-cols-12 min-h-0">
         {/* PLAYER AREA */}
         <div className="relative flex flex-col bg-black lg:col-span-8 xl:col-span-9">
-          <div className="relative flex-1 min-h-[300px] sm:min-h-[480px] lg:min-h-[600px] flex items-center justify-center overflow-hidden">
+          <div className="relative flex-1 min-h-[320px] sm:min-h-[480px] lg:min-h-[600px] flex items-center justify-center overflow-hidden">
             {/* FLOATING EMOJIS OVERLAY */}
             <div className="pointer-events-none absolute inset-0 z-20 overflow-hidden">
               <AnimatePresence>
@@ -265,15 +306,21 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
               </AnimatePresence>
             </div>
 
-            {/* Video Player Display */}
-            {initialRoom.media_type === "youtube" ? (
+            {/* Video Player Display: YouTube vs Proxied Movie/TV */}
+            {isYouTube && youtubeVideoId ? (
               <div className="h-full w-full aspect-video">
-                <div id="yt-room-player" className="h-full w-full" />
+                <iframe
+                  id={`yt-room-player-${youtubeVideoId}`}
+                  src={`https://www.youtube.com/embed/${youtubeVideoId}?enablejsapi=1&autoplay=1&rel=0`}
+                  className="h-full w-full border-0"
+                  allow="autoplay; encrypted-media; fullscreen"
+                  allowFullScreen
+                />
               </div>
             ) : (
               <iframe
                 ref={iframeRef}
-                src={embedUrl}
+                src={embedStreamUrl}
                 allowFullScreen
                 allow="autoplay; fullscreen; encrypted-media"
                 className="h-full w-full border-0"
@@ -340,7 +387,7 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
               }`}
             >
               <Users className="h-3.5 w-3.5" />
-              <span>İştirakçılar ({participants.length})</span>
+              <span>İştirakçılar ({Math.max(1, participants.length)})</span>
             </button>
           </div>
 
@@ -355,7 +402,6 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
                   </div>
                 ) : (
                   messages.map((msg) => {
-                    const isMe = msg.user_id === (user?.id || "");
                     return (
                       <div key={msg.id} className="space-y-1">
                         <div className="flex items-center gap-1.5 text-[11px] text-ink-6">
@@ -406,7 +452,18 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
           {/* Tab 2: Participants List */}
           {activeTab === "users" && (
             <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
-              {participants.map((p) => (
+              {(participants.length > 0
+                ? participants
+                : [
+                    {
+                      id: "current",
+                      username: profile?.username || user?.email?.split("@")[0] || "Guest",
+                      avatar_url: "",
+                      isHost: true,
+                      joinedAt: new Date().toISOString(),
+                    },
+                  ]
+              ).map((p) => (
                 <div
                   key={p.id}
                   className="flex items-center justify-between p-2.5 rounded-xs bg-ink-1 border border-ink-4"

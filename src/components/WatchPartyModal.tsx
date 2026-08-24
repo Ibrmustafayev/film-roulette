@@ -21,6 +21,7 @@ import {
 import { useStore } from "@/store/useStore";
 import { getTranslations } from "@/lib/i18n";
 import { supabase, WatchRoom } from "@/lib/supabaseClient";
+import { extractYoutubeId } from "@/components/YoutubePlayer";
 
 function YoutubeIcon({ className = "h-3.5 w-3.5" }: { className?: string }) {
   return (
@@ -37,18 +38,6 @@ function generateRoomCode(): string {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return code;
-}
-
-function extractYouTubeId(urlOrId: string): string {
-  if (!urlOrId) return "";
-  const clean = urlOrId.trim();
-  if (clean.length === 11 && !clean.includes("/") && !clean.includes(".")) {
-    return clean;
-  }
-  const match = clean.match(
-    /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/
-  );
-  return match ? match[1] : clean;
 }
 
 export function WatchPartyModal() {
@@ -99,7 +88,7 @@ export function WatchPartyModal() {
 
     let resolvedMediaId = "";
     if (mediaType === "youtube") {
-      resolvedMediaId = extractYouTubeId(youtubeInput);
+      resolvedMediaId = extractYoutubeId(youtubeInput) || "";
       if (!resolvedMediaId || resolvedMediaId.length !== 11) {
         setErrorMsg(
           locale === "az"
