@@ -78,7 +78,7 @@ export function RailContent({ genres }: { genres: Genre[] }) {
             <button
               type="button"
               onClick={signOut}
-              title={locale === "az" ? "Çıxış" : "Sign Out"}
+              title={t("nav.signOut")}
               className="ctl ctl-ghost h-6 w-6 px-0 text-ink-6 hover:text-amber-400"
             >
               <LogOut className="h-3 w-3" />
@@ -92,7 +92,7 @@ export function RailContent({ genres }: { genres: Genre[] }) {
             className="ctl ctl-ghost h-6 px-2 text-[11px] font-medium border border-ink-4 text-ink-7 hover:text-live hover:border-live-border/40"
           >
             <User className="h-3 w-3 mr-1" />
-            <span>{locale === "az" ? "Giriş" : "Sign In"}</span>
+            <span>{t("nav.signIn")}</span>
           </button>
         )}
       </div>

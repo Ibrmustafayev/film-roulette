@@ -58,7 +58,7 @@ export function WatchPartyModal() {
     movie?.media_type === "tv" ? "tv" : movie ? "movie" : "movie"
   );
   const [roomTitle, setRoomTitle] = useState(
-    movie?.title || (locale === "az" ? "Kino Gecəsi" : "Movie Night")
+    movie?.title || (t("party.defaultTitle"))
   );
   const [youtubeInput, setYoutubeInput] = useState("");
   const [isPrivate, setIsPrivate] = useState(true);
@@ -120,7 +120,7 @@ export function WatchPartyModal() {
       const roomPayload = {
         code,
         host_id: user.id,
-        title: roomTitle.trim() || (locale === "az" ? "Kino Otağı" : "Watch Room"),
+        title: roomTitle.trim() || (t("party.roomTitle")),
         media_type: mediaType,
         media_id: resolvedMediaId,
         season: 1,
@@ -345,10 +345,10 @@ export function WatchPartyModal() {
               ) : (
                 <div className="p-3 bg-ink-1 border border-ink-4 rounded-xs space-y-1">
                   <span className="text-label text-ink-6">
-                    {locale === "az" ? "Seçilmiş Məzmun:" : "Selected Media:"}
+                    {t("party.selected")}
                   </span>
                   <p className="text-small font-medium text-ink-9 truncate">
-                    {movie ? movie.title : locale === "az" ? "Film seçilməyib (Zərləri atın)" : "No movie selected"}
+                    {movie ? movie.title : t("party.nothingSelected")}
                   </p>
                 </div>
               )}
@@ -373,10 +373,10 @@ export function WatchPartyModal() {
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
                     <span className="text-xs font-medium text-ink-9">
-                      {locale === "az" ? "Yalnız Host İdarə Edə Bilsin" : "Host-Only Playback Control"}
+                      {t("party.hostOnly")}
                     </span>
                     <p className="text-label text-ink-6">
-                      {locale === "az" ? "Yalnız otaq sahibi dayandıra və irəli çəkə bilər" : "Only room host can play, pause, seek"}
+                      {t("party.hostOnlyHint")}
                     </p>
                   </div>
                   <input
@@ -390,7 +390,7 @@ export function WatchPartyModal() {
                 <div className="flex items-center justify-between pt-1">
                   <div className="space-y-0.5">
                     <span className="text-xs font-medium text-ink-9">
-                      {locale === "az" ? "Maksimum İştirakçı (Max 4)" : "Max Participants (Max 4)"}
+                      {t("party.maxParticipants")}
                     </span>
                   </div>
                   <select
@@ -414,12 +414,12 @@ export function WatchPartyModal() {
                 {loading ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>{locale === "az" ? "Otaq yaradılır..." : "Creating room..."}</span>
+                    <span>{t("party.creating")}</span>
                   </>
                 ) : (
                   <>
                     <Users className="h-3.5 w-3.5" />
-                    <span>{locale === "az" ? "Otağı Başlat (Start Room)" : "Start Watch Party"}</span>
+                    <span>{t("party.start")}</span>
                   </>
                 )}
               </button>
@@ -431,7 +431,7 @@ export function WatchPartyModal() {
             <form onSubmit={handleJoinRoom} className="space-y-4" id="join-room-form">
               <div className="space-y-1.5 text-center py-2">
                 <label className="block text-small font-medium text-ink-8" htmlFor="join-room-code">
-                  {locale === "az" ? "6-Rəqəmli Otaq Kodunu Daxil Edin" : "Enter 6-Character Room Code"}
+                  {t("party.enterCode")}
                 </label>
                 <input
                   id="join-room-code"
@@ -456,7 +456,7 @@ export function WatchPartyModal() {
                 ) : (
                   <LogIn className="h-3.5 w-3.5" />
                 )}
-                <span>{locale === "az" ? "Otağa Daxil Ol" : "Join Party"}</span>
+                <span>{t("party.join")}</span>
               </button>
             </form>
           )}

@@ -310,6 +310,57 @@
     "closedByHost": "The host closed the room.",
     "confirmKick": "Remove {name} from the room?",
     "confirmClose": "Close the room? Everyone will be disconnected.",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "full": "Room is Full",
+    "backToHub": "Back to Room Hub",
+    "close": "Close",
+    "leave": "Leave",
+    "fullHint": "This room has reached the maximum limit of {max} participants."
+  },
+  "rooms": {
+    "createRoom": "Create Room",
+    "activeTitle": "Active Watch Party Session",
+    "activeHint": "Code: {code} — Click to rejoin your active room",
+    "rejoin": "Rejoin Room",
+    "all": "All",
+    "searchPlaceholder": "Search rooms or code...",
+    "liveTitle": "Live Watch Parties",
+    "refresh": "Refresh",
+    "loading": "Loading rooms...",
+    "emptyTitle": "No open rooms found.",
+    "emptyHint": "Start the first room and invite friends to watch together!",
+    "createNow": "Create Room Now",
+    "join": "Join"
+  },
+  "nav": {
+    "signOut": "Sign Out",
+    "signIn": "Sign In"
+  },
+  "comments": {
+    "reactions": "Reactions:",
+    "post": "Post Comment",
+    "publicTitle": "Public Discussion Platform",
+    "signInHint": "Sign in to post comments, join discussions, and react to reviews.",
+    "signInCta": "Log In / Register",
+    "loading": "Loading comments...",
+    "empty": "No comments yet.",
+    "emptyHint": "Be the first one to share your review!",
+    "reply": "Reply",
+    "replyPlaceholder": "Write a reply...",
+    "send": "Send",
+    "placeholderNamed": "Share your thoughts as {name}..."
+  },
+  "party": {
+    "defaultTitle": "Movie Night",
+    "roomTitle": "Watch Room",
+    "selected": "Selected Media:",
+    "nothingSelected": "No movie selected",
+    "hostOnly": "Host-Only Playback Control",
+    "hostOnlyHint": "Only room host can play, pause, seek",
+    "maxParticipants": "Max Participants (Max 4)",
+    "creating": "Creating room...",
+    "start": "Start Watch Party",
+    "enterCode": "Enter 6-Character Room Code",
+    "join": "Join Party"
   }
 }

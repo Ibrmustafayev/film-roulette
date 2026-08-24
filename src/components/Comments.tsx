@@ -290,9 +290,9 @@ export function Comments({ mediaType, mediaId, title }: CommentsProps) {
                 onChange={(e) => setNewCommentText(e.target.value)}
                 maxLength={1000}
                 placeholder={
-                  locale === "az"
-                    ? `${profile?.username || "İstifadəçi"} olaraq film haqqında fikirlərinizi yazın...`
-                    : "Share your thoughts on this movie/show..."
+                  profile?.username
+                    ? t("comments.placeholderNamed", { name: profile.username })
+                    : t("comments.placeholder")
                 }
                 rows={3}
                 className="w-full bg-transparent text-xs text-ink-9 placeholder:text-ink-6 focus:outline-none resize-none leading-relaxed"
@@ -302,7 +302,7 @@ export function Comments({ mediaType, mediaId, title }: CommentsProps) {
               <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-4/60 pt-3">
                 <div className="flex items-center gap-1.5">
                   <span className="text-[11px] text-ink-6 hidden sm:inline">
-                    {locale === "az" ? "Reaksiyalar:" : "Reactions:"}
+                    {t("comments.reactions")}
                   </span>
                   {EMOJI_SHORTCUTS.map((emoji) => (
                     <button
@@ -332,7 +332,7 @@ export function Comments({ mediaType, mediaId, title }: CommentsProps) {
                     ) : (
                       <Send className="h-3.5 w-3.5" />
                     )}
-                    <span>{locale === "az" ? "Şərh Yaz" : "Post Comment"}</span>
+                    <span>{t("comments.post")}</span>
                   </button>
                 </div>
               </div>
@@ -348,12 +348,10 @@ export function Comments({ mediaType, mediaId, title }: CommentsProps) {
             </div>
             <div>
               <h4 className="text-small font-semibold text-ink-9">
-                {locale === "az" ? "Açıq Müzakirə Platforması" : "Public Discussion Platform"}
+                {t("comments.publicTitle")}
               </h4>
               <p className="text-label text-ink-6">
-                {locale === "az"
-                  ? "Şərh yazmaq və rəylərə reaksiya bildirmək üçün hesabınıza daxil olun."
-                  : "Sign in to post comments, join discussions, and react to reviews."}
+                {t("comments.signInHint")}
               </p>
             </div>
           </div>
@@ -365,7 +363,7 @@ export function Comments({ mediaType, mediaId, title }: CommentsProps) {
             className="ctl ctl-primary h-8 px-4 text-xs font-medium flex items-center gap-1.5 shrink-0"
           >
             <LogIn className="h-3.5 w-3.5" />
-            <span>{locale === "az" ? "Daxil Ol / Qeydiyyat" : "Log In / Register"}</span>
+            <span>{t("comments.signInCta")}</span>
           </button>
         </div>
       )}
@@ -375,18 +373,16 @@ export function Comments({ mediaType, mediaId, title }: CommentsProps) {
         {loading ? (
           <div className="py-12 text-center text-xs text-ink-6">
             <Loader2 className="mx-auto h-6 w-6 animate-spin text-live mb-2" />
-            <span>{locale === "az" ? "Şərhlər yüklənir..." : "Loading comments..."}</span>
+            <span>{t("comments.loading")}</span>
           </div>
         ) : comments.length === 0 ? (
           <div className="py-10 text-center text-xs text-ink-6 border border-dashed border-ink-4 rounded-xl p-6 bg-ink-2/30">
             <Sparkles className="mx-auto h-6 w-6 text-live/60 mb-2" />
             <p className="font-medium text-ink-8 mb-1">
-              {locale === "az" ? "Hələ heç bir şərh yazılmayıb." : "No comments yet."}
+              {t("comments.empty")}
             </p>
             <p className="text-label text-ink-6">
-              {locale === "az"
-                ? "Film haqqında ilk fikri siz bölüşün!"
-                : "Be the first one to share your review!"}
+              {t("comments.emptyHint")}
             </p>
           </div>
         ) : (
@@ -447,7 +443,7 @@ export function Comments({ mediaType, mediaId, title }: CommentsProps) {
                   className="inline-flex items-center gap-1 text-[11px] text-ink-6 hover:text-ink-9 transition-colors"
                 >
                   <Reply className="h-3 w-3" />
-                  <span>{locale === "az" ? "Cavabla" : "Reply"}</span>
+                  <span>{t("comments.reply")}</span>
                 </button>
               </div>
 
@@ -459,7 +455,7 @@ export function Comments({ mediaType, mediaId, title }: CommentsProps) {
                       type="text"
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
-                      placeholder={locale === "az" ? "Cavabınızı yazın..." : "Write a reply..."}
+                      placeholder={t("comments.replyPlaceholder")}
                       className="inp flex-1 text-xs"
                     />
                     <button
@@ -467,7 +463,7 @@ export function Comments({ mediaType, mediaId, title }: CommentsProps) {
                       onClick={() => handleSendReply(cmt.id)}
                       className="ctl ctl-primary h-7 px-3 text-xs"
                     >
-                      {locale === "az" ? "Göndər" : "Send"}
+                      {t("comments.send")}
                     </button>
                   </div>
                 </div>

@@ -230,16 +230,14 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
         <div className="max-w-md space-y-4 rounded-xs border border-amber-500/30 bg-ink-2 p-8 shadow-lifted">
           <Users className="mx-auto h-12 w-12 text-amber-400" />
           <h2 className="text-h3 font-semibold">
-            {locale === "az" ? "Otaq Doludur" : "Room is Full"}
+            {t("room.full")}
           </h2>
           <p className="text-small text-ink-6">
-            {locale === "az"
-              ? `Bu otaq maksimum ${initialRoom.max_participants} nəfərlik tutuma çatıb. Zəhmət olmasa başqa bir otaq yaradın və ya daha sonra qoşulun.`
-              : `This room has reached the maximum limit of ${initialRoom.max_participants} participants.`}
+            {t("room.fullHint", { max: initialRoom.max_participants })}
           </p>
           <Link href="/rooms" className="ctl ctl-primary inline-flex h-9 items-center gap-2 text-xs">
             <ArrowLeft className="h-4 w-4" />
-            <span>{locale === "az" ? "Otaqlar Mərkəzinə Qayıt" : "Back to Room Hub"}</span>
+            <span>{t("room.backToHub")}</span>
           </Link>
         </div>
       </div>
@@ -303,7 +301,7 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
               title="Close Room"
             >
               <Power className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{locale === "az" ? "Otağı Bağla" : "Close"}</span>
+              <span className="hidden sm:inline">{t("room.close")}</span>
             </button>
           ) : (
             <Link
@@ -312,7 +310,7 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
               title="Leave Room"
             >
               <LogOut className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">{locale === "az" ? "Çıx" : "Leave"}</span>
+              <span className="hidden sm:inline">{t("room.leave")}</span>
             </Link>
           )}
         </div>

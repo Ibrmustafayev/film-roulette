@@ -310,6 +310,57 @@
     "closedByHost": "Otaq sahibi otağı bağladı.",
     "confirmKick": "{name} adlı iştirakçını otaqdan kənarlaşdırmaq istəyirsiniz?",
     "confirmClose": "Otağı tamamilə bağlamaq istəyirsiniz? Bütün iştirakçılar kənarlaşdırılacaq.",
-    "dismiss": "Bağla"
+    "dismiss": "Bağla",
+    "full": "Otaq Doludur",
+    "backToHub": "Otaqlar Mərkəzinə Qayıt",
+    "close": "Otağı Bağla",
+    "leave": "Çıx",
+    "fullHint": "Bu otaq maksimum {max} nəfərlik tutuma çatıb. Zəhmət olmasa başqa bir otaq yaradın və ya daha sonra qoşulun."
+  },
+  "rooms": {
+    "createRoom": "Yeni Otaq Yarat",
+    "activeTitle": "Davam Edən Otaq Sessiyanız Var",
+    "activeHint": "Kod: {code} — Otağa qayıtmaq üçün klikləyin",
+    "rejoin": "Otağa Qayıt",
+    "all": "Hamısı",
+    "searchPlaceholder": "Otaq adı və ya kod...",
+    "liveTitle": "Aktiv İctimai Otaqlar",
+    "refresh": "Yenilə",
+    "loading": "Otaqlar axtarılır...",
+    "emptyTitle": "Hazırda heç bir açıq otaq tapılmadı.",
+    "emptyHint": "İlk otağı siz başladın və dostlarınızla birlikdə film izləyin!",
+    "createNow": "İndi Otaq Yarat",
+    "join": "Qoşul"
+  },
+  "nav": {
+    "signOut": "Çıxış",
+    "signIn": "Giriş"
+  },
+  "comments": {
+    "reactions": "Reaksiyalar:",
+    "post": "Şərh Yaz",
+    "publicTitle": "Açıq Müzakirə Platforması",
+    "signInHint": "Şərh yazmaq və rəylərə reaksiya bildirmək üçün hesabınıza daxil olun.",
+    "signInCta": "Daxil Ol / Qeydiyyat",
+    "loading": "Şərhlər yüklənir...",
+    "empty": "Hələ heç bir şərh yazılmayıb.",
+    "emptyHint": "Film haqqında ilk fikri siz bölüşün!",
+    "reply": "Cavabla",
+    "replyPlaceholder": "Cavabınızı yazın...",
+    "send": "Göndər",
+    "placeholderNamed": "{name} olaraq film haqqında fikirlərinizi yazın..."
+  },
+  "party": {
+    "defaultTitle": "Kino Gecəsi",
+    "roomTitle": "Kino Otağı",
+    "selected": "Seçilmiş Məzmun:",
+    "nothingSelected": "Film seçilməyib (Zərləri atın)",
+    "hostOnly": "Yalnız Host İdarə Edə Bilsin",
+    "hostOnlyHint": "Yalnız otaq sahibi dayandıra və irəli çəkə bilər",
+    "maxParticipants": "Maksimum İştirakçı (Max 4)",
+    "creating": "Otaq yaradılır...",
+    "start": "Otağı Başlat (Start Room)",
+    "enterCode": "6-Rəqəmli Otaq Kodunu Daxil Edin",
+    "join": "Otağa Daxil Ol"
   }
 }

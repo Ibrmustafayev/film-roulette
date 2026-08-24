@@ -169,7 +169,7 @@ export default function RoomsHubPage() {
             className="ctl ctl-primary h-9 px-4 text-xs font-semibold flex items-center gap-2"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span>{locale === "az" ? "Yeni Otaq Yarat" : "Create Room"}</span>
+            <span>{t("rooms.createRoom")}</span>
           </button>
         </div>
       </header>
@@ -202,12 +202,10 @@ export default function RoomsHubPage() {
               </div>
               <div>
                 <h4 className="text-small font-bold text-ink-9">
-                  {locale === "az" ? "Davam Edən Otaq Sessiyanız Var" : "Active Watch Party Session"}
+                  {t("rooms.activeTitle")}
                 </h4>
                 <p className="text-label text-ink-7">
-                  {locale === "az"
-                    ? `Kod: ${activeCode} — Otağa qayıtmaq üçün klikləyin`
-                    : `Code: ${activeCode} — Click to rejoin your active room`}
+                  {t("rooms.activeHint", { code: activeCode ?? "" })}
                 </p>
               </div>
             </div>
@@ -216,7 +214,7 @@ export default function RoomsHubPage() {
               href={`/room/${activeCode}`}
               className="ctl ctl-primary h-8 px-4 text-xs font-semibold flex items-center gap-1.5"
             >
-              <span>{locale === "az" ? "Otağa Qayıt" : "Rejoin Room"}</span>
+              <span>{t("rooms.rejoin")}</span>
               <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
@@ -235,7 +233,7 @@ export default function RoomsHubPage() {
                   : "text-ink-6 hover:text-ink-8"
               }`}
             >
-              {locale === "az" ? "Hamısı" : "All"}
+              {t("rooms.all")}
             </button>
             <button
               type="button"
@@ -282,7 +280,7 @@ export default function RoomsHubPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={locale === "az" ? "Otaq adı və ya kod..." : "Search rooms or code..."}
+              placeholder={t("rooms.searchPlaceholder")}
               className="inp w-full pl-9 text-xs"
             />
           </div>
@@ -292,7 +290,7 @@ export default function RoomsHubPage() {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-small font-bold text-ink-9 uppercase tracking-[0.1em]">
-              {locale === "az" ? "Aktiv İctimai Otaqlar" : "Live Watch Parties"}
+              {t("rooms.liveTitle")}
             </h2>
             <button
               type="button"
@@ -300,32 +298,30 @@ export default function RoomsHubPage() {
               className="ctl ctl-ghost h-7 gap-1 px-2 text-[11px] text-ink-6 hover:text-ink-9"
             >
               <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
-              <span>{locale === "az" ? "Yenilə" : "Refresh"}</span>
+              <span>{t("rooms.refresh")}</span>
             </button>
           </div>
 
           {loading ? (
             <div className="py-16 text-center text-xs text-ink-6">
               <RefreshCw className="mx-auto h-6 w-6 animate-spin text-live mb-2" />
-              <span>{locale === "az" ? "Otaqlar axtarılır..." : "Loading rooms..."}</span>
+              <span>{t("rooms.loading")}</span>
             </div>
           ) : filteredRooms.length === 0 ? (
             <div className="py-16 text-center text-xs text-ink-6 border border-dashed border-ink-4 rounded-xl p-8 bg-ink-2/40">
               <Users className="mx-auto h-8 w-8 text-live/60 mb-3" />
               <p className="font-semibold text-ink-9 mb-1 text-small">
-                {locale === "az" ? "Hazırda heç bir açıq otaq tapılmadı." : "No open rooms found."}
+                {t("rooms.emptyTitle")}
               </p>
               <p className="text-label text-ink-6 mb-4">
-                {locale === "az"
-                  ? "İlk otağı siz başladın və dostlarınızla birlikdə film izləyin!"
-                  : "Start the first room and invite friends to watch together!"}
+                {t("rooms.emptyHint")}
               </p>
               <button
                 type="button"
                 onClick={() => setWatchPartyModalOpen(true)}
                 className="ctl ctl-primary h-8 px-4 text-xs font-semibold"
               >
-                {locale === "az" ? "İndi Otaq Yarat" : "Create Room Now"}
+                {t("rooms.createNow")}
               </button>
             </div>
           ) : (
@@ -379,7 +375,7 @@ export default function RoomsHubPage() {
                       href={`/room/${room.code}`}
                       className="ctl ctl-primary h-7 px-3 text-xs font-semibold flex items-center gap-1"
                     >
-                      <span>{locale === "az" ? "Qoşul" : "Join"}</span>
+                      <span>{t("rooms.join")}</span>
                       <ArrowRight className="h-3 w-3" />
                     </Link>
                   </div>
