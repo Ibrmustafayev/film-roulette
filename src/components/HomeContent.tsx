@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Menu, User, Users } from "lucide-react";
@@ -131,15 +132,14 @@ export function HomeContent({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => useStore.getState().setWatchPartyModalOpen(true)}
+          <Link
+            href="/rooms"
             id="mobile-watch-party-btn"
             className="ctl ctl-ghost h-8 gap-1.5 px-2.5 text-xs text-amber-300 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20"
           >
             <Users className="h-3.5 w-3.5 text-amber-400" />
             <span className="text-[11px] font-semibold">Party</span>
-          </button>
+          </Link>
 
           {useStore.getState().user ? (
             <div className="h-7 w-7 rounded-full bg-live/15 text-live border border-live/30 flex items-center justify-center text-xs font-bold">

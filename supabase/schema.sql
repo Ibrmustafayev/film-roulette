@@ -30,11 +30,13 @@ CREATE TABLE IF NOT EXISTS public.rooms (
   is_private BOOLEAN DEFAULT TRUE NOT NULL,
   host_only_control BOOLEAN DEFAULT FALSE NOT NULL,
   max_participants INT DEFAULT 4 NOT NULL CHECK (max_participants <= 4 AND max_participants >= 2),
+  is_closed BOOLEAN DEFAULT FALSE NOT NULL,
   created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_rooms_code ON public.rooms(code);
 CREATE INDEX IF NOT EXISTS idx_rooms_host ON public.rooms(host_id);
+CREATE INDEX IF NOT EXISTS idx_rooms_public ON public.rooms(is_private, is_closed, created_at DESC);
 
 -- 4. Room Messages Table
 CREATE TABLE IF NOT EXISTS public.room_messages (
@@ -50,8 +52,8 @@ CREATE INDEX IF NOT EXISTS idx_room_messages_room ON public.room_messages(room_i
 -- 5. Media Comments Table (Public Comments for Movies & TV shows)
 CREATE TABLE IF NOT EXISTS public.media_comments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  media_type TEXT NOT NULL CHECK (media_type IN ('movie', 'tv')),
-  media_id INT NOT NULL,
+  media_type TEXT NOT NULL,
+  media_id TEXT NOT NULL,
   user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   parent_id UUID REFERENCES public.media_comments(id) ON DELETE CASCADE,
   content TEXT NOT NULL,
@@ -82,8 +84,8 @@ CREATE POLICY "Users can update their own profile"
   ON public.profiles FOR UPDATE USING (auth.uid() = id);
 
 -- Rooms Policies
-DROP POLICY IF EXISTS "Rooms are viewable by everyone with code or public" ON public.rooms;
-CREATE POLICY "Rooms are viewable by everyone with code or public"
+DROP POLICY IF EXISTS "Rooms are viewable by everyone" ON public.rooms;
+CREATE POLICY "Rooms are viewable by everyone"
   ON public.rooms FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Authenticated users can create rooms" ON public.rooms;

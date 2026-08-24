@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Dice5,
@@ -132,11 +133,10 @@ export function RailContent({ genres }: { genres: Genre[] }) {
           })}
         </ul>
 
-        {/* Watch Party Button */}
-        <button
-          type="button"
+        {/* Watch Party Hub Link */}
+        <Link
+          href="/rooms"
           id="rail-watch-party-btn"
-          onClick={() => setWatchPartyModalOpen(true)}
           className="group flex h-7 w-full items-center gap-2.5 px-2 text-small transition-colors duration-[120ms] text-amber-300 hover:text-amber-200 mt-1 font-medium"
         >
           <Users className="h-3.5 w-3.5 shrink-0 text-amber-400" />
@@ -144,9 +144,9 @@ export function RailContent({ genres }: { genres: Genre[] }) {
             {locale === "az" ? "Birlikdə İzlə" : locale === "ru" ? "Совместный Просмотр" : "Watch Party"}
           </span>
           <span className="rounded-xs bg-amber-500/20 text-amber-300 px-1 py-0.2 text-[9px] font-bold">
-            NEW
+            HUB
           </span>
-        </button>
+        </Link>
 
         {/* Feedback button */}
         <button

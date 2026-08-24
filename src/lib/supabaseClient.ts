@@ -28,6 +28,7 @@ export interface WatchRoom {
   is_private: boolean;
   host_only_control: boolean;
   max_participants: number;
+  is_closed?: boolean;
   created_at?: string;
   host_profile?: UserProfile;
 }
@@ -44,7 +45,7 @@ export interface RoomMessage {
 export interface MediaComment {
   id: string;
   media_type: "movie" | "tv";
-  media_id: number;
+  media_id: string | number;
   user_id: string;
   parent_id?: string | null;
   content: string;
@@ -98,7 +99,6 @@ export async function checkUsernameAvailable(username: string): Promise<boolean>
 
     if (error) {
       console.warn("checkUsernameAvailable error:", error.message);
-      // Fallback check against local users if table not ready
       return true;
     }
     return !data || data.length === 0;
@@ -145,7 +145,6 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
       .single();
 
     if (error) {
-      console.warn("getUserProfile error:", error.message);
       return null;
     }
     return data as UserProfile;
@@ -166,11 +165,110 @@ export async function upsertUserProfile(profile: UserProfile): Promise<UserProfi
       .single();
 
     if (error) {
-      console.warn("upsertUserProfile error:", error.message);
       return profile;
     }
     return data as UserProfile;
   } catch {
     return profile;
   }
+}
+
+/**
+ * Robust comments fetcher with local storage persistence fallback
+ */
+export async function fetchMediaComments(
+  mediaType: "movie" | "tv",
+  mediaId: string | number
+): Promise<MediaComment[]> {
+  const localKey = `film_comments_${mediaType}_${mediaId}`;
+  let localComments: MediaComment[] = [];
+
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem(localKey);
+      if (stored) {
+        localComments = JSON.parse(stored);
+      }
+    } catch {}
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("media_comments")
+      .select(`
+        id,
+        media_type,
+        media_id,
+        user_id,
+        parent_id,
+        content,
+        reactions,
+        created_at,
+        profiles (id, username, email, avatar_url)
+      `)
+      .eq("media_type", mediaType)
+      .eq("media_id", String(mediaId))
+      .order("created_at", { ascending: true });
+
+    if (!error && data && data.length > 0) {
+      const serverComments: MediaComment[] = data.map((item: any) => ({
+        id: item.id,
+        media_type: item.media_type,
+        media_id: item.media_id,
+        user_id: item.user_id,
+        parent_id: item.parent_id,
+        content: item.content,
+        reactions: item.reactions || {},
+        created_at: item.created_at,
+        profile: Array.isArray(item.profiles) ? item.profiles[0] : item.profiles,
+      }));
+
+      // Merge and update local storage
+      const map = new Map<string, MediaComment>();
+      localComments.forEach((c) => map.set(c.id, c));
+      serverComments.forEach((c) => map.set(c.id, c));
+
+      const merged = Array.from(map.values());
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(localKey, JSON.stringify(merged));
+        } catch {}
+      }
+      return merged;
+    }
+  } catch {}
+
+  return localComments;
+}
+
+/**
+ * Save new comment to Supabase with local fallback
+ */
+export async function saveMediaComment(comment: MediaComment): Promise<MediaComment> {
+  const localKey = `film_comments_${comment.media_type}_${comment.media_id}`;
+
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem(localKey);
+      const list: MediaComment[] = stored ? JSON.parse(stored) : [];
+      if (!list.some((c) => c.id === comment.id)) {
+        list.push(comment);
+        localStorage.setItem(localKey, JSON.stringify(list));
+      }
+    } catch {}
+  }
+
+  try {
+    await supabase.from("media_comments").insert({
+      id: comment.id.startsWith("cmt-") ? undefined : comment.id,
+      media_type: comment.media_type,
+      media_id: String(comment.media_id),
+      user_id: comment.user_id,
+      parent_id: comment.parent_id || null,
+      content: comment.content,
+      reactions: comment.reactions || {},
+    });
+  } catch {}
+
+  return comment;
 }

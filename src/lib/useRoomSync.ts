@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase, WatchRoom, RoomMessage, UserProfile } from "@/lib/supabaseClient";
 
@@ -46,16 +47,18 @@ export function useRoomSync({
   playMedia,
   pauseMedia,
 }: UseRoomSyncProps) {
+  const router = useRouter();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [messages, setMessages] = useState<RoomMessage[]>([]);
   const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isRoomFull, setIsRoomFull] = useState(false);
+  const [notification, setNotification] = useState<string | null>(null);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isHost = currentUser?.id === room.host_id;
 
-  // Stable User ID for session to prevent re-tracking
+  // Stable User ID for session
   const currentUserId = useMemo(() => {
     return currentUser?.id || "guest-" + Math.random().toString(36).substring(2, 8);
   }, [currentUser?.id]);
@@ -64,6 +67,15 @@ export function useRoomSync({
     currentProfile?.username || currentUser?.email?.split("@")[0] || "Guest-" + currentUserId.slice(-4);
   const currentAvatar =
     currentProfile?.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUserId}`;
+
+  // Store active room code in localStorage for session persistence across F5
+  useEffect(() => {
+    if (typeof window !== "undefined" && room.code) {
+      try {
+        localStorage.setItem("active_room_code", room.code);
+      } catch {}
+    }
+  }, [room.code]);
 
   // Keep latest callbacks in ref to avoid re-triggering subscription effect
   const callbacksRef = useRef({ getCurrentTime, seekTo, playMedia, pauseMedia });
@@ -114,6 +126,27 @@ export function useRoomSync({
     [broadcast, room.host_only_control, isHost]
   );
 
+  // Host action: Kick participant
+  const kickUser = useCallback(
+    (targetUserId: string, targetUsername?: string) => {
+      if (!isHost) return;
+      broadcast("KICK_USER", { targetUserId, targetUsername });
+      setParticipants((prev) => prev.filter((p) => p.id !== targetUserId));
+    },
+    [isHost, broadcast]
+  );
+
+  // Host action: Close room
+  const closeRoom = useCallback(async () => {
+    if (!isHost) return;
+    broadcast("ROOM_CLOSED", {});
+    try {
+      localStorage.removeItem("active_room_code");
+      await supabase.from("rooms").update({ is_closed: true }).eq("code", room.code);
+    } catch {}
+    router.push("/rooms");
+  }, [isHost, broadcast, room.code, router]);
+
   // Send chat message
   const sendMessage = useCallback(
     async (content: string) => {
@@ -136,7 +169,6 @@ export function useRoomSync({
       setMessages((prev) => [...prev, newMsg]);
       broadcast("CHAT_MESSAGE", { message: newMsg });
 
-      // Save to Supabase DB if user is authenticated
       if (currentUser) {
         try {
           await supabase.from("room_messages").insert({
@@ -144,9 +176,7 @@ export function useRoomSync({
             user_id: currentUser.id,
             content: content.trim(),
           });
-        } catch {
-          /* ignore */
-        }
+        } catch {}
       }
     },
     [broadcast, room.id, currentUserId, currentUsername, currentAvatar, currentUser]
@@ -165,7 +195,6 @@ export function useRoomSync({
       setFloatingEmojis((prev) => [...prev, newFloating]);
       broadcast("EMOJI_REACTION", { emoji, x: newFloating.x });
 
-      // Auto remove floating emoji after animation completes (2.5s)
       setTimeout(() => {
         setFloatingEmojis((prev) => prev.filter((item) => item.id !== newFloating.id));
       }, 2500);
@@ -173,7 +202,7 @@ export function useRoomSync({
     [broadcast, currentUsername]
   );
 
-  // Connect to Supabase Realtime channel (STABLE SUBSCRIPTION)
+  // Connect to Supabase Realtime channel (ROCK SOLID PRESENCE & HOST MANAGEMENT)
   useEffect(() => {
     if (!room.code) return;
 
@@ -232,7 +261,27 @@ export function useRoomSync({
         }
       })
 
-      // 2. Chat & Emojis
+      // 2. Host Moderation Events (KICK & CLOSE)
+      .on("broadcast", { event: "KICK_USER" }, ({ payload }) => {
+        if (payload?.targetUserId === currentUserId) {
+          try {
+            localStorage.removeItem("active_room_code");
+          } catch {}
+          channel.unsubscribe();
+          alert("Otaq sahibi tərəfindən kənarlaşdırıldınız (Kicked by host).");
+          router.push("/rooms");
+        }
+      })
+      .on("broadcast", { event: "ROOM_CLOSED" }, () => {
+        try {
+          localStorage.removeItem("active_room_code");
+        } catch {}
+        channel.unsubscribe();
+        alert("Otaq sahibi tərəfindən bağlandı (Room closed by host).");
+        router.push("/rooms");
+      })
+
+      // 3. Chat & Emojis
       .on("broadcast", { event: "CHAT_MESSAGE" }, ({ payload }) => {
         if (payload?.message) {
           setMessages((prev) => {
@@ -256,7 +305,7 @@ export function useRoomSync({
         }
       })
 
-      // 3. Stable Presence tracking
+      // 4. Stable Presence tracking
       .on("presence", { event: "sync" }, () => {
         const state = channel.presenceState();
         const userList: Participant[] = [];
@@ -268,7 +317,6 @@ export function useRoomSync({
           }
         });
 
-        // Ensure current user is at least in the list if connected
         if (userList.length === 0) {
           userList.push({
             id: currentUserId,
@@ -281,7 +329,6 @@ export function useRoomSync({
 
         setParticipants(userList);
 
-        // Check if room is full (max participants)
         if (userList.length > room.max_participants) {
           const isUserInList = userList.slice(0, room.max_participants).some((u) => u.id === currentUserId);
           if (!isUserInList && !isHost) {
@@ -304,7 +351,6 @@ export function useRoomSync({
             joinedAt: new Date().toISOString(),
           });
 
-          // If joining non-host, request sync state from host
           if (!isHost) {
             channel.send({
               type: "broadcast",
@@ -323,7 +369,7 @@ export function useRoomSync({
       channel.unsubscribe();
       channelRef.current = null;
     };
-  }, [room.code, room.id, room.max_participants, currentUserId, isHost]);
+  }, [room.code, room.id, room.max_participants, currentUserId, isHost, router]);
 
   // Periodic heartbeat sync from Host to prevent drift
   useEffect(() => {
@@ -346,9 +392,12 @@ export function useRoomSync({
     isConnected,
     isRoomFull,
     isHost,
+    notification,
     sendSeek,
     sendPlay,
     sendPause,
+    kickUser,
+    closeRoom,
     sendMessage,
     sendEmojiReaction,
   };
