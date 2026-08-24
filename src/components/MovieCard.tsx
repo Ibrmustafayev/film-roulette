@@ -496,6 +496,17 @@ export function MovieCard({ initialMovie }: { initialMovie?: Movie } = {}) {
 
   const activeSeasonData = isTv ? seasonCache[`${movie.id}_${selectedSeason}`] : null;
 
+  /* The episode after the current one, when the season list is loaded. Drives
+     the player's end-of-episode prompt; undefined for films and for the last
+     episode of a season. */
+  const nextEpisodeNumber = (() => {
+    if (!isTv || !activeSeasonData?.episodes?.length) return null;
+    const ordered = activeSeasonData.episodes
+      .map((ep) => ep.episode_number)
+      .sort((a, b) => a - b);
+    return ordered.find((n) => n > selectedEpisode) ?? null;
+  })();
+
   const ogUrl = `/api/og?title=${encodeURIComponent(movie.title)}&poster=${
     movie.poster_path ? encodeURIComponent(movie.poster_path) : ""
   }&rating=${movie.vote_average.toFixed(1)}&year=${releaseYear}&genres=${
@@ -981,6 +992,12 @@ export function MovieCard({ initialMovie }: { initialMovie?: Movie } = {}) {
                         });
                       }}
                       onError={() => switchToServer(0)}
+                      onNextEpisode={
+                        nextEpisodeNumber
+                          ? () => handleSelectEpisode(nextEpisodeNumber)
+                          : undefined
+                      }
+                      nextEpisodeLabel={t("tv.nextEpisode")}
                     />
                   </div>
                 )}

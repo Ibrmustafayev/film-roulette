@@ -40,7 +40,8 @@
     "selectSeason": "Season",
     "selectEpisode": "Episode",
     "episodeList": "Episodes List",
-    "seriesOverview": "Series Overview"
+    "seriesOverview": "Series Overview",
+    "nextEpisode": "Next episode"
   },
   "movie": {
     "cast": "Cast",

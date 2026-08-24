@@ -40,7 +40,8 @@
     "selectSeason": "Сезон",
     "selectEpisode": "Серия",
     "episodeList": "Список Серий",
-    "seriesOverview": "О Сериале"
+    "seriesOverview": "О Сериале",
+    "nextEpisode": "Следующая серия"
   },
   "movie": {
     "cast": "В Главных Ролях",
