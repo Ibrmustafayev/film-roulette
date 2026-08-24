@@ -2,8 +2,9 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Movie, SeasonDetails } from "@/lib/tmdb";
 import { Locale, DEFAULT_LOCALE } from "@/lib/i18n";
+import { UserProfile, supabase } from "@/lib/supabaseClient";
 
-type ActiveView = "random" | "history" | "favourites" | "mobileapp" | "help";
+type ActiveView = "random" | "history" | "favourites" | "mobileapp" | "help" | "rooms";
 export type ContentType = "all" | "movie" | "tv";
 
 const MAX_HISTORY = 30;
@@ -34,6 +35,13 @@ interface AppState {
   activeView: ActiveView;
   isMenuOpen: boolean;
 
+  // User & Auth
+  user: { id: string; email?: string } | null;
+  profile: UserProfile | null;
+  authModalOpen: boolean;
+  watchPartyModalOpen: boolean;
+  activeRoomCode: string | null;
+
   // History & Favourites
   history: Movie[];
   favourites: Movie[];
@@ -61,6 +69,15 @@ interface AppState {
   setLocale: (l: Locale) => void;
   setActiveView: (v: ActiveView) => void;
   setMenuOpen: (open: boolean) => void;
+
+  // Auth Actions
+  setUser: (user: { id: string; email?: string } | null, profile?: UserProfile | null) => void;
+  setProfile: (profile: UserProfile | null) => void;
+  setAuthModalOpen: (open: boolean) => void;
+  setWatchPartyModalOpen: (open: boolean) => void;
+  setActiveRoomCode: (code: string | null) => void;
+  signOut: () => Promise<void>;
+
   addToHistory: (movie: Movie) => void;
   removeFromHistory: (movieId: number) => void;
   clearHistory: () => void;
@@ -89,6 +106,13 @@ export const useStore = create<AppState>()(
       locale: DEFAULT_LOCALE,
       activeView: "random",
       isMenuOpen: false,
+
+      user: null,
+      profile: null,
+      authModalOpen: false,
+      watchPartyModalOpen: false,
+      activeRoomCode: null,
+
       history: [],
       favourites: [],
       showPlayer: false,
@@ -130,6 +154,21 @@ export const useStore = create<AppState>()(
       setLocale: (locale) => set({ locale }),
       setActiveView: (activeView) => set({ activeView, isMenuOpen: false }),
       setMenuOpen: (isMenuOpen) => set({ isMenuOpen }),
+
+      setUser: (user, profile = null) => set({ user, profile }),
+      setProfile: (profile) => set({ profile }),
+      setAuthModalOpen: (authModalOpen) => set({ authModalOpen }),
+      setWatchPartyModalOpen: (watchPartyModalOpen) => set({ watchPartyModalOpen }),
+      setActiveRoomCode: (activeRoomCode) => set({ activeRoomCode }),
+      signOut: async () => {
+        try {
+          await supabase.auth.signOut();
+        } catch {
+          /* ignore */
+        }
+        set({ user: null, profile: null });
+      },
+
       setShowPlayer: (showPlayer) => set({ showPlayer, showTrailer: false }),
       setShowTrailer: (showTrailer) => set({ showTrailer, showPlayer: false }),
       setWatchProgress: (key, time) =>
@@ -170,6 +209,8 @@ export const useStore = create<AppState>()(
         history: state.history,
         favourites: state.favourites,
         watchProgress: state.watchProgress,
+        user: state.user,
+        profile: state.profile,
       }),
     }
   )

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import { useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Menu } from "lucide-react";
+import { Menu, User, Users } from "lucide-react";
 
 import { Rail } from "@/components/Rail";
 import { Mark, Logo } from "@/components/Mark";
@@ -117,16 +117,46 @@ export function HomeContent({
       <Rail genres={genres} />
 
       {/* Compact bar below xl only — the rail carries navigation above it. */}
-      <div className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-ink-4 bg-ink-1/95 px-4 backdrop-blur-sm xl:hidden">
-        <button
-          type="button"
-          onClick={() => setMenuOpen(true)}
-          aria-label={t("menu.open")}
-          className="ctl ctl-ghost h-8 w-8 px-0"
-        >
-          <Menu className="h-4 w-4" />
-        </button>
-        <Logo id="mobile-site-logo-btn" markSize={18} />
+      <div className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-ink-4 bg-ink-1/95 px-4 backdrop-blur-sm xl:hidden">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-label={t("menu.open")}
+            className="ctl ctl-ghost h-8 w-8 px-0"
+          >
+            <Menu className="h-4 w-4" />
+          </button>
+          <Logo id="mobile-site-logo-btn" markSize={18} />
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => useStore.getState().setWatchPartyModalOpen(true)}
+            id="mobile-watch-party-btn"
+            className="ctl ctl-ghost h-8 gap-1.5 px-2.5 text-xs text-amber-300 border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20"
+          >
+            <Users className="h-3.5 w-3.5 text-amber-400" />
+            <span className="text-[11px] font-semibold">Party</span>
+          </button>
+
+          {useStore.getState().user ? (
+            <div className="h-7 w-7 rounded-full bg-live/15 text-live border border-live/30 flex items-center justify-center text-xs font-bold">
+              {useStore.getState().profile?.username?.charAt(0).toUpperCase() || "U"}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => useStore.getState().setAuthModalOpen(true)}
+              id="mobile-auth-login-btn"
+              className="ctl ctl-ghost h-8 w-8 px-0 text-ink-7 border border-ink-4"
+              title="Sign In"
+            >
+              <User className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <main className="relative flex-1">

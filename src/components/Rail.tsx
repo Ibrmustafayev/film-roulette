@@ -2,7 +2,19 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Dice5, Clock, Heart, Smartphone, HelpCircle, X, MessageCircle } from "lucide-react";
+import {
+  Dice5,
+  Clock,
+  Heart,
+  Smartphone,
+  HelpCircle,
+  X,
+  MessageCircle,
+  Users,
+  User,
+  LogOut,
+  Sparkles,
+} from "lucide-react";
 
 import { useStore } from "@/store/useStore";
 import { getTranslations, LOCALE_LABELS, Locale } from "@/lib/i18n";
@@ -12,6 +24,8 @@ import { SearchBar } from "./SearchBar";
 import { FilterPanel } from "./FilterPanel";
 import { RouletteButton } from "./RouletteButton";
 import { FeedbackModal } from "./FeedbackModal";
+import { AuthModal } from "./AuthModal";
+import { WatchPartyModal } from "./WatchPartyModal";
 
 const NAV = [
   { key: "random" as const, icon: Dice5 },
@@ -26,8 +40,17 @@ const EASE = [0.2, 0.8, 0.2, 1] as const;
 /** The instrument. Dense, hard-cornered, hairline-ruled — the opposite of the stage. */
 export function RailContent({ genres }: { genres: Genre[] }) {
   const {
-    locale, setLocale, activeView, setActiveView,
-    history, favourites,
+    locale,
+    setLocale,
+    activeView,
+    setActiveView,
+    history,
+    favourites,
+    user,
+    profile,
+    setAuthModalOpen,
+    setWatchPartyModalOpen,
+    signOut,
   } = useStore();
   const t = getTranslations(locale);
 
@@ -39,8 +62,38 @@ export function RailContent({ genres }: { genres: Genre[] }) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b border-ink-4 px-5 py-5">
+      {/* Top Logo & User Auth Status */}
+      <div className="border-b border-ink-4 px-5 py-4 flex items-center justify-between">
         <Logo id="desktop-site-logo-btn" />
+
+        {user ? (
+          <div className="flex items-center gap-1.5">
+            <div
+              className="h-6 w-6 rounded-full bg-live/15 text-live border border-live/30 flex items-center justify-center text-[11px] font-bold overflow-hidden"
+              title={profile?.username || user.email}
+            >
+              {profile?.username ? profile.username.charAt(0).toUpperCase() : "U"}
+            </div>
+            <button
+              type="button"
+              onClick={signOut}
+              title={locale === "az" ? "Çıxış" : "Sign Out"}
+              className="ctl ctl-ghost h-6 w-6 px-0 text-ink-6 hover:text-amber-400"
+            >
+              <LogOut className="h-3 w-3" />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setAuthModalOpen(true)}
+            id="rail-auth-login-btn"
+            className="ctl ctl-ghost h-6 px-2 text-[11px] font-medium border border-ink-4 text-ink-7 hover:text-live hover:border-live-border/40"
+          >
+            <User className="h-3 w-3 mr-1" />
+            <span>{locale === "az" ? "Giriş" : "Sign In"}</span>
+          </button>
+        )}
       </div>
 
       <div className="border-b border-ink-4 px-5 py-4">
@@ -59,9 +112,7 @@ export function RailContent({ genres }: { genres: Genre[] }) {
                   onClick={() => setActiveView(key)}
                   aria-current={active ? "page" : undefined}
                   className={`group flex h-7 w-full items-center gap-2.5 px-2 text-small transition-colors duration-[120ms] ${
-                    active
-                      ? "text-ink-9"
-                      : "text-ink-7 hover:text-ink-9"
+                    active ? "text-ink-9" : "text-ink-7 hover:text-ink-9"
                   }`}
                 >
                   <Icon
@@ -81,6 +132,22 @@ export function RailContent({ genres }: { genres: Genre[] }) {
           })}
         </ul>
 
+        {/* Watch Party Button */}
+        <button
+          type="button"
+          id="rail-watch-party-btn"
+          onClick={() => setWatchPartyModalOpen(true)}
+          className="group flex h-7 w-full items-center gap-2.5 px-2 text-small transition-colors duration-[120ms] text-amber-300 hover:text-amber-200 mt-1 font-medium"
+        >
+          <Users className="h-3.5 w-3.5 shrink-0 text-amber-400" />
+          <span className="flex-1 text-left">
+            {locale === "az" ? "Birlikdə İzlə" : locale === "ru" ? "Совместный Просмотр" : "Watch Party"}
+          </span>
+          <span className="rounded-xs bg-amber-500/20 text-amber-300 px-1 py-0.2 text-[9px] font-bold">
+            NEW
+          </span>
+        </button>
+
         {/* Feedback button */}
         <button
           type="button"
@@ -93,6 +160,8 @@ export function RailContent({ genres }: { genres: Genre[] }) {
       </nav>
 
       <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+      <AuthModal />
+      <WatchPartyModal />
 
       {/* The instrument panel proper */}
       <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
@@ -113,13 +182,11 @@ export function RailContent({ genres }: { genres: Genre[] }) {
           onChange={(e) => setLocale(e.target.value as Locale)}
           className="inp h-7 w-auto cursor-pointer text-label uppercase tracking-[0.12em]"
         >
-          {(Object.entries(LOCALE_LABELS) as [Locale, string][]).map(
-            ([code, label]) => (
-              <option key={code} value={code} className="bg-ink-3">
-                {label}
-              </option>
-            )
-          )}
+          {(Object.entries(LOCALE_LABELS) as [Locale, string][]).map(([code, label]) => (
+            <option key={code} value={code} className="bg-ink-3">
+              {label}
+            </option>
+          ))}
         </select>
         <span className="rail-label truncate">TMDB</span>
       </div>

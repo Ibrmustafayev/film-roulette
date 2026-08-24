@@ -21,6 +21,7 @@ import {
 } from "@/lib/history";
 import { HlsPlayer } from "./HlsPlayer";
 import { FeedbackModal } from "./FeedbackModal";
+import { Comments } from "./Comments";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 type PlayerPhase =
@@ -1162,6 +1163,12 @@ export function MovieCard({ initialMovie }: { initialMovie?: Movie } = {}) {
             </motion.section>
           )}
         </AnimatePresence>
+
+        <Comments
+          mediaType={isTv ? "tv" : "movie"}
+          mediaId={movie.id}
+          title={movie.title}
+        />
 
         <FeedbackModal
           open={feedbackOpen}
