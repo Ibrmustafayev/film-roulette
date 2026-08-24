@@ -213,13 +213,13 @@ export function WatchPartyRoom({ initialRoom }: { initialRoom: WatchRoom }) {
   };
 
   const handleKick = (targetId: string, targetName: string) => {
-    if (confirm(`${targetName} adlı iştirakçını otaqdan kənarlaşdırmaq istəyirsiniz?`)) {
+    if (confirm(t("room.confirmKick", { name: targetName }))) {
       kickUser(targetId, targetName);
     }
   };
 
   const handleCloseRoom = () => {
-    if (confirm("Otağı tamamilə bağlamaq istəyirsiniz? Bütün iştirakçılar kənarlaşdırılacaq.")) {
+    if (confirm(t("room.confirmClose"))) {
       closeRoom();
     }
   };

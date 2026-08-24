@@ -303,5 +303,12 @@
     "success": "Mesajınız göndərildi! Təşəkkür edirik.",
     "error": "Göndərilə bilmədi. Yenidən cəhd edin.",
     "close": "Bağla"
+  },
+  "room": {
+    "kickedByHost": "Otaq sahibi sizi otaqdan kənarlaşdırdı.",
+    "closedByHost": "Otaq sahibi otağı bağladı.",
+    "confirmKick": "{name} adlı iştirakçını otaqdan kənarlaşdırmaq istəyirsiniz?",
+    "confirmClose": "Otağı tamamilə bağlamaq istəyirsiniz? Bütün iştirakçılar kənarlaşdırılacaq.",
+    "dismiss": "Bağla"
   }
 }

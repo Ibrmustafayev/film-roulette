@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { supabase, WatchRoom, RoomMessage, UserProfile } from "@/lib/supabaseClient";
@@ -53,15 +53,39 @@ export function useRoomSync({
   const [floatingEmojis, setFloatingEmojis] = useState<FloatingEmoji[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isRoomFull, setIsRoomFull] = useState(false);
-  const [notification, setNotification] = useState<string | null>(null);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const isHost = currentUser?.id === room.host_id;
 
-  // Stable User ID for session
-  const currentUserId = useMemo(() => {
-    return currentUser?.id || "guest-" + Math.random().toString(36).substring(2, 8);
-  }, [currentUser?.id]);
+  /**
+   * Stable guest identity.
+   *
+   * This is the Realtime presence key (see the channel config below), so it has
+   * to survive every re-render. It used to be `Math.random()` inside a useMemo,
+   * but useMemo is a performance hint, not a guarantee — React may discard and
+   * recompute it, which handed the channel a brand new key and left the old
+   * entry behind. That is what made the participant count flap between 1/4 and
+   * 0/4. A lazy useState initializer runs exactly once per mount, and the value
+   * is kept in sessionStorage so a refresh rejoins the same presence slot
+   * instead of stranding a ghost in a capacity-capped room.
+   */
+  const [guestId] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    const key = "film-roulette:guest-id";
+    try {
+      const existing = window.sessionStorage.getItem(key);
+      if (existing) return existing;
+      const created = `guest-${crypto.randomUUID().slice(0, 8)}`;
+      window.sessionStorage.setItem(key, created);
+      return created;
+    } catch {
+      // Private-mode storage denial: fall back to a per-mount id. Still stable
+      // across re-renders, just not across a refresh.
+      return `guest-${crypto.randomUUID().slice(0, 8)}`;
+    }
+  });
+
+  const currentUserId = currentUser?.id || guestId;
 
   const currentUsername =
     currentProfile?.username || currentUser?.email?.split("@")[0] || "Guest-" + currentUserId.slice(-4);
@@ -268,8 +292,9 @@ export function useRoomSync({
             localStorage.removeItem("active_room_code");
           } catch {}
           channel.unsubscribe();
-          alert("Otaq sahibi tərəfindən kənarlaşdırıldınız (Kicked by host).");
-          router.push("/rooms");
+          // A blocking alert() with a hard-coded string used to live here. The
+          // reason now rides the redirect so /rooms can render it translated.
+          router.push("/rooms?notice=kicked");
         }
       })
       .on("broadcast", { event: "ROOM_CLOSED" }, () => {
@@ -277,8 +302,7 @@ export function useRoomSync({
           localStorage.removeItem("active_room_code");
         } catch {}
         channel.unsubscribe();
-        alert("Otaq sahibi tərəfindən bağlandı (Room closed by host).");
-        router.push("/rooms");
+        router.push("/rooms?notice=closed");
       })
 
       // 3. Chat & Emojis
@@ -392,7 +416,6 @@ export function useRoomSync({
     isConnected,
     isRoomFull,
     isHost,
-    notification,
     sendSeek,
     sendPlay,
     sendPause,

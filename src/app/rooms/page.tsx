@@ -41,6 +41,26 @@ export default function RoomsHubPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<"all" | "movie" | "tv" | "youtube">("all");
 
+  /**
+   * Why a participant landed back here. useRoomSync redirects with ?notice=
+   * instead of firing a blocking alert(), so the reason can be rendered in the
+   * viewer's own language.
+   *
+   * Read after mount rather than with useSearchParams(), which would require a
+   * Suspense boundary on this prerendered page.
+   */
+  const [notice, setNotice] = useState<"kicked" | "closed" | null>(null);
+
+  useEffect(() => {
+    const value = new URLSearchParams(window.location.search).get("notice");
+    if (value === "kicked" || value === "closed") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot read of a browser-only value
+      setNotice(value);
+      // Drop the query so a refresh does not resurrect the banner.
+      window.history.replaceState({}, "", window.location.pathname);
+    }
+  }, []);
+
   const loadRooms = async () => {
     setLoading(true);
     try {
@@ -153,6 +173,23 @@ export default function RoomsHubPage() {
           </button>
         </div>
       </header>
+
+      {notice && (
+        <div className="border-b border-amber-500/30 bg-amber-500/10">
+          <div className="mx-auto flex max-w-5xl items-center gap-3 px-6 py-3">
+            <p className="flex-1 text-small text-amber-200">
+              {notice === "kicked" ? t("room.kickedByHost") : t("room.closedByHost")}
+            </p>
+            <button
+              type="button"
+              onClick={() => setNotice(null)}
+              className="ctl ctl-ghost h-8 px-3 text-xs"
+            >
+              {t("room.dismiss")}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Container */}
       <main className="max-w-6xl mx-auto p-6 space-y-8">

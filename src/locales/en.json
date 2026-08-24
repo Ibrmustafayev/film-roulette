@@ -303,5 +303,12 @@
     "success": "Your message was sent! Thank you.",
     "error": "Could not send. Please try again.",
     "close": "Close"
+  },
+  "room": {
+    "kickedByHost": "The host removed you from the room.",
+    "closedByHost": "The host closed the room.",
+    "confirmKick": "Remove {name} from the room?",
+    "confirmClose": "Close the room? Everyone will be disconnected.",
+    "dismiss": "Dismiss"
   }
 }

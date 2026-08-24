@@ -1,12 +1,23 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-const DEFAULT_URL = "https://zbpplqqeihawvsmibjlx.supabase.co";
-const DEFAULT_ANON_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpicHBscXFlaWhhd3ZzbWliamx4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc1ODc2MjEsImV4cCI6MjEwMzE2MzYyMX0.bIofuB2XwPe7Sp1MDiaS8Pd99FW-lgXD9UBWMwPlA-A";
+/**
+ * Configuration comes from the environment only.
+ *
+ * Credentials used to be hard-coded here as fallbacks. That made rotation
+ * ineffective — a rotated key left the stale one live in the bundle — and put
+ * the project ref in a public repository. See .env.example for the full list.
+ */
+export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-export const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || DEFAULT_URL;
-export const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || DEFAULT_ANON_KEY;
-export const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY;
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  // Thrown at module load so a misconfigured deploy fails immediately and
+  // visibly, instead of every query failing later with an opaque auth error.
+  throw new Error(
+    "Supabase is not configured: set NEXT_PUBLIC_SUPABASE_URL and " +
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY (see .env.example)."
+  );
+}
 
 export interface UserProfile {
   id: string;
@@ -72,10 +83,24 @@ export const supabase: SupabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON
 });
 
 /**
- * Server-side Admin client
+ * Server-side admin client. Server-only: the service-role key is read here and
+ * never exported, so it cannot be pulled into a client bundle by accident.
+ *
+ * This used to fall back to the anon key when the env var was missing, which
+ * silently downgraded every admin query to anonymous privileges and surfaced as
+ * confusing row-level-security denials. It now fails loudly instead.
  */
 export function getServiceSupabase(): SupabaseClient {
-  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY || SUPABASE_ANON_KEY, {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!serviceRoleKey) {
+    throw new Error(
+      "SUPABASE_SERVICE_ROLE_KEY is not set. The admin client requires it; " +
+        "it must never fall back to the anon key (see .env.example)."
+    );
+  }
+
+  return createClient(SUPABASE_URL, serviceRoleKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false,
